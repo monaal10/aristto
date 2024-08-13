@@ -1,0 +1,1 @@
+-Xmx1G -XX:ReservedCodeCacheSize=1024M

@@ -1,0 +1,1396 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1440, maximum-scale=1.0" />
+  <meta name="og:type" content="website" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/start-basic-search.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styleguide.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/globals.css') }}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1098.0.min.js"></script>
+  <style>
+    results-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+
+    .expanded-view {
+      margin-top: 20px;
+      border-top: 1px solid #e0e0e0;
+      padding-top: 20px;
+    }
+
+    .overview-result-tab.expanded .icons-chevron-down {
+      transform: rotate(180deg);
+    }
+
+    .expanded-view {
+      display: none;
+      margin-top: 15px;
+      border-top: 1px solid #ddd;
+      padding-top: 15px;
+    }
+
+    .overview-result-tab.expanded .expanded-view {
+      display: block;
+    }
+
+
+    .expanded-view {
+      display: none;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-top: 1px solid #ddd;
+    }
+    .overview-result-tab.expanded .expanded-view {
+      display: block;
+    }
+    .overview-result-tab.expanded .icons-chevron-down {
+      transform: rotate(180deg);
+    }
+    .ask-a-question-with-a-paper {
+      display: flex;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .ask-a-question-about-the-paper {
+      flex-grow: 1;
+      padding: 10px;
+      position: relative;
+    }
+
+    .search-symbol {
+      cursor: pointer;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff80;
+    }
+
+    .overlay-content {
+      background-color: #ffffff;
+      margin: 5% auto;
+      padding: 20px;
+      width: 80%;
+      max-width: 1200px;
+      border-radius: 5px;
+      overflow-y: auto;
+      max-height: 90vh;
+      left : 10%
+    }
+
+    .reference-overlay-content {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .reference-overlay-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
+    }
+
+    .reference-overlay-title {
+      font-family: 'Raleway', sans-serif;
+      font-weight: bold;
+      font-size: 32px;
+      color: #633604;
+      position: relative;
+    }
+
+    .reference-overlay-authors {
+      font-family: 'Raleway', sans-serif;
+      font-weight: 300;
+      font-size: 20px;
+      color: #633604;
+      position: relative;
+    }
+
+    .reference-overlay-details {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .reference-overlay-journal,
+    .reference-overlay-year {
+      font-family: 'Raleway', sans-serif;
+      font-weight: 300;
+      font-size: 20px;
+      color: #633604;
+      position: relative;
+    }
+    .reference-overlay-abstract {
+      font-family: 'Raleway', sans-serif;
+      font-weight: normal;
+      font-size: 16px;
+      color: #633604;
+      position: relative;
+    }
+    .reference-overlay-pictures {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      position: relative;
+    }
+    .reference-overlay-picture {
+      width: 200px;
+      height: 200px;
+      background-size: cover;
+      background-position: center;
+      border-radius: 5px;
+      position: relative;
+    }
+    .question-overlay-content {
+      background-color: #ffffff80;
+      padding: 20px;
+      border-radius: 5px;
+      position: relative;
+    }
+    .question-overlay-text {
+      font-family: "Raleway-Regular", Helvetic;
+      font-weight: normal;
+      font-size: 16px;
+      color: #633604;
+      position: relative;
+    }
+
+    .overview-rectangle {
+      position: relative;
+      width: 1000px;
+      height: 290px;
+      background-color: #ffffff80;
+      border-radius: 20px;
+      box-shadow: 0px 2px 5px #00000033;
+      left : 200px;
+      margin-bottom: 50px;
+    }
+
+    .overview-rectangle.expanded .expanded-content {
+      opacity: 1;
+      height: auto; /* Adjust this value based on your maximum expected content height */
+    }
+    .paper-title {
+      position: absolute;
+      width: 758px;
+      font-family: "Raleway-Bold", Helvetica;
+      font-weight: 700;
+      color: #663b1c;
+      font-size: 24px;
+      letter-spacing: 0;
+      line-height: 30px;
+      top: 10px;
+    }
+
+    .citation {
+      position: absolute;
+      width: 66px;
+      height: 20px;
+      left: 785px;
+      top: 20px
+    }
+
+    .img {
+      position: relative;
+      width: 20px;
+      height: 17px;
+    }
+
+    .citation-count {
+      position: relative;
+      font-family: "Overpass Mono-Regular", Helvetica;
+      font-weight: 400;
+      color: #663b1c;
+      font-size: 20px;
+      letter-spacing: 0;
+      white-space: nowrap;
+      left: 25px;
+      top: -20px;
+
+    }
+
+    .publishing-year {
+      position: absolute;
+      top: 20px;
+      left: 880px;
+      font-family: "Raleway-Regular", Helvetica;
+      font-weight: 400;
+      color: #663b1c;
+      font-size: 20px;
+      letter-spacing: 0;
+      line-height: 20px;
+      white-space: nowrap;
+
+    }
+
+    .icons-chevron-down {
+      position: absolute;
+      width: 35px;
+      height: 42px;
+      top: 10px;
+      left: 945px;
+    }
+
+    .author-names {
+      position: absolute;
+      width: 500px;
+      top: 110px;
+      left: 25px;
+      font-family: "Raleway-Light", Helvetica;
+      font-weight: 300;
+      color: #663b1c;
+      font-size: 16px;
+      letter-spacing: 0;
+      line-height: 20px;
+    }
+
+    .span {
+      font-family: "Raleway-LightItalic", Helvetica;
+      font-style: italic;
+    }
+
+    .journal-name {
+      position: absolute;
+      width: 300px;
+      height: 20px;
+      left: 530px;
+      top: 110px;
+      font-family: "Raleway-LightItalic", Helvetica;
+      font-weight: 300;
+      font-style: italic;
+      color: #663b1c;
+      font-size: 16px;
+      letter-spacing: 0;
+      line-height: 20px;
+    }
+
+    .open-pdf-button {
+      position: absolute;
+      width: 122px;
+      height: 53px;
+      top: 60px;
+      left: 846px;
+    }
+
+    .div-wrapper {
+      position: relative;
+      width: 120px;
+      height: 43px;
+      background-color: #ffffff80;
+      border-radius: 10px;
+      border: 1px solid;
+      border-color: #663b1c;
+    }
+
+    .text-wrapper-3 {
+      position: relative;
+      width: 95px;
+      top: 10px;
+      left: 12px;
+      font-family: "Raleway-Regular", Helvetica;
+      font-weight: 400;
+      color: #663b1c;
+      font-size: 20px;
+      letter-spacing: 0;
+      line-height: 20px;
+      white-space: nowrap;
+    }
+
+    .primary-topic {
+      position: absolute;
+      width: 360px;
+      height: 59px;
+      top: 200px;
+      left: 12px;
+      background-color: #c09a7e80;
+      border-radius: 5px;
+    }
+
+    .primary-topic-2 {
+      position: relative;
+      top: 5px;
+      left: 14px;
+      font-family: "Raleway-Regular", Helvetica;
+      font-weight: 400;
+      color: #663b1c;
+      font-size: 20px;
+      letter-spacing: 0;
+      line-height: 20px;
+      text-wrap: wrap;
+    }
+
+    .keywords {
+      position: absolute;
+      width: 341px;
+      height: 96px;
+      top: 200px;
+      left: 399px;
+    }
+    .keyword-wrapper {
+      position: relative;
+      width: 156px;
+      height: 44px;
+      background-color: #ffffff80;
+      border-radius: 5px;
+      text-align: center;
+      top : 10px
+    }
+
+
+    .notable-references-wrapper {
+      position: relative;
+      width: 156px;
+      height: 44px;
+      background-color: #ffffff80;
+      border-radius: 5px;
+      text-align: center;
+      top : 10px
+    }
+
+    .keyword {
+      position: relative;
+      color: #663b1c;
+      text-wrap: wrap;
+      font-family: "Raleway-Regular", Helvetica;
+    }
+
+
+
+
+    .overview-rectangle.expanded {
+      /* Add styles for the expanded state, e.g., */
+      padding-bottom: 20px;
+      height: auto;
+    }
+
+    .expanded-content {
+      /* Add styles for the expanded content, e.g., */
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: transparent;
+      border-radius: 20px;
+      overflow: auto;
+    }
+    .detailed-inner-container {
+      width: 100%;
+      height: auto; /* Allow inner content to dictate height */
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .detailed-text-wrapper-title {
+      position: absolute;
+      top: 15px;
+      left: 18px;
+      width: 650px;
+      font-family: "Raleway-Bold", Helvetica;
+      font-weight: 700;
+      color: #663b1c;
+      font-size: 26px;
+      letter-spacing: 0;
+      line-height: 30px;
+      white-space: nowrap;
+      text-wrap: wrap;
+    }
+
+    .detailed-open-pdf {
+      position: absolute;
+      width: 122px;
+      height: 53px;
+      top: 60px;
+      left: 845px;
+    }
+
+    .detailed-div {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      font-family: "Raleway-Regular", Helvetica;
+      font-weight: 400;
+      color: #663b1c;
+      font-size: 20px;
+      letter-spacing: 0;
+      line-height: 20px;
+      white-space: nowrap;
+    }
+
+    .detailed-abstract {
+      position: relative;
+      left: 28px;
+      width: 900px;
+      background-color: transparent;
+      margin-top: 200px;
+      max-height: 400px;
+      overflow: auto;
+
+    }
+
+    .detailed-text-wrapper-abstract {
+      position: relative;
+      top: 20px;
+      left: 0;
+      font-family: "Raleway-Regular", Helvetica;
+      font-weight: 400;
+      color: #663b1c;
+      font-size: 24px;
+      letter-spacing: 0;
+      line-height: 20px;
+      white-space: nowrap;
+      width: max-content;
+      max-height: 400px;
+      background-color: transparent;
+      border-radius: 5px;
+      text-align: justify;
+      align-self: center;
+      margin-bottom : 20px;
+
+    }
+
+    .detailed-p {
+      position: relative;
+      left: 0;
+
+      font-family: "Raleway-Regular", Helvetica;
+      font-weight: 400;
+      color: #663b1c;
+      font-size: 16px;
+      letter-spacing: 0;
+      line-height: 20px;
+    }
+
+    .detailed-date-result {
+      position: absolute;
+      top: 18px;
+      left: 875px;
+      font-family: "Raleway-Regular", Helvetica;
+      font-weight: 400;
+      color: #663b1c;
+      font-size: 20px;
+      letter-spacing: 0;
+      line-height: 20px;
+      white-space: nowrap;
+    }
+
+    .detailed-pictures-container {
+      width: 100%;
+      padding: 0 15px;
+      max-height: 300px;
+      box-sizing: border-box;
+      margin-top: 40px;
+      overflow: auto;
+      margin-bottom: 40px;
+    }
+
+    .detailed-pictures {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-start;
+      margin-top: 20px;
+    }
+
+    .detailed-picture-box {
+      flex: 0 0 calc(33.333% - 10px);
+      max-width: calc(33.333% - 10px);
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .detailed-picture-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .detailed-picture-box:hover img {
+      transform: scale(1.05);
+    }
+
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .popup-content {
+      max-width: 90%;
+      max-height: 90%;
+    }
+
+    .popup-content img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .close-popup {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .detailed-picture-box {
+        flex: 0 0 calc(50% - 10px);
+        max-width: calc(50% - 10px);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .detailed-picture-box {
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+    }
+
+    .detailed-icons-chevron-down {
+      position: absolute;
+      width: 35px;
+      height: 35px;
+      top: 12px;
+      left: 942px;
+    }
+
+    .detailed-author-names {
+      position: absolute;
+      width: 570px;
+      top: 100px;
+      left: 28px;
+      font-family: "Raleway-Light", Helvetica;
+      font-weight: 300;
+      color: #663b1c;
+      font-size: 14px;
+      letter-spacing: 0;
+      line-height: 15px;
+      text-wrap: wrap;
+    }
+
+    .detailed-span {
+      font-family: "Raleway-LightItalic", Helvetica;
+      font-style: italic;
+    }
+
+    .detailed-text-wrapper-3 {
+      position: relative;
+      width: 95px;
+      top: 10px;
+      left: 12px;
+      font-family: "Raleway-Regular", Helvetica;
+      font-weight: 400;
+      color: #663b1c;
+      font-size: 20px;
+      letter-spacing: 0;
+      line-height: 20px;
+      white-space: nowrap;
+    }
+
+    .detailed-citation {
+      position: absolute;
+      width: 66px;
+      height: 20px;
+      top: 20px;
+      left: 785px;
+    }
+
+    .detailed-image {
+      position: absolute;
+      width: 20px;
+      height: 17px;
+      top: 0;
+      left: 0;
+    }
+
+    .detailed-citation-count {
+      position: absolute;
+      top: 0;
+      left: 27px;
+      font-family: "Overpass Mono-Regular", Helvetica;
+      font-weight: 400;
+      color: #663b1c;
+      font-size: 20px;
+      letter-spacing: 0;
+      line-height: 20px;
+      white-space: nowrap;
+    }
+
+    .detailed-primary-topic {
+      position: absolute;
+      width: 400px;
+      height: 40px;
+      top: 100px;
+      left: 304px;
+      background-color: #c09a7e80;
+      border-radius: 5px;
+      text-wrap: wrap;
+    }
+
+    .detailed-text-wrapper-primary-topic {
+      position: relative;
+      top: 7px;
+      left: 14px;
+      font-family: "Raleway-Regular", Helvetica;
+      font-weight: 400;
+      color: #663b1c;
+      font-size: 18px;
+      letter-spacing: 0;
+      line-height: 15px;
+      white-space: nowrap;
+      text-wrap: wrap;
+    }
+
+    .detailed-text-wrapper-publication {
+      position: absolute;
+      top: 84px;
+      left: 600px;
+      width: 100px;
+      font-family: "raleway-bold-irish-coffee-32px", Helvetica;
+      font-weight: 300;
+      font-style: italic;
+      color: #663b1c;
+      font-size: 16px;
+      letter-spacing: 0;
+      line-height: 20px;
+      white-space: nowrap;
+      text-wrap: wrap;
+    }
+
+    .detailed-result {
+      position: absolute;
+      width: 515px;
+      height: 36px;
+      top: 121px;
+      left: 236px;
+    }
+
+    .detailed-keyword {
+      position: relative;
+      color: #663b1c;
+      text-wrap: wrap;
+      font-family: "Raleway-Regular", Helvetica;
+    }
+
+    .detailed-keyword-2 {
+      position: absolute;
+      width: 135px;
+      top: 8px;
+      left: 10px;
+      font-family: "Raleway-Regular", Helvetica;
+      font-weight: 400;
+      color: #663b1c;
+      font-size: 20px;
+      letter-spacing: 0;
+      line-height: 20px;
+      white-space: nowrap;
+    }
+
+    .detailed-keyword-wrapper {
+      position: relative;
+      width: 156px;
+      height: 44px;
+      background-color: #ffffff80;
+      border-radius: 5px;
+      text-align: center;
+      top : 10px
+    }
+
+    .detailed-div-wrapper {
+      position: relative;
+      width: 120px;
+      height: 43px;
+      background-color: #ffffff80;
+      border-radius: 10px;
+      border: 1px solid;
+      border-color: #663b1c;
+    }
+    .common-container{
+      position: relative;
+      left : 18px;
+      margin-top: 20px;
+    }
+    .detailed-references {
+      width: 681px;
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      column-gap: 20px;
+      row-gap: 30px;
+      left : 150px;
+      margin-top: 40px;
+      margin-bottom: 40px;
+      align-items: center;
+    }
+
+    .detailed-reference {
+      position: relative;
+    }
+
+    .detailed-reference-box {
+      position: relative;
+      background-color: #c09a7e80;;
+      border-radius: 5px;
+      text-align: center;
+      min-height: 25px;
+    }
+
+    .detailed-text-reference {
+      position: relative;
+      color: #663b1c;
+      text-wrap: wrap;
+      font-family: "Raleway-Regular", Helvetica;
+      font-size: 18px;
+    }
+
+
+
+    .detailed-overlap-wrapper {
+      position: absolute;
+      width: 156px;
+      height: 36px;
+      top: 124px;
+      left: 205px;
+    }
+
+    .detailed-overlap-group-wrapper {
+      position: absolute;
+      width: 156px;
+      height: 36px;
+      top: 124px;
+      left: 1px;
+    }
+
+    .detailed-reference-2 {
+      position: absolute;
+      width: 156px;
+      height: 36px;
+      top: 36px;
+      left: 1px;
+    }
+
+    .detailed-ask-a-question-with {
+      align-items: center; /* Changed from flex-start to center for vertical alignment */
+      background-color: var(--white-3);
+      border-radius: 50px;
+      box-shadow: 0px 4px 2px #0000001a;
+      cursor: pointer;
+      display: flex;
+      gap: 10px; /* Reduced gap to allow for longer input */
+      justify-content: space-between; /* Changed from flex-end to space-between */
+      width: 75%; /* Increased from min-width: 1000px to width: 1200px */
+      padding: 0 30px; /* Adjusted padding for better spacing */
+      position: relative;
+      left : 80px;
+      margin-top: 20px;
+
+    }
+
+    .detailed-search-symbol {
+
+      width: 40px;
+    }
+
+    .detailed-text-wrapper {
+      flex-grow: 1;
+      background-color: transparent;
+      border: none;
+      outline: none;
+      color: #663B1C; /* Irish Coffee color */
+      font-family: 'Raleway', sans-serif;
+      font-weight: 300; /* Light */
+      font-size: 28px;
+      padding: 10px;
+      width: calc(100% - 60px);
+    }
+    .detailed-text-wrapper::placeholder {
+      color: #663B1C; /* Make placeholder text the same color */
+      opacity: 0.7; /* Slightly transparent to distinguish from entered text */
+    }
+
+    #loading-message {
+      display: none;
+      position: fixed;
+      top: 25%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(255, 255, 255, 0.5);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 1005;
+      text-align: center;
+      color: #663b1c;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #663b1c;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .hidden {
+      display: none;
+    }
+
+  </style>
+</head>
+<div id="loading-message">
+  <div class="spinner"></div>
+  <p>Fetching results... This might take up to a minute.</p>
+  <p>This is probably a good time to hydrate yourself!</p>
+</div>
+
+<body style="margin: 0">
+<input type="hidden" id="anPageName" name="page" value="start-basic-search" />
+<div class="container-center-horizontal">
+  <div class="start-basic-search screen">
+    <div class="overlap-group2">
+      <div class="background">
+        <div class="overlap-group">
+          <div class="group-10">
+            <div class="rectangle-18"></div>
+          </div>
+          <div class="a italiana-normal-brown-sugar-2500px">A</div>
+        </div>
+      </div>
+      <div class="search-bar-main-page">
+        <input type="text" id="search-input" class="enter-text-box raleway-light-irish-coffee-28px" placeholder="Search Phrase">
+        <img class="search-symbol" src="{{ url_for('static', filename='img/icons---search-2.svg') }}" alt="Search symbol" onclick="performSearch()" />
+      </div>
+      <div class="aristto-logo">
+        <div class="overlap-group1 italiana-normal-brown-sugar-250px">
+          <h1 class="title">Arist</h1>
+          <div class="t">t</div>
+          <div class="o">o</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="results-container" class="results-container">
+  <!-- Results will be dynamically inserted here -->
+</div>
+
+<!-- Overlay for displaying question answers and reference details -->
+<div id="overlay" class="overlay">
+  <div class="overlay-content">
+    <span class="close-overlay" onclick="closeOverlay()">&times;</span>
+    <div id="overlay-text"></div>
+  </div>
+</div>
+<script>
+  async function performSearch() {
+    const searchInput = document.getElementById('search-input').value;
+    const resultsContainer = document.getElementById('results-container');
+
+    try {
+      document.getElementById('loading-message').style.display = 'block';
+      const response = await axios.post('http://127.0.0.1:5000/search', {query: searchInput});
+      document.getElementById('loading-message').style.display = 'none';
+      const searchResults = response.data;
+
+      resultsContainer.innerHTML = ''; // Clear previous results
+
+      if (searchResults && searchResults.length > 0) {
+        searchResults.forEach(result => {
+          const resultHTML = `
+                    <div id="overview-rectangle${result.open_alex_id}" class="overview-rectangle">
+                        <p class="paper-title">${result.title}</p>
+                        <div class="citation">
+                            <img class="img" src="{{ url_for('static', filename='img/image-2@2x.png') }}" />
+                            <div class="citation-count">${result.cited_by_count}</div>
+                        </div>
+                        <div class="publishing-year">${result.publication_year}</div>
+                        <img class="icons-chevron-down" src="{{ url_for('static', filename='img/icons---chevron-down.svg')}}" />
+                        <p class="author-names">
+                            <span class="span">
+                                ${result.authors.map(author => `<span class="Raleway-LightItalic">${author}</span>`).join(', ')}
+                            </span>
+                        </p>
+                        <div class="journal-name">${result.publication}</div>
+                        <a href=${result.oa_url} target="_blank" rel="noopener noreferrer">
+                            <div class="open-pdf-button">
+                                <div class="div-wrapper"><div class="text-wrapper-3">Open PDF</div></div>
+                            </div>
+                        </a>
+                        <div class="primary-topic">
+                            <div class="primary-topic-2">${result.primary_topic}</div>
+                        </div>
+                        <div class="keywords">
+                            ${result.key_words.map(keyword => `
+                                <div class="keyword">
+                                    <div class="keyword-wrapper"><div class="keyword-2">${keyword}</div></div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+
+          resultsContainer.innerHTML += resultHTML;
+          localStorage.setItem(result.open_alex_id, JSON.stringify(result));
+        });
+
+        document.querySelectorAll('.overview-rectangle').forEach(container => {
+          const originalContent = container.innerHTML;
+          let isExpanded = false;
+
+          container.addEventListener('click', async function(event) {
+            const clickedElement = event.target;
+
+            // Check if the clicked element is an image
+            if (clickedElement.tagName === 'IMG') {
+              event.stopPropagation();
+              openImagePopup(clickedElement.src);
+              return;
+            }
+
+            // Check if the clicked element or its parent has a click event or is a clickable element
+            const isClickable = (element) => {
+              const clickableTagNames = ['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'];
+              return (
+                      element.onclick ||
+                      element.getAttribute('onclick') ||
+                      clickableTagNames.includes(element.tagName) ||
+                      element.closest('a, button, input, select, textarea')
+              );
+            };
+
+            if (isClickable(clickedElement)) {
+              // Allow the default action for clickable elements
+              return;
+            }
+
+            event.stopPropagation();
+
+            if (!isExpanded) {
+              const result_id = this.getAttribute('id').replace('overview-rectangle', '');
+              const result = JSON.parse(localStorage.getItem(result_id));
+
+              // Create expanded content
+              const expandedContent = document.createElement('div');
+              expandedContent.className = 'expanded-content';
+              await expandResult(result, expandedContent);
+
+              // Save original content and append expanded content
+              this.dataset.originalContent = originalContent;
+              this.innerHTML = '';
+              this.appendChild(expandedContent);
+
+              // Trigger reflow before adding expanded class
+              void this.offsetWidth;
+
+              this.classList.add('expanded');
+              isExpanded = true;
+            } else {
+              // Only collapse if the clicked area is not a clickable element
+              if (!isClickable(clickedElement)) {
+                // Restore original content
+                this.classList.remove('expanded');
+
+                // Wait for transition to finish before replacing content
+                setTimeout(() => {
+                  this.innerHTML = this.dataset.originalContent;
+                }); // This should match the transition duration in CSS
+
+                isExpanded = false;
+              }
+            }
+          });
+        });
+
+// Function to open image popup
+        function openImagePopup(src) {
+          const popup = document.createElement('div');
+          popup.className = 'image-popup';
+          popup.innerHTML = `
+    <div class="image-popup-content">
+      <img src="${src}" alt="Enlarged image">
+      <button class="close-popup">×</button>
+    </div>
+  `;
+          document.body.appendChild(popup);
+
+          // Close popup when clicking outside the image or on the close button
+          popup.addEventListener('click', function(event) {
+            if (event.target === popup || event.target.className === 'close-popup') {
+              document.body.removeChild(popup);
+            }
+          });
+        }
+
+// Add necessary CSS for the image popup
+        const style = document.createElement('style');
+        style.textContent = `
+  .image-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  .image-popup-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+  }
+  .image-popup-content img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  .close-popup {
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    font-size: 30px;
+    color: white;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+`;
+        document.head.appendChild(style);
+
+
+        resultsContainer.style.display = 'flex';
+        resultsContainer.style.flexDirection = 'column';
+      } else {
+        resultsContainer.innerHTML = '<p>No results found.</p>';
+      }
+    } catch (error) {
+      document.getElementById('loading-message').style.display = 'none';
+      console.error('Error performing search:', error);
+      alert('An error occurred while searching. Please try again.' + error);
+    }
+  }
+
+  async function expandResult(result, expandedContentElement) {
+    try {
+      document.getElementById('loading-message').style.display = 'block';
+      const response = await axios.post('http://127.0.0.1:5000/getExpandedViewData', {query: result});
+      document.getElementById('loading-message').style.display = 'none';
+
+      let diagrams = [];
+      const diagrams_map = response.data.figures;
+      if (Object.keys(diagrams_map).length > 0) {
+        diagrams = diagrams_map[`${result.open_alex_id}`];
+      }
+      const images_from_s3 = await getSignedUrls(diagrams)
+      const referenced_papers = response.data.referenced_papers;
+      referenced_papers.forEach(referenced_paper =>
+              localStorage.setItem(referenced_paper.open_alex_id, JSON.stringify(referenced_paper))
+      );
+
+      expandedContentElement.innerHTML =
+              `
+        <div class="expanded-content">
+         <div class = "detailed-inner-container">
+          <div class="detailed-text-wrapper-title">${result.title}</div>
+          <a href="${result.oa_url}" target="_blank" rel="noopener noreferrer">
+            <div class="detailed-open-pdf">
+              <div class="detailed-div-wrapper"><div class="detailed-text-wrapper-3">Open PDF</div></div>
+            </div>
+          </a>
+          <div class="detailed-abstract">
+            <div class="detailed-text-wrapper-abstract">Abstract</div>
+            <p class="detailed-p">${result.abstract}</p>
+          </div>
+          <div class="detailed-date-result">${result.publication_year}</div>
+          <img class="detailed-icons-chevron-down" src="{{ url_for('static', filename='img/icons---chevron-down.svg')}}"/>
+          <p class="detailed-author-names">
+            <span class="span">${result.authors.map(author => `<span class="Raleway-LightItalic">${author}</span>`).join(', ')}</span>
+          </p>
+          <div class="detailed-citation">
+            <img class="detailed-image" src="{{ url_for('static', filename='img/image-2@2x.png') }}"/>
+            <div class="detailed-citation-count">${result.cited_by_count}</div>
+          </div>
+
+          <div class="detailed-text-wrapper-publication">${result.publication}</div>
+          <div class="detailed-pictures-container">
+             <div class="detailed-pictures">
+                  ${images_from_s3.map(diagram => `
+                      <div class="detailed-picture-box">
+                          <img src="${diagram}" alt="s Image"/>
+                      </div>
+                  `).join('')}
+
+              </div>
+          </div>
+          <div class="popup-overlay">
+              <span class="close-popup">&times;</span>
+              <div class="popup-content">
+                  <img src="" alt="Enlarged Image"/>
+              </div>
+          </div>
+
+
+          <div class="common-container">
+          <div class="detailed-text-wrapper-abstract">Notable References</div>
+          <div class="detailed-references">
+              ${referenced_papers.map(referenced_paper => `
+                  <div  class="detailed-reference" onclick="showReferenceView('${referenced_paper.open_alex_id}')">
+                      <div class ="detailed-reference-box">
+                      <div class="detailed-text-reference">${referenced_paper.title}</div></div>
+                  </div>
+                `).join('')}
+            </div>
+            </div>
+            <div class="detailed-ask-a-question-with">
+              <input type="text" id="ask-a-question-${result.open_alex_id}" class="detailed-text-wrapper raleway-light-irish-coffee-28px"
+                     placeholder="Ask a question about the paper"/>
+              <img class="detailed-search-symbol" src="{{ url_for('static', filename='img/icons---search-2.svg') }}" alt="Search symbol"
+     onclick="askQuestion('${result.open_alex_id}', '${result.oa_url}', event)"/>
+            </div>
+            </div>
+        </div>`;
+        document.addEventListener('DOMContentLoaded', () => {
+        const pictures = document.querySelectorAll('.detailed-picture-box img');
+        const popupOverlay = document.querySelector('.popup-overlay');
+        const popupImage = document.querySelector('.popup-content img');
+        const closePopup = document.querySelector('.close-popup');
+
+        pictures.forEach(picture => {
+        picture.addEventListener('click', () => {
+        popupImage.src = picture.src;
+        popupOverlay.style.display = 'flex';
+      });
+      });
+
+        closePopup.addEventListener('click', () => {
+        popupOverlay.style.display = 'none';
+      });
+
+        popupOverlay.addEventListener('click', (e) => {
+        if (e.target === popupOverlay) {
+        popupOverlay.style.display = 'none';
+      }
+      });
+      });
+
+
+    } catch (error) {
+      console.error('Error fetching detailed result:', error);
+      expandedContentElement.innerHTML = '<p>An error occurred while fetching the detailed result. Please try again.</p>';
+    } finally {
+      document.getElementById('loading-message').style.display = 'none';
+    }
+  }
+
+  async function askQuestion(paperId, url, event) {
+    event.stopPropagation();
+    const questionInput = document.getElementById(`ask-a-question-${paperId}`);
+    const question = questionInput.value;
+    const request = { question: question, url : url }
+    document.getElementById('loading-message').style.display = 'block';
+    const response = await axios.post('http://127.0.0.1:5000/askQuestion', {query : request})
+    document.getElementById('loading-message').style.display = 'none';
+
+
+              showOverlay(`
+          <div class="question-overlay-content">
+            <div class="question-overlay-text">
+              <p><strong>Question:</strong> ${question}</p>
+              <p><strong>Answer:</strong> ${response.data.answer}</p>
+            </div>
+          </div>
+        `);
+              questionInput.value = ''; // Clear the input after asking
+
+
+  }
+   async function showReferenceView(referenceId) {
+     try {
+       const result_string = localStorage.getItem(referenceId)
+       const result = JSON.parse(result_string)
+       document.getElementById('loading-message').style.display = 'block';
+       const response = await axios.post('http://127.0.0.1:5000/getExpandedViewData', {query: result});
+       document.getElementById('loading-message').style.display = 'none';
+       let images_from_s3 = []
+       let diagrams = [];
+       const diagrams_map = response.data.figures;
+       if (Object.keys(diagrams_map).length > 0) {
+         diagrams = diagrams_map[`${result.open_alex_id}`];
+         if (diagrams) {
+           images_from_s3 = await getSignedUrls(diagrams)
+         }
+
+
+       }
+
+       const referenced_papers = response.data.referenced_papers;
+       referenced_papers.forEach(referenced_paper =>
+               localStorage.setItem(referenced_paper.open_alex_id, JSON.stringify(referenced_paper))
+       );
+
+       showOverlay(
+               `
+        <div class="expanded-content">
+         <div class = "detailed-inner-container">
+          <div class="detailed-text-wrapper-title">${result.title}</div>
+          <a href="${result.oa_url}" target="_blank" rel="noopener noreferrer">
+            <div class="detailed-open-pdf">
+              <div class="detailed-div-wrapper"><div class="detailed-text-wrapper-3">Open PDF</div></div>
+            </div>
+          </a>
+          <div class="detailed-abstract">
+            <div class="detailed-text-wrapper-abstract">Abstract</div>
+            <p class="detailed-p">${result.abstract}</p>
+          </div>
+          <div class="detailed-date-result">${result.publication_year}</div>
+          ${result.authors && result.authors.length > 0 ? `
+          <p class="detailed-author-names">
+            <span class="span">${result.authors.map(author => `<span class="Raleway-LightItalic">${author}</span>`).join(', ')}</span>
+          </p>
+        ` : ''}
+          <div class="detailed-citation">
+            <img class="detailed-image" src="{{ url_for('static', filename='img/image-2@2x.png') }}"/>
+            <div class="detailed-citation-count">${result.cited_by_count}</div>
+          </div>
+
+          <div class="detailed-text-wrapper-publication">${result.publication}</div>
+          <div class="detailed-pictures-container">
+             <div class="detailed-pictures">
+                  ${images_from_s3.map(diagram => `
+                      <div class="detailed-picture-box">
+                          <img src="${diagram}" alt="s Image"/>
+                      </div>
+                  `).join('')}
+
+              </div>
+          </div>
+          <div class="popup-overlay">
+              <span class="close-popup">&times;</span>
+              <div class="popup-content">
+                  <img src="" alt="Enlarged Image"/>
+              </div>
+          </div>
+            <div class="detailed-ask-a-question-with">
+              <input type="text" id="ask-a-question-${result.open_alex_id}" class="detailed-text-wrapper raleway-light-irish-coffee-28px"
+                     placeholder="Ask a question about the paper"/>
+              <img class="detailed-search-symbol" src="{{ url_for('static', filename='img/icons---search-2.svg') }}" alt="Search symbol"
+     onclick="askQuestion('${result.open_alex_id}', '${result.oa_url}', event)"/>
+            </div>
+        </div>`);
+       document.addEventListener('DOMContentLoaded', () => {
+         const pictures = document.querySelectorAll('.detailed-picture-box img');
+         const popupOverlay = document.querySelector('.popup-overlay');
+         const popupImage = document.querySelector('.popup-content img');
+         const closePopup = document.querySelector('.close-popup');
+
+         pictures.forEach(picture => {
+           picture.addEventListener('click', () => {
+             popupImage.src = picture.src;
+             popupOverlay.style.display = 'flex';
+           });
+         });
+
+         closePopup.addEventListener('click', () => {
+           popupOverlay.style.display = 'none';
+         });
+
+         popupOverlay.addEventListener('click', (e) => {
+           if (e.target === popupOverlay) {
+             popupOverlay.style.display = 'none';
+           }
+         });
+       });
+   }
+     catch (error) {
+       console.error('Error fetching detailed result:', error);
+     } finally {
+       document.getElementById('loading-message').style.display = 'none';
+     }
+  }
+
+
+  function showOverlay(content) {
+    const overlay = document.getElementById('overlay');
+    const overlayText = document.getElementById('overlay-text');
+    overlayText.innerHTML = content;
+    overlay.style.display = 'block';
+  }
+
+  function closeOverlay() {
+    const overlay = document.getElementById('overlay');
+    overlay.style.display = 'none';
+  }
+
+
+
+
+
+  function getSignedUrl(key) {
+    // Configure the AWS SDK with your credentials and region
+    AWS.config.update({
+      accessKeyId: 'AKIA6ODU27KHAM2XYDGK',
+      secretAccessKey: '6jJwywaM+RMzWHK3NcfyHr1e3/Yk9obe5HlV2lsR',
+      region: 'us-east-1'
+    });
+
+    // Create an S3 instance
+    const s3 = new AWS.S3();
+    const params = {
+      Bucket: 'paper-figures',
+      Key: key,
+      Expires: 60 * 5 // URL expires in 5 minutes
+    };
+
+    return new Promise((resolve, reject) => {
+      s3.getSignedUrl('getObject', params, (err, url) => {
+        if (err) reject(err);
+        else resolve(url);
+      });
+    });
+  }
+
+  async function getSignedUrls(keys) {
+    return Promise.all(keys.map(key => getSignedUrl(key)));
+  }
+
+
+</script>
+</body>
+</html>

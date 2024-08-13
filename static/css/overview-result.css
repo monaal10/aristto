@@ -1,0 +1,115 @@
+/* screen - overview-result */
+
+.overview-result {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 100vh; /* Adjust as needed */
+  padding: 20px;
+}
+
+.overview-result .overlap-group6,
+.overview-result .overlap-group-3 {
+  width: 100%;
+}
+
+.overview-result .overview-result-tab {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 15px;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.overview-result .overlap-group {
+  flex-direction: column;
+  gap: 10px;
+}
+
+.overview-result .author-names {
+  font-size: 14px;
+  line-height: 20px;
+  width: 100%;
+}
+
+.overview-result .overlap-group-1 {
+  align-items: center;
+  background-color: var(--mongoose);
+  border-radius: 5px;
+  padding: 9px 14px;
+}
+
+.overview-result .overlap-group1 {
+  align-items: center;
+  justify-content: center;
+  background-color: var(--white-2);
+  border: 1px solid var(--irish-coffee);
+  border-radius: 10px;
+  padding: 9.8px 12px;
+  align-self: flex-start;
+}
+
+.overview-result .open-pdf {
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.overview-result .icons-chevron-down {
+  align-self: flex-end;
+  cursor: pointer;
+}
+
+.overview-result .overlap-group-2 {
+  align-items: center;
+  background-color: var(--white-2);
+  border-radius: 5px;
+  padding: 9px 10px;
+  align-self: flex-start;
+}
+
+.overview-result .citation {
+  align-items: center;
+  gap: 5px;
+}
+
+.overview-result .overview-result-tab-1,
+.overview-result .overview-result-tab-2,
+.overview-result .overview-result-tab-3 {
+  width: 100%;
+}
+
+.overview-result .arrow_back {
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+/* Additional styles for layout */
+.overview-result-header {
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.overview-result-content {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.overview-result-footer {
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .overview-result-header,
+  .overview-result-content,
+  .overview-result-footer {
+    flex-direction: column;
+  }
+}

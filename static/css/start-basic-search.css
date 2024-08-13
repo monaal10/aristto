@@ -1,0 +1,110 @@
+/* screen - start-basic-search */
+
+.start-basic-search {
+  align-items: flex-start;
+  background-color: #ffecd5e6;
+  display: flex;
+  height: 700px;
+  overflow: hidden;
+  width: 1440px;
+}
+
+.start-basic-search .overlap-group2 {
+  height: 2945px;
+  margin-left: -26px;
+  margin-top: -767px;
+  position: relative;
+  width: 1589px;
+}
+
+.start-basic-search .overlap-group {
+  height: 2945px;
+  margin-top: -1px;
+  position: relative;
+  width: 1589px;
+}
+
+.start-basic-search .search-bar-main-page {
+  align-items: center; /* Changed from flex-start to center for vertical alignment */
+  background-color: var(--white-3);
+  border-radius: 50px;
+  box-shadow: 0px 4px 2px #0000001a;
+  cursor: pointer;
+  display: flex;
+  gap: 20px; /* Reduced gap to allow for longer input */
+  height: 75px;
+  justify-content: space-between; /* Changed from flex-end to space-between */
+  left: 125px;
+  width: 1200px; /* Increased from min-width: 1000px to width: 1200px */
+  padding: 0 30px; /* Adjusted padding for better spacing */
+  position: absolute;
+  top: 1283px;
+}
+
+.start-basic-search .enter-text-box {
+  flex-grow: 1;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  color: #663B1C; /* Irish Coffee color */
+  font-family: 'Raleway', sans-serif;
+  font-weight: 300; /* Light */
+  font-size: 28px;
+  padding: 10px;
+  width: calc(100% - 60px); /* Set width to fill the container minus padding */
+}
+
+.enter-text-box::placeholder {
+  color: #663B1C; /* Make placeholder text the same color */
+  opacity: 0.7; /* Slightly transparent to distinguish from entered text */
+}
+
+.start-basic-search .search-symbol {
+  height: 40px;
+  width: 40px;
+}
+
+.start-basic-search .aristto-logo {
+  align-items: flex-start;
+  display: flex;
+  height: 295px;
+  left: 457px;
+  min-width: 578px;
+  position: absolute;
+  top: 988px;
+}
+
+.start-basic-search .overlap-group1 {
+  height: 295px;
+  margin-top: -1.0px;
+  position: relative;
+  width: 578px;
+}
+
+.start-basic-search .title {
+  left: 0;
+  letter-spacing: -12.50px;
+  line-height: normal;
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+
+.start-basic-search .t {
+  left: 396px;
+  letter-spacing: -12.50px;
+  line-height: normal;
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+
+.start-basic-search .o {
+  left: 441px;
+  letter-spacing: -12.50px;
+  line-height: normal;
+  position: absolute;
+  top: 0;
+  width: 137px;
+}
+
