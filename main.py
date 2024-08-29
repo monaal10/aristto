@@ -6,7 +6,7 @@ import datetime
 from concurrent.futures import ThreadPoolExecutor
 import sys
 
-from chat_with_paper_qa import get_answer
+from chat_with_paper_qa import get_answer_from_paperqa
 from extract_figures import get_figures_and_tables
 from get_referenced_papers import fetch_referenced_papers
 from get_relevant_papers import get_relevant_papers
@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 # mongodbClient = MongoDB()
 app = Flask(__name__)
-application = app
 CORS(app)
 
 
@@ -77,9 +76,9 @@ def get_diagrams_and_referenced_papers():
         figures_future = executor.submit(get_figures_and_tables, paper)
         referenced_papers_future = executor.submit(fetch_referenced_papers, paper)
         figures = figures_future.result()
-        logger.info("Got figures")
+        logger.info("Got figures %s", figures)
         referenced_papers = referenced_papers_future.result()
-        logger.info("Got referenced papers")
+        logger.info("Got referenced papers : %s")
         response = {
             "figures": figures,
             "referenced_papers": referenced_papers
@@ -100,7 +99,7 @@ def ask_question():
     question = query_data.get('question')
     url = query_data.get('url')
     logger.info(f"url: {url}")
-    answer = get_answer([url], question)
+    answer = get_answer_from_paperqa([url], question)
     response = {
         "answer": answer
     }
@@ -117,5 +116,5 @@ def get_referenced_paper_info():
     return jsonify(response)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=4000, debug=True)
 

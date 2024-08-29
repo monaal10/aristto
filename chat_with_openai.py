@@ -38,6 +38,3 @@ def main():
     response = call_chatgpt_assistant(assistant_id, user_message)
     if response:
         print("Assistant's response:", response)
-
-
-main()

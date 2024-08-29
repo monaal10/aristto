@@ -1,12 +1,11 @@
-from pyalex import Works, Authors, Sources, Institutions, Publishers, Funders
+from pyalex import Works
 import pyalex
-import datetime
 import logging
 import numpy as np
-from classes.research_paper import ResearchPaper
-from embedding_model import get_embedding, calculate_similarity_scores
+from research_paper import ResearchPaper
+#from embedding_model import get_embedding, calculate_similarity_scores
 from tqdm import tqdm
-#from get_openai_embeddings import get_relevant_docs_from_oai
+from get_openai_embeddings import rank_documents
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -14,7 +13,7 @@ pyalex.config.email = "monaalsanghvi1998@gmail.com"
 min_cited_by_count = 20
 
 
-def semantic_search(query, papers, top_k=75, batch_size=1):
+"""def semantic_search(query, papers, top_k=75, batch_size=1):
     query_embedding = get_embedding(query).cpu().numpy()
     paper_embeddings = []
 
@@ -42,7 +41,7 @@ def semantic_search(query, papers, top_k=75, batch_size=1):
     # Sort papers by similarity
     sorted_papers = sorted(zip(similarities, papers[:top_k]), key=lambda x: x[0], reverse=True)
     return [paper for _, paper in sorted_papers[:top_k]]
-
+"""
 def get_relevant_papers(query):
     papers = []
     logger.info("Fetching works from OpenAlex")
@@ -50,7 +49,7 @@ def get_relevant_papers(query):
              .search(query)
              .filter(cited_by_count=">" + str(min_cited_by_count))
              .sort(relevance_score="desc")
-             .paginate(method="page", per_page=5, n_max=1)
+             .paginate(method="page", per_page=50, n_max=1)
              )
     for page in pages:
         for work in page:
@@ -58,13 +57,6 @@ def get_relevant_papers(query):
     #print("time taken 1", datetime.datetime.now() - time)
     # relevant_papers = get_relevant_docs_from_oai(query, papers[:75])
     # Perform semantic search on the initial results
-    relevant_papers = semantic_search(query, papers)
+    relevant_papers = rank_documents(query, papers)
+    logger.info("relevant papers {}", relevant_papers)
     return relevant_papers
-
-
-if __name__ == "__main__":
-    time = datetime.datetime.now()
-    papers = get_relevant_papers("Diffusion models to create synthetic datasets")
-    print([paper.title for paper in papers])
-    print(len(papers))
-    print("time taken 3", datetime.datetime.now() - time)

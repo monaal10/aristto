@@ -2,7 +2,7 @@ import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Tuple
 
-from classes import research_paper
+import research_paper
 
 # Set up the OpenAI API client
 openai.api_key = "sk-None-IEWqcLkHft3djH66AroZT3BlbkFJ4cCc3ieleT5ArR1On5rK"
@@ -80,13 +80,5 @@ def rank_documents(query: str, documents: List[research_paper]) -> List[Tuple[st
         reverse=True
     )
 
-    return ranked_documents
+    return [doc for doc, _ in ranked_documents]
 
-
-def get_relevant_docs_from_oai(query, documents):
-    ranked_docs = rank_documents(query, documents)
-    print(f"Query: {query}\n")
-    print("Ranked documents:")
-    for i, (doc, similarity) in enumerate(ranked_docs, 1):
-        print(f"{i}. Similarity: {similarity:.4f} - {doc.title}")
-    return ranked_docs

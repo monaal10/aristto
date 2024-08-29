@@ -1,5 +1,8 @@
 
 # Elastic Beanstalk Files
-.elasticbeanstalk/*
-!.elasticbeanstalk/*.cfg.yml
-!.elasticbeanstalk/*.global.yml
+/node_modules/
+/venv/
+/target/
+/pdffigures2/
+/.elasticbeanstalk/
+/.venv/
