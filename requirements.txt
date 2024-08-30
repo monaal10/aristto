@@ -14,3 +14,4 @@ tqdm
 gunicorn
 pyalex
 flask-cors
+pymongo
