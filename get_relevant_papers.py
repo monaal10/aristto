@@ -1,10 +1,9 @@
-from pyalex import Works
+import requests
+from pyalex import Works, Institutions, Authors, Publishers
 import pyalex
 import logging
-import numpy as np
 from research_paper import ResearchPaper
 #from embedding_model import get_embedding, calculate_similarity_scores
-from tqdm import tqdm
 from get_openai_embeddings import rank_documents
 
 # Configure logging
@@ -13,50 +12,82 @@ pyalex.config.email = "monaalsanghvi1998@gmail.com"
 min_cited_by_count = 20
 
 
-"""def semantic_search(query, papers, top_k=75, batch_size=1):
-    query_embedding = get_embedding(query).cpu().numpy()
-    paper_embeddings = []
+def create_strings_for_filters(filter_list):
+    filter_string = ""
+    for filter in filter_list:
+        filter_string += str(filter) + "|"
+    return filter_string[:len(filter_string) - 1]
 
-    # Get Embeddings
-    logger.info("getting embeddings for each paper")
 
-    # Process papers in batches
-    for i in tqdm(range(0, min(len(papers), top_k), batch_size)):
+def get_author_id_list(authors):
+    author_ids = ""
+    author_list = []
+    if authors:
+        author_list = Authors().search(create_strings_for_filters(authors)).get()
+    for author in author_list:
+        id = author['id'].split(".org/")
+        author_ids += id[1] + "|"
+    return author_ids[:len(author_ids) - 1]
 
-        batch = papers[i:min(i + batch_size, top_k)]
-        batch_texts = [f"{paper.title}{paper.abstract}"[:10000] for paper in batch]
 
-        # Get embeddings for the batch
-        batch_embeddings = get_embedding(batch_texts)
+def get_institution_id_list(institutions):
+    institution_list = []
+    institution_ids = ""
+    if institutions:
+        institution_list = Institutions().search(create_strings_for_filters(institutions)).get()
+    for institution in institution_list:
+        id = institution['id'].split(".org/")
+        institution_ids += id[1] + "|"
+    return institution_ids[:len(institution_ids) - 1]
 
-        # Add batch embeddings to the list
-        paper_embeddings.extend(batch_embeddings.cpu())
 
-    paper_embeddings = np.array(paper_embeddings)
-    #print("time taken 2", datetime.datetime.now() - time)
+def get_publisher_id_list(publishers):
+    publisher_list = []
+    publisher_ids = ""
+    if publishers:
+        publisher_list = Publishers().search(create_strings_for_filters(publishers)).get()
+    for publisher in publisher_list:
+        id = publisher['id'].split(".org/")
+        publisher_ids += id[1] + "|"
+    return publisher_ids[:len(publisher_ids) - 1]
 
-    # Calculate cosine similarities
-    similarities = calculate_similarity_scores(query_embedding, paper_embeddings)
 
-    # Sort papers by similarity
-    sorted_papers = sorted(zip(similarities, papers[:top_k]), key=lambda x: x[0], reverse=True)
-    return [paper for _, paper in sorted_papers[:top_k]]
-"""
-def get_relevant_papers(query):
+def create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in, published_by_institutions,
+                                  authors):
+    try:
+
+        institution_ids = get_institution_id_list(published_by_institutions)
+        #author_ids = get_author_id_list(authors)
+        publisher_ids = get_publisher_id_list(published_in)
+        logger.info("Fetching works from OpenAlex")
+        cited_by_count = citation_count if citation_count else min_cited_by_count
+        start_year_final = (str(start_year) if start_year else "1800")
+        end_year_final = (str(end_year) if end_year else "2024")
+        http_url = 'https://api.openalex.org/works?mailto=monaalsanghvi1998@gmail.com&search=' + query + '&filter=cited_by_count:>' + str(
+            cited_by_count) + ',publication_year:>' + start_year_final + ',publication_year:<' + end_year_final
+
+        # if len(author_ids) > 0:
+        #    http_url = http_url + ',authors.id:' + author_ids
+
+        if len(publisher_ids) > 0:
+            http_url = http_url + ',best_oa_location.source.host_organization:' + publisher_ids
+
+        if len(institution_ids) > 0:
+            http_url = http_url + ',institutions.id:' + institution_ids
+        http_url = http_url + "&sort=relevance_score:desc&per-page=50&page=1"
+        return http_url
+    except Exception as e:
+        raise e
+
+
+def get_relevant_papers(query, start_year, end_year, citation_count, published_in, published_by_institutions, authors):
     papers = []
-    logger.info("Fetching works from OpenAlex")
-    pages = (Works()
-             .search(query)
-             .filter(cited_by_count=">" + str(min_cited_by_count))
-             .sort(relevance_score="desc")
-             .paginate(method="page", per_page=50, n_max=1)
-             )
-    for page in pages:
-        for work in page:
-            papers.append(ResearchPaper(work))
-    #print("time taken 1", datetime.datetime.now() - time)
-    # relevant_papers = get_relevant_docs_from_oai(query, papers[:75])
-    # Perform semantic search on the initial results
+    http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in,
+                                             published_by_institutions, authors)
+    response = requests.get(http_url)
+    data = response.json()
+    for work in data['results']:
+        papers.append(ResearchPaper(work))
     relevant_papers = rank_documents(query, papers)
-    logger.info("relevant papers {}", relevant_papers)
+    logger.info(" fetched relevant papers")
     return relevant_papers

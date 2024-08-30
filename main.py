@@ -43,23 +43,22 @@ def search():
     logger.info(f"Request received at: {start_time}")
 
     data = request.json
-    query = data.get('query', '')
-
+    query = data.get('query', None)
+    start_year = data.get('start_year', None)
+    end_year = data.get('end_year', None)
+    citation_count = data.get('citation_count', None)
+    author = data.get('author', None)
+    published_in = data.get('published_in', None)
+    published_by_institution = data.get('published_by_institution', None)
     if not query:
         return jsonify({"error": "No query provided"}), 400
-
-    results = get_relevant_papers(query)
+    results = get_relevant_papers(query, start_year, end_year, citation_count, author, published_in, published_by_institution)
     end_time = datetime.datetime.now()
     logger.info(f"Request completed at: {end_time}")
     logger.info(f"Total execution time: {end_time - start_time}")
     json_strings = []
     for result in results:
         json_strings.append(vars(result))
-    data = {
-        "search_id": json_strings[0].get("search_id"),
-        "user_id": json_strings[0].get("user_id"),
-        "research_papers": json_strings
-    }
     # insert_data(mongodbClient, data)
     return json_strings
 
