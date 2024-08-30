@@ -26,7 +26,7 @@ class ResearchPaper:
         self.biblio = work['biblio']
         self.institutions = self.fetch_institutions(work)
         self.key_words = self.fetch_keywords(work)
-        self.primary_topic = work['primary_topic']['display_name']
+        self.primary_topic = self.fetch_primary_topic(work)
         self.publication = self.fetch_publication_name(work)
         self.extracted_figures = []
         self.referenced_papers = []
@@ -116,3 +116,9 @@ class ResearchPaper:
         if url and url != "":
              get_figures_and_tables(url)
         return research_paper
+
+    @staticmethod
+    def fetch_primary_topic(work):
+        if work['primary_topic']:
+            return work['primary_topic']['display_name']
+        return ""
