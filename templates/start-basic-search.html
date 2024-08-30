@@ -310,7 +310,7 @@
               </div>
           </div>
 
-
+          ${referenced_papers.length > 0?`
           <div class="common-container">
           <div class="detailed-text-wrapper-abstract">Notable References</div>
           <div class="detailed-references">
@@ -320,7 +320,7 @@
                       <div class="detailed-text-reference">${referenced_paper.title}</div></div>
                   </div>
                 `).join('')}
-            </div>
+            </div>` : ''}
           ${result.oa_url && result.oa_url !== ''? `
           <div class="detailed-ask-a-question-with">
             <input type="text" id="ask-a-question-${result.open_alex_id}" class="detailed-text-wrapper raleway-light-irish-coffee-28px"
