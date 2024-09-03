@@ -102,13 +102,13 @@ class ResearchPaper:
 
     @staticmethod
     def fetch_user_id():
-        return " "
+        return ""
 
     @staticmethod
     def fetch_publication_name(work):
         if work['primary_location'] and work['primary_location']['source']:
             return work['primary_location']['source']['display_name']
-        return " "
+        return ""
 
     @staticmethod
     def fetch_figures(research_paper):
