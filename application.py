@@ -20,11 +20,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # mongodbClient = MongoDB()
-app = Flask(__name__)
-CORS(app)
+application = Flask(__name__)
+CORS(application)
 
 
-@app.after_request
+@application.after_request
 def after_request(response):
     response.headers.add("Access-Control-Allow-Origin", "*")
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
@@ -32,12 +32,12 @@ def after_request(response):
     return response
 
 
-@app.route('/', methods=['GET'])
+@application.route('/', methods=['GET'])
 def main():
     return render_template("start-basic-search.html")
 
 
-@app.route('/search', methods=['POST'])
+@application.route('/search', methods=['POST'])
 def search():
     start_time = datetime.datetime.now()
     logger.info(f"Request received at: {start_time}")
@@ -63,7 +63,7 @@ def search():
     return json_strings
 
 
-@app.route('/getExpandedViewData', methods=['POST'])
+@application.route('/getExpandedViewData', methods=['POST'])
 def get_diagrams_and_referenced_papers():
     logger.info("Received request data: %s", request.data)
     data = request.json
@@ -86,7 +86,7 @@ def get_diagrams_and_referenced_papers():
         return jsonify(response)
 
 
-@app.route('/askQuestion', methods=['POST'])
+@application.route('/askQuestion', methods=['POST'])
 def ask_question():
     data = request.json
     logger.info(f"Received data: {request.data}")
@@ -105,7 +105,7 @@ def ask_question():
     return jsonify(response)
 
 
-@app.route('/getReferencedPaperInfo', methods=['POST'])
+@application.route('/getReferencedPaperInfo', methods=['POST'])
 def get_referenced_paper_info():
     data = request.json
     paper = data.get('query', '')
@@ -115,5 +115,5 @@ def get_referenced_paper_info():
     return jsonify(response)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    application.run(host='0.0.0.0', port=8000, debug=True)
 
