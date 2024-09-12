@@ -1,3 +1,4 @@
+import io
 import openai
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Tuple
