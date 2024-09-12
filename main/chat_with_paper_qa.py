@@ -6,8 +6,8 @@ import os
 
 from extract_figures import download_pdf
 
-os.environ['OPENAI_API_KEY'] = 'sk-None-IEWqcLkHft3djH66AroZT3BlbkFJ4cCc3ieleT5ArR1On5rK'
-
+os.environ['OPENAI_API_KEY'] = 'sk-zFNU8L6Nkc1e-2VgAKoSB8tBcuEgJ140flDuDTc0muT3BlbkFJ_ChBKzjg63-HOPaPNczEzxWVoahtCUU9g1ZsZzBvgA'
+prompt_for_references = "The paper (OrigamiNet: Weakly-Supervised, Segmentation-Free, One-Step, Full Page Text Recognition by learning to unfold) in this list scites the second one (Scan, Attend and Read: End-to-End Handwritten Paragraph Recognition with MDLSTM Attention). Can you tell me what concepts of the paper that is scited are used in the first paper?"
 def get_reference_content(reference_names, response):
     reference_content = []
     for reference_name in reference_names:

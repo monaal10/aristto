@@ -13,9 +13,9 @@ from get_relevant_papers import get_relevant_papers
 # from classes.mongodb import MongoDB, insert_data
 from flask_cors import CORS
 import os
-os.environ['OPENAI_API_KEY'] = 'sk-None-IEWqcLkHft3djH66AroZT3BlbkFJ4cCc3ieleT5ArR1On5rK'
-os.environ['AWS_ACCESS_KEY_ID'] = 'AKIA6ODU27KHAM2XYDGK'
-os.environ['AWS_SECRET_ACCESS_KEY'] = '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'
+os.environ['OPENAI_API_KEY'] = 'sk-zFNU8L6Nkc1e-2VgAKoSB8tBcuEgJ140flDuDTc0muT3BlbkFJ_ChBKzjg63-HOPaPNczEzxWVoahtCUU9g1ZsZzBvgA'
+os.environ['AWS_ACCESS_KEY_ID'] = 'AKIA6ODU27KHMGRMPHOZ'
+os.environ['AWS_SECRET_ACCESS_KEY'] = '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'
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 

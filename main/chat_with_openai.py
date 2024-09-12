@@ -2,7 +2,7 @@ import openai
 import os
 
 # Set up the OpenAI API client
-openai.api_key = "sk-None-IEWqcLkHft3djH66AroZT3BlbkFJ4cCc3ieleT5ArR1On5rK"
+openai.api_key = "sk-zFNU8L6Nkc1e-2VgAKoSB8tBcuEgJ140flDuDTc0muT3BlbkFJ_ChBKzjg63-HOPaPNczEzxWVoahtCUU9g1ZsZzBvgA"
 
 
 def call_chatgpt_assistant(assistant_id, user_message):
