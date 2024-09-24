@@ -1,7 +1,7 @@
 import requests
 import logging
 
-from research_paper import ResearchPaper
+from classes.research_paper import ResearchPaper
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

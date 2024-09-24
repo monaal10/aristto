@@ -30,3 +30,5 @@ def get_answer_from_paperqa(doc_urls, query):
     response = docs.query(query)
     return response.answer
 
+print(get_answer_from_paperqa(["https://arxiv.org/pdf/2006.07491"],
+                              "Give me information about the following things of this research paper : 1. What are the major contributions of this paper? 2. What are the limitations of this paper? What dataset is being used in this paper if any? Give me an answer in bullet point format for each question."))

@@ -1,10 +1,17 @@
+
 import requests
-from pyalex import Works, Institutions, Authors, Publishers
+from pyalex import Institutions, Authors
 import pyalex
 import logging
-from research_paper import ResearchPaper
+from classes.research_paper import ResearchPaper
 #from embedding_model import get_embedding, calculate_similarity_scores
 from get_openai_embeddings import rank_documents
+import pandas as pd
+from classes.mongodb import MongoDB
+
+mongoDB = MongoDB()
+mongoDB_client = mongoDB.get_mongodb_client()
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -41,24 +48,22 @@ def get_institution_id_list(institutions):
     return institution_ids[:len(institution_ids) - 1]
 
 
-def get_publisher_id_list(publishers):
-    publisher_list = []
-    publisher_ids = ""
-    if publishers:
-        publisher_list = Publishers().search(create_strings_for_filters(publishers)).get()
-    for publisher in publisher_list:
-        id = publisher['id'].split(".org/")
-        publisher_ids += id[1] + "|"
-    return publisher_ids[:len(publisher_ids) - 1]
+def get_publisher_id_list(publisher_ranks):
+    publisher_ids = {}
+    df = pd.read_csv('journal_quartile_rank.csv')
+    df_final = pd.DataFrame()
+    for publisher_rank in publisher_ranks:
+        df_filtered = df[df['SJR Best Quartile'] == publisher_rank]
+        df_final = pd.concat([df_final, df_filtered], ignore_index=True)
+    for i in range(len(df_final)):
+        publisher_ids[df_final['source_id'][i]] = df_final['SJR Best Quartile'][i]
+    return publisher_ids
 
 
 def create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in, published_by_institutions,
                                   authors):
     try:
-
-        institution_ids = get_institution_id_list(published_by_institutions)
-        #author_ids = get_author_id_list(authors)
-        publisher_ids = get_publisher_id_list(published_in)
+        author_ids = get_author_id_list(authors)
         logger.info("Fetching works from OpenAlex")
         cited_by_count = citation_count if citation_count else min_cited_by_count
         start_year_final = (str(start_year) if start_year else "1800")
@@ -66,15 +71,10 @@ def create_http_url_for_open_alex(query, start_year, end_year, citation_count, p
         http_url = 'https://api.openalex.org/works?mailto=monaalsanghvi1998@gmail.com&search=' + query + '&filter=cited_by_count:>' + str(
             cited_by_count) + ',publication_year:>' + start_year_final + ',publication_year:<' + end_year_final
 
-        # if len(author_ids) > 0:
-        #    http_url = http_url + ',authors.id:' + author_ids
+        if len(author_ids) > 0:
+            http_url = http_url + ',author.id:' + author_ids
 
-        if len(publisher_ids) > 0:
-            http_url = http_url + ',best_oa_location.source.host_organization:' + publisher_ids
-
-        if len(institution_ids) > 0:
-            http_url = http_url + ',institutions.id:' + institution_ids
-        http_url = http_url + "&sort=relevance_score:desc&per-page=50&page=1"
+        http_url = http_url + "&sort=relevance_score:desc&per-page=200&page="
         return http_url
     except Exception as e:
         raise e
@@ -86,8 +86,17 @@ def get_relevant_papers(query, start_year, end_year, citation_count, published_i
                                              published_by_institutions, authors)
     response = requests.get(http_url)
     data = response.json()
-    for work in data['results']:
-        papers.append(ResearchPaper(work))
+    results = data['results']
+    publisher_ids = get_publisher_id_list(published_in)
+    for work in results:
+        research_paper = ResearchPaper(work)
+        if research_paper.publication_id in publisher_ids and len(research_paper.oa_url) > 0:
+            research_paper.publication_quartile = publisher_ids[research_paper.publication_id]
+            papers.append(research_paper)
     relevant_papers = rank_documents(query, papers)
-    logger.info(" fetched relevant papers")
+    logger.info("fetched relevant papers")
+
+
     return relevant_papers
+
+get_relevant_papers("Deepfake Detection using Computer vision", 2018, 2023, None, ["Q1", "Q2"], None, None)

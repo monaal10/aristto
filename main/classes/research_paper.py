@@ -1,7 +1,8 @@
 import logging
 import random
 
-from extract_figures import get_figures_and_tables
+from chat_with_paper_qa import get_answer_from_paperqa
+from main.extract_figures import get_figures_and_tables
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,9 @@ class ResearchPaper:
         self.extracted_figures = []
         self.referenced_papers = []
         self.embeddings = []
+        self.publication_id = self.fetch_publication_id(work)
+        self.publication_quartile = ""
+        self.pdf_content = None
 
     @staticmethod
     def fetch_id(paper_id):
@@ -111,11 +115,24 @@ class ResearchPaper:
         return ""
 
     @staticmethod
+    def fetch_publication_id(work):
+        if work['primary_location'] and work['primary_location']['source']:
+            return work['primary_location']['source']['id'].split(".org/")[1]
+        return ""
+
+    @staticmethod
     def fetch_figures(research_paper):
         url = research_paper.oa_url
         if url and url != "":
              get_figures_and_tables(url)
         return research_paper
+
+    @staticmethod
+    def extract_relevant_info_from_paper(research_paper):
+        pdf_content = research_paper.pdf_content
+        query = ""
+        relevant_contents = get_answer_from_paperqa(pdf_content, query)
+        return relevant_contents
 
     @staticmethod
     def fetch_primary_topic(work):
