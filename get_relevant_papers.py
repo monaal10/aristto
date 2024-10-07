@@ -57,7 +57,7 @@ def extract_doi(doi_url):
     
     if "doi.org" in parts:
         index = parts.index("doi.org")
-        doi = "/".join(parts[index + 1:])  # Join the parts after "doi.org"
+        doi = "/".join(parts[index + 1:]) 
         return doi
     return None
 def create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in, published_by_institutions,
