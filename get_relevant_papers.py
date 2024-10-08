@@ -2,10 +2,11 @@ import requests
 from pyalex import Works, Institutions, Authors, Publishers
 import pyalex
 import logging
+import re
 from research_paper import ResearchPaper
 #from embedding_model import get_embedding, calculate_similarity_scores
 from get_openai_embeddings import rank_documents
-
+import json
 # Configure logging
 logger = logging.getLogger(__name__)
 pyalex.config.email = "monaalsanghvi1998@gmail.com"
@@ -51,7 +52,14 @@ def get_publisher_id_list(publishers):
         publisher_ids += id[1] + "|"
     return publisher_ids[:len(publisher_ids) - 1]
 
-
+def extract_doi(doi_url):
+    parts = re.split(r'/+', doi_url)
+    
+    if "doi.org" in parts:
+        index = parts.index("doi.org")
+        doi = "/".join(parts[index + 1:]) 
+        return doi
+    return None
 def create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in, published_by_institutions,
                                   authors):
     try:
@@ -87,7 +95,21 @@ def get_relevant_papers(query, start_year, end_year, citation_count, published_i
     response = requests.get(http_url)
     data = response.json()
     for work in data['results']:
+        # doi = work.get("doi") - call the get_summary_reference method to get the paper details using doi
         papers.append(ResearchPaper(work))
     relevant_papers = rank_documents(query, papers)
-    logger.info(" fetched relevant papers")
+    logger.info("fetched relevant papers")
     return relevant_papers
+def get_summary_reference(doi):
+    # Getting Reference and summary from semantic Scholar
+    try:
+        url = f"https://api.semanticscholar.org/graph/v1/paper/DOI:{doi}?fields=title,references,abstract"
+        response = requests.get(url).json()
+        return {
+            "title":response.get("title"),
+            "summary": response.get("abstract","No Summary Available"),
+            "references":response.get("references",[])
+        }
+    except Exception as e:
+        logger.error(f"Error fetching data from Semantic Scholar: {str(e)}")
+        return None
