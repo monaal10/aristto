@@ -7,6 +7,9 @@ from research_paper import ResearchPaper
 #from embedding_model import get_embedding, calculate_similarity_scores
 from get_openai_embeddings import rank_documents
 import json
+from download_pdf import generate_chunks
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import time # remove before production
 # Configure logging
 logger = logging.getLogger(__name__)
 pyalex.config.email = "monaalsanghvi1998@gmail.com"
@@ -90,15 +93,70 @@ def create_http_url_for_open_alex(query, start_year, end_year, citation_count, p
 
 def get_relevant_papers(query, start_year, end_year, citation_count, published_in, published_by_institutions, authors):
     papers = []
-    http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in,
-                                             published_by_institutions, authors)
+    paper_urls = []
+    
+    http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in, published_by_institutions, authors)
     response = requests.get(http_url)
     data = response.json()
-    for work in data['results']:
-        # doi = work.get("doi") - call the get_summary_reference method to get the paper details using doi
-        papers.append(ResearchPaper(work))
-    relevant_papers = rank_documents(query, papers)
-    logger.info("fetched relevant papers")
+
+    # Parallelize the creation of ResearchPaper objects
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [executor.submit(ResearchPaper, work) for work in data['results']]
+        
+        for future in as_completed(futures):
+            try:
+                paper_obj = future.result()
+                if paper_obj.oa_url and paper_obj.oa_url.endswith(".pdf"):
+                    paper_urls.append(paper_obj.oa_url)
+                papers.append(paper_obj)
+            except Exception as e:
+                logger.error(f"Error processing paper: {e}")
+
+    logger.info(f"Valid URLs count = {len(paper_urls)}")
+
+    # Parallelize ranking documents
+    def rank_document_parallel(query, papers_batch):
+        return rank_documents(query, papers_batch)
+    
+    relevant_papers = []
+    max_workers = 5
+    with ThreadPoolExecutor(max_workers=max_workers) as rank_executor:
+        rank_futures = [
+            rank_executor.submit(rank_document_parallel, query, papers[i:i+max_workers])
+            for i in range(0, len(papers), max_workers)
+        ]
+        
+        for future in as_completed(rank_futures):
+            try:
+                ranking_result = future.result()
+                relevant_papers.extend(ranking_result)
+            except Exception as e:
+                logger.error(f"Error when trying to rank documents: {e}")
+
+    # Parallelize chunk generation
+    def generate_chunk_parallel(urls_batch, query):
+        return generate_chunks(urls_batch, query)
+    
+    start_time = time.time()
+    chunks = []
+    
+    with ThreadPoolExecutor(max_workers=max_workers) as chunk_executor:
+        chunk_futures = [
+            chunk_executor.submit(generate_chunk_parallel, paper_urls[i:i+10], query)
+            for i in range(0, len(paper_urls), 10)  # Process in batches of 10 URLs
+        ]
+        
+        for future in as_completed(chunk_futures):
+            try:
+                chunk_result = future.result()
+                chunks.extend(chunk_result)  # Append chunk results correctly
+            except Exception as e:
+                logger.error(f"Error generating chunks: {e}")
+
+    logger.info("Fetched relevant papers")
+    logger.info("Parallel process ended here")
+    logger.info(f"Total Execution time for PDF download and chunk creation - {time.time() - start_time}")
+    
     return relevant_papers
 def get_summary_reference(doi):
     # Getting Reference and summary from semantic Scholar
