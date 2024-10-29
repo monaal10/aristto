@@ -15,7 +15,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # MongoDB Atlas connection
-MONGO_URI = "your_mongo_atlas_connection_string"
+MONGO_URI = ""
 client = MongoClient(MONGO_URI)
 db = client['chatbot_db']
 chat_history_collection = db['chat_history']
