@@ -1,10 +1,9 @@
 from pymongo import MongoClient, InsertOne
 from pymongo.errors import BulkWriteError
 from pymongo.server_api import ServerApi
-from bson.binary import Binary
-from PIL import Image
-import io
-
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 ATLAS_URI = ("mongodb+srv://monaal:Abcd1234!@atlascluster.2fxmiy3.mongodb.net/?retryWrites=true&w=majority&appName"
              "=AtlasCluster")
 client = MongoClient(ATLAS_URI, server_api=ServerApi('1'))
@@ -23,10 +22,10 @@ def insert_data(data):
     try:
         result = collection.bulk_write(operations, ordered=False)
         inserted_count = result.inserted_count
-        print(f"Successfully inserted {inserted_count} new papers.")
+        logger.info(f"Successfully inserted {inserted_count} new papers.")
     except BulkWriteError as bwe:
         inserted_count = bwe.details['nInserted']
-        print(f"Inserted {inserted_count} new papers. Some papers were already in the database.")
+        logger.info(f"Inserted {inserted_count} new papers. Some papers were already in the database.")
 
     client.close()
 
