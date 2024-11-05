@@ -1,22 +1,14 @@
-import io
-
 import openai
-from pymongo import MongoClient
 from sklearn.metrics.pairwise import cosine_similarity
-from typing import List, Tuple
+from typing import List
+
+import pandas as pd
 from classes import research_paper
-from classes.mongodb import MongoDB
-from classes.mongodb import insert_data
-from classes.mongodb import fetch_data
-from main.extract_figures import download_pdf
+
 
 # Set up the OpenAI API client
 openai.api_key = "sk-zFNU8L6Nkc1e-2VgAKoSB8tBcuEgJ140flDuDTc0muT3BlbkFJ_ChBKzjg63-HOPaPNczEzxWVoahtCUU9g1ZsZzBvgA"
 openai_model = "text-embedding-3-small"
-mongoDB = MongoDB()
-mongoDB_client = mongoDB.get_mongodb_client()
-
-
 def get_embedding(text: str, model: str = openai_model, max_retries: int = 3) -> List[float]:
     """
    Get an embedding for the given text using the specified OpenAI model.
@@ -57,6 +49,24 @@ def calculate_similarity(query_embedding: List[float], document_embedding: List[
    :return: The cosine similarity score
    """
     return cosine_similarity([query_embedding], [document_embedding])[0][0]
+def get_publisher_id_list(publisher_ranks):
+    publisher_ids = {}
+
+    df = pd.read_csv('journal_quartile_rank.csv')
+    df1 = pd.read_csv('/Users/monaal/Downloads/rankings_final_with_ids.csv')
+    df1_ids = df1['ids'].to_list()
+    df_final = pd.DataFrame()
+    for publisher_rank in publisher_ranks:
+        df_filtered = df[df['SJR Best Quartile'] == publisher_rank]
+        df_final = pd.concat([df_final, df_filtered], ignore_index=True)
+
+    for i in range(len(df_final)):
+        publisher_ids[df_final['source_id'][i]] = df_final['SJR Best Quartile'][i]
+    for j in df1_ids:
+        if type(j) == str:
+            publisher_ids[j] = df1_ids
+    return publisher_ids
+
 
 
 def rank_documents(query: str, documents: List[research_paper]):
@@ -72,16 +82,11 @@ def rank_documents(query: str, documents: List[research_paper]):
     query_embedding = get_embedding(query)
     document_embeddings = []
     for paper in documents:
-        result = fetch_data(mongoDB_client, {"open_alex_id": paper.open_alex_id})
-        if len(result) > 0:
-            document_embeddings.append(result[0].embeddings)
-        else:
             paper_text = f"{paper.title} {' '.join(paper.authors)} {paper.abstract}"
             paper_embedding = get_embedding(paper_text)
             document_embeddings.append(paper_embedding)
             paper.embeddings = paper_embedding
-            paper.pdf_content = io.BytesIO(download_pdf(paper.oa_url))
-            insert_data(mongoDB_client, paper)
+            #paper.pdf_content = io.BytesIO(download_pdf(paper.oa_url))
 
     # Calculate similarities
     similarities = [
@@ -97,4 +102,3 @@ def rank_documents(query: str, documents: List[research_paper]):
     )
 
     return [doc for doc, _ in ranked_documents]
-

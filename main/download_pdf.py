@@ -1,4 +1,10 @@
 import logging
+import os
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import PyPDF2
+import requests
 import fitz  # PyMuPDF
 import io
 from PIL import Image
@@ -24,38 +30,31 @@ def download_pdf(url):
             'User-Agent': user_agent
         }
         response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        return response.content  # Return PDF content as bytes
-    except requests.RequestException as e:
-        logger.error("The PDF link provided could not be downloaded: %s", e)
-        return None
+        response.raise_for_status()  # Raise an error for bad status codes
 
-# Function to extract images (figures) from PDF content
-def extract_figures_from_paper(pdf_content):
-    try:
-        pdf_stream = io.BytesIO(pdf_content)
-        doc = fitz.open(stream=pdf_stream, filetype="pdf")
-        figures = []
-        for page_num in range(len(doc)):
-            page = doc[page_num]
-            images = page.get_images(full=True)
-            for img_index, img in enumerate(images):
-                xref = img[0]
-                base_image = doc.extract_image(xref)
-                image_bytes = base_image["image"]
-                ext = base_image["ext"]
-                image = Image.open(io.BytesIO(image_bytes))
-                buffered = io.BytesIO()
-                image.save(buffered, format=image.format if image.format else "PNG")
-                img_str = base64.b64encode(buffered.getvalue()).decode()
-                figures.append(img_str)
-        doc.close()
-        return figures
+        logger.info(f"Downloaded {url} successfully.")
+        text = extract_text_from_pdf(response.content)
+        return url, text  # Return URL and its content
     except Exception as e:
-        logger.error("Could not extract figures from paper: %s", e)
-        return []
+        logger.error(f"Failed to download {url}: {e}")
+        return url, None  # Return None if there's an error
 
-# Function to extract text from PDF content
+
+# Function to download PDFs in parallel and return contents
+def download_pdfs_parallel(urls):
+    results = {}
+    with ThreadPoolExecutor(max_workers=8) as executor:  # Adjust number of workers based on CPU capacity
+        futures = {executor.submit(download_pdf, url): url for url in urls}
+
+        for future in as_completed(futures):
+            url, content = future.result()
+            if content:
+                results[url] = content  # Store content by URL key
+            else:
+                logger.warning(f"No content downloaded for {url}")
+
+    return results  # Return dictionary with URLs and their content
+
 nltk.download('punkt')
 
 def extract_text_from_pdf(pdf_content):
@@ -73,7 +72,7 @@ def chunk_text(text, chunk_size=100):
     return chunks
 
 # Function to get the most relevant chunks using TF-IDF and cosine similarity
-def get_relevant_chunks(pdf_content, query, chunk_size=100, top_n=3):
+def get_relevant_chunks(pdf_content, query, chunk_size=1000, top_n=3):
     text = extract_text_from_pdf(pdf_content)
     chunks = chunk_text(text, chunk_size)
     vectorizer = TfidfVectorizer(stop_words='english')
@@ -110,7 +109,7 @@ def download_pdfs_from_urls(urls, numberOfWorkers):
     return [pdf_content for sublist in results for pdf_content in sublist if pdf_content]
 
 # Function to handle the entire process of downloading and generating relevant chunks
-def generate_chunks(urls, user_query, numberOfWorkers=3, chunk_size=100, top_n=3):
+def generate_chunks(urls, user_query, numberOfWorkers=3, chunk_size=1000, top_n=3):
     logger.info("Starting PDF download process.")
     pdfs = download_pdfs_from_urls(urls, numberOfWorkers)
 
@@ -123,17 +122,3 @@ def generate_chunks(urls, user_query, numberOfWorkers=3, chunk_size=100, top_n=3
 
     logger.info("Completed extraction of relevant chunks.")
     return all_relevant_chunks
-
-# Example usage
-
-pdf_urls = [
-    "https://arxiv.org/pdf/1706.03762.pdf",
-    "https://www.davekuhlman.org/python_book_01.pdf",
-    "https://github.com/mozilla/pdf.js/raw/master/web/compressed.tracemonkey-pldi-09.pd"
-]
-user_query = "machine learning techniques"
-
-relevant_chunks = generate_chunks(pdf_urls, user_query, numberOfWorkers=3, chunk_size=100, top_n=3)
-
-for chunk, score in relevant_chunks:
-    print(f"Relevance Score: {score:.4f}\nChunk: {chunk}\n")

@@ -1,49 +1,51 @@
-import numpy as np
-import faiss
-import os
-from datasets import load_dataset
+import json
 import pandas as pd
-import random
-nprobe = 16
-D = 384
-def create_faiss_index(memmap_file, index_file, batch_size=100000):
-    # Load the memmap file
-    embeddings = np.memmap(memmap_file, dtype=np.float16, mode='r').reshape(-1, D)
+import requests
+from tqdm import tqdm
 
-    # Get the number of vectors and dimensionality
-    num_vectors = embeddings.shape[0]
-    dim = embeddings.shape[1]
+headers = {
+    "x-api-key": "vd5G9VoPYk3hfCYyPjZR334dvZCumbEF2tkdeQhK",
+}
+response = requests.get("https://api.semanticscholar.org/datasets/v1/release/latest/dataset/embeddings-specter_v2", headers=headers)
+files = response.json().get("files")
 
-    print(f"Creating Faiss index for {num_vectors} vectors of dimension {dim}")
-    nlist = 16384
-    m = 48  # number of subquantizers
-    k = 4
-    # Create a Faiss index
-    #quantizer = faiss.IndexFlatL2(D)  # this remains the same
-    #index = faiss.IndexIVFPQ(quantizer, D, nlist, m, 8) # Enable on-disk index
-    #index.ivf_on_disk_read = True
-    #index.train(embeddings[:batch_size])
-    #faiss.write_index(index, f'/Volumes/SEAGATE BAC/abstracts-search/partial-indices/index_initial.faiss')
-    # Add vectors to the index in batches
-    for i in range(29700000, num_vectors, batch_size):
-        index = faiss.read_index(index_file)
-        #index = faiss.IndexIVFFlat(dim, 4)
-        idxs_chunk = np.arange(i, min(i + batch_size, len(embeddings)))
-        end = min(i + batch_size, num_vectors)
-        batch = embeddings[i:end].astype(np.float32)  # Faiss requires float32
-        index.add(batch)
-        print(f"Added vectors {i} to {end}")
-        faiss.write_index(index, f'/Volumes/SEAGATE BAC/abstracts-search/partial-indices/index_{idxs_chunk[-1]:03d}.faiss')
+with open("files.txt", "w") as f:
+    for file in files:
+        f.write(f"{file}\n")
+
+"""import pandas as pd
+import numpy as np
+from tqdm import tqdm
+
+# Load the data
+df = pd.read_json("publication.json", lines=True)
+df1 = pd.read_csv("journal_quartile_rank.csv")
+
+# Preprocess the data
+df['name_lower'] = df['name'].str.lower()
+df['alternate_names_lower'] = df['alternate_names'].str.lower()
+
+# Create a dictionary for faster lookup
+name_to_id = {}
+for _, row in df.iterrows():
+    if isinstance(row['name'], str):
+        name_to_id[row['name_lower']] = row['id']
+    if isinstance(row['alternate_names'], str):
+        for alt_name in row['alternate_names_lower'].split(','):
+            name_to_id[alt_name.strip()] = row['id']
+
+# Function to find matching ID
+def find_matching_id(name):
+    if isinstance(name, str) and len(name) > 0:
+        name_lower = name.lower()
+        return name_to_id.get(name_lower)
+    return None
+
+# Apply the function to the DataFrame
+tqdm.pandas()
+df1['ss_id'] = df1['title'].progress_apply(find_matching_id)
+
+# Save the result
+df1.to_csv("jqr.csv", index=False)"""
 
 
-works_ids_path = '/Volumes/SEAGATE BAC/abstracts-search/abstracts-embeddings/openalex_ids.txt'
-
-
-#ds = load_dataset("colonelwatch/abstracts-embeddings")
-
-# Usage
-memmap_file = '/Volumes/SEAGATE BAC/abstracts-search/abstracts-embeddings/embeddings.memmap'
-index_file = '/Volumes/SEAGATE BAC/abstracts-search/partial-indices/index_initial.faiss'
-
-
-create_faiss_index(memmap_file, index_file)

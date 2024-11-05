@@ -4,37 +4,21 @@ import os
 # Set up the OpenAI API client
 openai.api_key = "sk-zFNU8L6Nkc1e-2VgAKoSB8tBcuEgJ140flDuDTc0muT3BlbkFJ_ChBKzjg63-HOPaPNczEzxWVoahtCUU9g1ZsZzBvgA"
 
-
-def call_chatgpt_assistant(assistant_id, user_message):
-        # Create a thread
-        thread = openai.beta.threads.create(
+# Function to query GPT-4
+def query_gpt4_mini(user_query):
+    try:
+        # Make API call to GPT-4
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini-2024-07-18",  # Replace with the specific model you're using, if necessary
             messages=[
-                {
-                    "role": "user",
-                    "content": user_message,
-                    "attachments": []
-                }])
-
-        run = openai.beta.threads.runs.create_and_poll(
-            thread_id=thread.id,
-            assistant_id=assistant_id
+                {"role": "system", "content": "You are a research expert and so is the person that is going to read your response. Be highly technical and specific in your response to the query. Only answer the question based on the context provided. If you do not gwt the answer fromt the context provided say I dont know."},
+                {"role": "user", "content": user_query}
+            ]
         )
-        messages = openai.beta.threads.messages.list(thread_id=thread.id)
+        # Extract the response from the model
+        return response['choices'][0]['message']['content']
 
-        # The latest message will be the assistant's response
-        assistant_response = messages.data[0].content[0].text.value
-        print(assistant_response)
-        # Retrieve the assistant's response
-        #messages = openai.beta.threads.retrieve(thread_id=run.id)
-        assistant_response = ""
-        #assistant_response = messages.data[0].content[0].text.value
-
-        return assistant_response
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
 
 
-def main():
-    assistant_id = "asst_Dtjr12HPLBh4xnGjklAvEatZ"
-    user_message = "Here is the url of the paper : https://arxiv.org/pdf/2312.10997. What is the best method for RAG according to this paper and why?"
-    response = call_chatgpt_assistant(assistant_id, user_message)
-    if response:
-        print("Assistant's response:", response)

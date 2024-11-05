@@ -4,25 +4,29 @@ from flask import Flask, request, jsonify, render_template
 import logging
 import datetime
 from concurrent.futures import ThreadPoolExecutor
-import sys
 
-from chat_with_paper_qa import get_answer_from_paperqa
-from extract_figures import get_figures_and_tables
-from get_referenced_papers import fetch_referenced_papers
-from get_relevant_papers import get_relevant_papers
-# from classes.mongodb import MongoDB, insert_data
+from main.chat_with_paper_qa import get_answer_from_paperqa
+from main.get_referenced_papers import fetch_referenced_papers
+from main.get_relevant_papers import get_relevant_papers
 from flask_cors import CORS
 import os
+from sentence_transformers import SentenceTransformer
+from classes.mongodb import insert_data
+
+
 os.environ['OPENAI_API_KEY'] = 'sk-zFNU8L6Nkc1e-2VgAKoSB8tBcuEgJ140flDuDTc0muT3BlbkFJ_ChBKzjg63-HOPaPNczEzxWVoahtCUU9g1ZsZzBvgA'
+os.environ['ANTHROPIC_API_KEY'] = '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'
 os.environ['AWS_ACCESS_KEY_ID'] = 'AKIA6ODU27KHMGRMPHOZ'
 os.environ['AWS_SECRET_ACCESS_KEY'] = '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'
+os.environ['SEMANTIC_SCHOLAR_API_KEY'] = 'vd5G9VoPYk3hfCYyPjZR334dvZCumbEF2tkdeQhK'
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # mongodbClient = MongoDB()
 application = Flask(__name__)
 CORS(application)
-
+model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 @application.after_request
 def after_request(response):
@@ -41,49 +45,26 @@ def main():
 def search():
     start_time = datetime.datetime.now()
     logger.info(f"Request received at: {start_time}")
-
     data = request.json
     query = data.get('query', None)
     start_year = data.get('start_year', None)
     end_year = data.get('end_year', None)
     citation_count = data.get('citation_count', None)
-    author = data.get('author', None)
+    authors = data.get('authors', None)
     published_in = data.get('published_in', None)
-    published_by_institution = data.get('published_by_institution', None)
+
     if not query:
         return jsonify({"error": "No query provided"}), 400
-    results = get_relevant_papers(query, start_year, end_year, citation_count, author, published_in, published_by_institution)
+    results = get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors, model)
     end_time = datetime.datetime.now()
     logger.info(f"Request completed at: {end_time}")
     logger.info(f"Total execution time: {end_time - start_time}")
     json_strings = []
     for result in results:
         json_strings.append(vars(result))
-    # insert_data(mongodbClient, data)
+        insert_data(data)
     return json_strings
 
-
-@application.route('/getExpandedViewData', methods=['POST'])
-def get_diagrams_and_referenced_papers():
-    logger.info("Received request data: %s", request.data)
-    data = request.json
-    paper = data.get('query')
-    if not paper:
-        return jsonify({"error": "No paper provided"}), 400
-    logger.info("Paper content: %s", json.dumps(paper, indent=2))
-    with ThreadPoolExecutor() as executor:
-        figures_future = executor.submit(get_figures_and_tables, paper)
-        referenced_papers_future = executor.submit(fetch_referenced_papers, paper)
-        figures = figures_future.result()
-        logger.info("Got figures %s", figures)
-        referenced_papers = referenced_papers_future.result()
-        logger.info("Got referenced papers : %s")
-        response = {
-            "figures": figures,
-            "referenced_papers": referenced_papers
-        }
-
-        return jsonify(response)
 
 
 @application.route('/askQuestion', methods=['POST'])

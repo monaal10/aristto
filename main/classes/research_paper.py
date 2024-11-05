@@ -1,8 +1,8 @@
 import logging
 import random
+import re
 
-from chat_with_paper_qa import get_answer_from_paperqa
-from main.extract_figures import get_figures_and_tables
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class ResearchPaper:
         self.publication_date = work['publication_date']
         self.referenced_works_ids = self.fetch_id_for_referenced_works(work)
         self.referenced_works_count = work['referenced_works_count']
-        self.oa_url = "" if work['open_access']['oa_url'] is None else work['open_access']['oa_url']
+        self.oa_url = self.fetch_oa_url(work)
         self.concepts = self.fetch_concepts(work)
         self.cited_by_count = work['cited_by_count']
         self.cited_by_url = work['cited_by_api_url']
@@ -34,7 +34,14 @@ class ResearchPaper:
         self.embeddings = []
         self.publication_id = self.fetch_publication_id(work)
         self.publication_quartile = ""
-        self.pdf_content = None
+        self.summary = self.get_summary_reference(self.extract_doi(work['doi'])) if work['doi'] else ""
+        self.pdf_content = ""
+        self.extracted_info = ""
+        self.methodology = ""
+        self.datasets = ""
+        self.contributions = ""
+        self.results = ""
+        self.limitations = ""
 
     @staticmethod
     def fetch_id(paper_id):
@@ -120,22 +127,37 @@ class ResearchPaper:
             return work['primary_location']['source']['id'].split(".org/")[1]
         return ""
 
-    @staticmethod
-    def fetch_figures(research_paper):
-        url = research_paper.oa_url
-        if url and url != "":
-             get_figures_and_tables(url)
-        return research_paper
 
-    @staticmethod
-    def extract_relevant_info_from_paper(research_paper):
-        pdf_content = research_paper.pdf_content
-        query = ""
-        relevant_contents = get_answer_from_paperqa(pdf_content, query)
-        return relevant_contents
+
 
     @staticmethod
     def fetch_primary_topic(work):
         if work['primary_topic']:
             return work['primary_topic']['display_name']
         return ""
+
+    @staticmethod
+    def fetch_oa_url(work):
+        return "" if work['best_oa_location'] is None or work['best_oa_location']['pdf_url'] is None else work['best_oa_location'][
+        'pdf_url']
+
+    @staticmethod
+    def get_summary_reference(doi):
+        # Getting Reference and summary from semantic Scholar
+        try:
+            url = f"https://api.semanticscholar.org/graph/v1/paper/DOI:{doi}?fields=title,references,tldr"
+            response = requests.get(url).json()
+            return response.get("tldr", {}).get("text", "")
+        except Exception as e:
+            logger.error(f"Error fetching data from Semantic Scholar: {str(e)}")
+            return ""
+
+    @staticmethod
+    def extract_doi(doi_url):
+        parts = re.split(r'/+', doi_url)
+
+        if "doi.org" in parts:
+            index = parts.index("doi.org")
+            doi = "/".join(parts[index + 1:])
+            return doi
+        return None
