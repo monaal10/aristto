@@ -36,6 +36,7 @@ class ResearchPaper:
         self.publication_quartile = ""
         self.summary = self.get_summary_reference(self.extract_doi(work['doi'])) if work['doi'] else ""
         self.pdf_content = ""
+        self.pdf_content_chunks = None
         self.extracted_info = ""
         self.methodology = ""
         self.datasets = ""

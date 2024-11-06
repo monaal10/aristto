@@ -1,18 +1,17 @@
-import json
-
 from flask import Flask, request, jsonify, render_template
 import logging
 import datetime
-from concurrent.futures import ThreadPoolExecutor
+import uuid
 
-from main.chat_with_paper_qa import get_answer_from_paperqa
-from main.get_referenced_papers import fetch_referenced_papers
-from main.get_relevant_papers import get_relevant_papers
+from modules.answer_a_question_module import answer_a_question
+from modules.chat_with_paper_module import chat
+from utils.chunk_operations import parallel_download_and_chunk_papers, get_relevant_chunks
+from modules.literature_review_agent_module import analyze_research_query
+from modules.relevant_papers_module import get_relevant_papers
 from flask_cors import CORS
 import os
 from sentence_transformers import SentenceTransformer
-from classes.mongodb import insert_data
-
+from classes.mongodb import insert_data, fetch_data
 
 os.environ['OPENAI_API_KEY'] = 'sk-zFNU8L6Nkc1e-2VgAKoSB8tBcuEgJ140flDuDTc0muT3BlbkFJ_ChBKzjg63-HOPaPNczEzxWVoahtCUU9g1ZsZzBvgA'
 os.environ['ANTHROPIC_API_KEY'] = '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'
@@ -23,11 +22,10 @@ os.environ['SEMANTIC_SCHOLAR_API_KEY'] = 'vd5G9VoPYk3hfCYyPjZR334dvZCumbEF2tkdeQ
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# mongodbClient = MongoDB()
 application = Flask(__name__)
 CORS(application)
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-
+RESEARCH_PAPER_DATABASE = "researchPapers"
 @application.after_request
 def after_request(response):
     response.headers.add("Access-Control-Allow-Origin", "*")
@@ -41,59 +39,74 @@ def main():
     return render_template("start-basic-search.html")
 
 
-@application.route('/search', methods=['POST'])
-def search():
+@application.route('/chatWithPapers', methods=['POST'])
+def chat_with_papers():
     start_time = datetime.datetime.now()
     logger.info(f"Request received at: {start_time}")
     data = request.json
+    query = data.get('query', None)
+    paper_ids = data.get('paper_ids', None)
+    papers = fetch_data(paper_ids, RESEARCH_PAPER_DATABASE)
+    if len(papers) > 1:
+        relevant_chunks = get_relevant_chunks(query, papers)[:5]
+    else:
+        relevant_chunks = {"1": papers[0].pdf_content}
+
+    result = chat(query, relevant_chunks)
+    response = {"answer": result}
+    return jsonify(response)
+
+
+@application.route('/askQuestion', methods=['POST'])
+def ask_question():
+    top_k = 7
+    start_time = datetime.datetime.now()
+    logger.info(f"Request received at: {start_time}")
+    data = request.json
+    user_id = data.get('user_id', None)
     query = data.get('query', None)
     start_year = data.get('start_year', None)
     end_year = data.get('end_year', None)
     citation_count = data.get('citation_count', None)
     authors = data.get('authors', None)
     published_in = data.get('published_in', None)
-
-    if not query:
-        return jsonify({"error": "No query provided"}), 400
-    results = get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors, model)
-    end_time = datetime.datetime.now()
-    logger.info(f"Request completed at: {end_time}")
-    logger.info(f"Total execution time: {end_time - start_time}")
+    relevant_papers = get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors, model)
+    papers_with_chunks = parallel_download_and_chunk_papers(relevant_papers)
+    relevant_chunks = get_relevant_chunks(query, papers_with_chunks)[:top_k]
+    result = answer_a_question(query, relevant_chunks, papers_with_chunks)
+    papers = result.get('papers', None)
     json_strings = []
-    for result in results:
-        json_strings.append(vars(result))
-        insert_data(data)
-    return json_strings
+    for paper in papers:
+        json_strings.append(vars(paper))
+    return vars(result)
 
 
-
-@application.route('/askQuestion', methods=['POST'])
-def ask_question():
+@application.route('/getLiteratureReview', methods=['POST'])
+def get_literature_review():
+    start_time = datetime.datetime.now()
+    logger.info(f"Request received at: {start_time}")
     data = request.json
-    logger.info(f"Received data: {request.data}")
-
-    # Log the parsed JSON data
-    logger.info(f"Parsed JSON: {request.json}")
-    query_data = data.get('query', {})  # Access the 'query' dictionary
-    logger.info(f"query_data: {query_data}")
-    question = query_data.get('question')
-    url = query_data.get('url')
-    logger.info(f"url: {url}")
-    answer = get_answer_from_paperqa([url], question)
+    user_id = data.get('user_id', None)
+    query = data.get('query', None)
+    start_year = data.get('start_year', None)
+    end_year = data.get('end_year', None)
+    citation_count = data.get('citation_count', None)
+    authors = data.get('authors', None)
+    published_in = data.get('published_in', None)
+    results = analyze_research_query(query, start_year, end_year, citation_count, published_in, authors)
+    literature_review = results.literature_review
+    json_strings = []
+    for theme_literature_review in literature_review:
+        json_strings.append(vars(theme_literature_review))
+    literature_review_id = uuid.uuid4()
     response = {
-        "answer": answer
+        "userId": user_id,
+        "literatureReviewId": literature_review_id,
+        "literatureReview": json_strings
     }
+    insert_data(json_strings, "LiteratureReviews")
     return jsonify(response)
 
-
-@application.route('/getReferencedPaperInfo', methods=['POST'])
-def get_referenced_paper_info():
-    data = request.json
-    paper = data.get('query', '')
-    response = {
-        "answer": ""
-    }
-    return jsonify(response)
 
 if __name__ == '__main__':
     application.run(host='0.0.0.0', port=8000, debug=True)

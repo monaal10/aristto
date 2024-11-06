@@ -8,9 +8,10 @@ ATLAS_URI = ("mongodb+srv://monaal:Abcd1234!@atlascluster.2fxmiy3.mongodb.net/?r
              "=AtlasCluster")
 client = MongoClient(ATLAS_URI, server_api=ServerApi('1'))
 database = client['aristto']
-collection = database['researchPapers']
-def insert_data(data):
 
+
+def insert_data(data, database_name):
+    collection = database[database_name]
     collection.create_index("id", unique=True)
 
     # Prepare bulk operations
@@ -29,9 +30,11 @@ def insert_data(data):
 
     client.close()
 
-def fetch_data(data):
+
+def fetch_data(data, database_name):
     results = []
     try:
+        collection = database[database_name]
         for result in collection.find(data):
             results.append(result)
         return results
