@@ -7,6 +7,7 @@ from classes.research_paper import ResearchPaper
 from modules.answer_a_question_module import answer_a_question
 from modules.chat_with_paper_module import chat
 from modules.extract_paper_info_module import extract_paper_information
+from user.routes import user_blueprint
 from utils.chunk_operations import parallel_download_and_chunk_papers, get_relevant_chunks
 from modules.literature_review_agent_module import analyze_research_query
 from modules.relevant_papers_module import get_relevant_papers
@@ -28,7 +29,26 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 application = Flask(__name__)
-CORS(application)
+cors_config = {
+    "origins": ["http://localhost:3000"],
+    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin", "accesstoken"],
+    "expose_headers": ["Content-Type", "Authorization"],
+    "supports_credentials": True,
+    "max_age": 3600
+}
+# @app.after_request
+# def after_request(response):
+#     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+#     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+#     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+#     return response
+
+CORS(application, origins=cors_config["origins"], supports_credentials=True, methods=cors_config["methods"],
+     allow_headers=cors_config["allow_headers"], expose_headers=cors_config["expose_headers"])
+CORS(user_blueprint, origins=cors_config["origins"], supports_credentials=True, methods=cors_config["methods"],
+     allow_headers=cors_config["allow_headers"], expose_headers=cors_config["expose_headers"])
+application.register_blueprint(user_blueprint, url_prefix="/api/user")
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 @application.after_request
