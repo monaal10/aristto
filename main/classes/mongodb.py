@@ -2,6 +2,7 @@ from pymongo import MongoClient, InsertOne
 from pymongo.errors import BulkWriteError
 from pymongo.server_api import ServerApi
 import logging
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 ATLAS_URI = ("mongodb+srv://monaal:Abcd1234!@atlascluster.2fxmiy3.mongodb.net/?retryWrites=true&w=majority&appName"
@@ -40,3 +41,19 @@ def fetch_data(data, database_name):
         return results
     except Exception:
         raise Exception("Could not fetch data from MongoDB")
+
+
+def update_data(data, database_name):
+    # Update multiple documents
+    try:
+        filter = {"open_alex_id": data["open_alex_id"]}
+        update_data = {
+            "$set": vars(data)
+        }
+        collection = database[database_name]
+        collection.update_one(
+            filter,
+            update_data
+        )
+    except Exception as e:
+        raise Exception("Could not update data in MongoDB :", e)

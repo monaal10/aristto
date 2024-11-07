@@ -17,6 +17,10 @@ llm = ChatAnthropic(model="claude-3-5-haiku-latest",
                     temperature=0,
                     max_tokens=4096,
                     timeout=None)
+
+# Cache setup
+langchain_cache = InMemoryCache()
+
 topic_extraction_dict = {
     "methodology": " Methodology/Processes/Algorithms used to conduct the research.",
     "contributions": "Major Findings/New Contributions of the paper.",
@@ -24,11 +28,6 @@ topic_extraction_dict = {
     "limitations": "Drawbacks/Limitations",
     "results": "Results of the experiments in the paper"
 }
-# Cache setup
-langchain_cache = InMemoryCache()
-topic_extraction_list = [" Methodology/Processes/Algorithms used to conduct the research.",
-                         "Major Findings/New Contributions of the paper.", "Datasets used", "Drawbacks/Limitations",
-                         "Results of the experiments in the paper"]
 
 # Helper function to create Claude message
 def create_claude_message(prompt: str, state: Dict, output_format):

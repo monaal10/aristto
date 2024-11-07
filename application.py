@@ -5,13 +5,14 @@ import uuid
 
 from modules.answer_a_question_module import answer_a_question
 from modules.chat_with_paper_module import chat
+from modules.extract_paper_info_module import extract_paper_information
 from utils.chunk_operations import parallel_download_and_chunk_papers, get_relevant_chunks
 from modules.literature_review_agent_module import analyze_research_query
 from modules.relevant_papers_module import get_relevant_papers
 from flask_cors import CORS
 import os
 from sentence_transformers import SentenceTransformer
-from classes.mongodb import insert_data, fetch_data
+from classes.mongodb import insert_data, fetch_data, update_data
 
 os.environ['OPENAI_API_KEY'] = 'sk-zFNU8L6Nkc1e-2VgAKoSB8tBcuEgJ140flDuDTc0muT3BlbkFJ_ChBKzjg63-HOPaPNczEzxWVoahtCUU9g1ZsZzBvgA'
 os.environ['ANTHROPIC_API_KEY'] = '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'
@@ -46,7 +47,8 @@ def chat_with_papers():
     data = request.json
     query = data.get('query', None)
     paper_ids = data.get('paper_ids', None)
-    papers = fetch_data(paper_ids, RESEARCH_PAPER_DATABASE)
+    paper_ids_dict = [{"id": paper_id} for paper_id in paper_ids]
+    papers = fetch_data(paper_ids_dict, RESEARCH_PAPER_DATABASE)
     if len(papers) > 1:
         relevant_chunks = get_relevant_chunks(query, papers)[:5]
     else:
@@ -106,6 +108,21 @@ def get_literature_review():
     }
     insert_data(json_strings, "LiteratureReviews")
     return jsonify(response)
+
+
+@application.route('/getPaperInfo', methods=['POST'])
+def get_paper_info():
+    start_time = datetime.datetime.now()
+    logger.info(f"Request received at: {start_time}")
+    data = request.json
+    paper_id = data.get('paper_id', None)
+    paper = fetch_data({"id": paper_id}, RESEARCH_PAPER_DATABASE)
+    output = extract_paper_information(paper.pdf_content)
+    for key in output.keys():
+        setattr(paper, key, output[key])
+    update_data(paper, RESEARCH_PAPER_DATABASE)
+    return jsonify(output)
+
 
 
 if __name__ == '__main__':
