@@ -6,7 +6,7 @@ from collections import Counter
 import re
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from application import RESEARCH_PAPER_DATABASE
+from utils.constants import RESEARCH_PAPER_DATABASE
 from classes.mongodb import fetch_data
 from classes.research_paper import ResearchPaper
 from utils.pdf_operations import download_pdfs_parallel

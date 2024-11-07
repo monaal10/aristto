@@ -4,7 +4,7 @@ import io
 import requests
 import PyPDF2
 
-from application import RESEARCH_PAPER_DATABASE
+from utils.constants import RESEARCH_PAPER_DATABASE
 from classes.mongodb import fetch_data
 from classes.research_paper import ResearchPaper
 

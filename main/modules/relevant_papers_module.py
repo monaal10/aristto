@@ -57,8 +57,8 @@ def get_publisher_id_list(publisher_ranks):
     except Exception as e:
         raise ("Error getting SJR rank", e)
 
-def create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in, published_by_institutions,
-                                  authors):
+
+def create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in, authors):
     try:
         author_ids = get_author_id_list(authors) if authors else None
         logger.info("Fetching works from OpenAlex")
@@ -77,13 +77,13 @@ def create_http_url_for_open_alex(query, start_year, end_year, citation_count, p
         raise e
 
 
-def get_relevant_papers(query, start_year, end_year, citation_count, published_in, published_by_institutions, authors):
+def get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors):
     filtered_papers =[]
     paper_urls = []
     if not published_in:
         published_in = ["Q1", "Q2", "Q3", "Q4"]
     http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in,
-                                             published_by_institutions, authors)
+                                             authors)
     response = requests.get(http_url)
     data = response.json()
     papers = [ResearchPaper(work) for work in data['results']]

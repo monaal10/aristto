@@ -43,12 +43,11 @@ def fetch_data(data, database_name):
         raise Exception("Could not fetch data from MongoDB")
 
 
-def update_data(data, database_name):
+def update_data(data, database_name, filter, operation):
     # Update multiple documents
     try:
-        filter = {"open_alex_id": data["open_alex_id"]}
         update_data = {
-            "$set": vars(data)
+            operation: data
         }
         collection = database[database_name]
         collection.update_one(

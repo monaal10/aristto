@@ -14,12 +14,15 @@ from flask_cors import CORS
 import os
 from sentence_transformers import SentenceTransformer
 from classes.mongodb import insert_data, fetch_data, update_data
+from utils.constants import RESEARCH_PAPER_DATABASE, LITERATURE_REVIEW_DATABASE, RELEVANT_CHUNKS_TO_RETRIEVE, \
+    MONGODB_SET_OPERATION, OPENAI_API_KEY, ANTHROPIC_API_KEY, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, \
+    SEMANTIC_SCHOLAR_API_KEY
 
-os.environ['OPENAI_API_KEY'] = 'sk-zFNU8L6Nkc1e-2VgAKoSB8tBcuEgJ140flDuDTc0muT3BlbkFJ_ChBKzjg63-HOPaPNczEzxWVoahtCUU9g1ZsZzBvgA'
-os.environ['ANTHROPIC_API_KEY'] = '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'
-os.environ['AWS_ACCESS_KEY_ID'] = 'AKIA6ODU27KHMGRMPHOZ'
-os.environ['AWS_SECRET_ACCESS_KEY'] = '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'
-os.environ['SEMANTIC_SCHOLAR_API_KEY'] = 'vd5G9VoPYk3hfCYyPjZR334dvZCumbEF2tkdeQhK'
+os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY
+os.environ['ANTHROPIC_API_KEY'] = ANTHROPIC_API_KEY
+os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
+os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
+os.environ['SEMANTIC_SCHOLAR_API_KEY'] = SEMANTIC_SCHOLAR_API_KEY
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -27,9 +30,7 @@ logger = logging.getLogger(__name__)
 application = Flask(__name__)
 CORS(application)
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-RESEARCH_PAPER_DATABASE = "researchPapers"
-LITERATURE_REVIEW_DATABASE = "literatureReviews"
-RELEVANT_CHUNKS_TO_RETRIEVE = 7
+
 @application.after_request
 def after_request(response):
     response.headers.add("Access-Control-Allow-Origin", "*")
@@ -76,7 +77,7 @@ def ask_question():
     citation_count = data.get('citation_count', None)
     authors = data.get('authors', None)
     published_in = data.get('published_in', None)
-    relevant_papers = get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors, model)
+    relevant_papers = get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors)
     papers_with_chunks = parallel_download_and_chunk_papers(relevant_papers)
     relevant_chunks = get_relevant_chunks(query, papers_with_chunks)[:RELEVANT_CHUNKS_TO_RETRIEVE]
     result = answer_a_question(query, relevant_chunks, papers_with_chunks)
@@ -126,7 +127,8 @@ def get_paper_info():
     output = extract_paper_information(final_paper.pdf_content)
     for key in output.keys():
         setattr(paper, key, output[key])
-    update_data(paper, RESEARCH_PAPER_DATABASE)
+    filter = {"open_alex_id": paper["open_alex_id"]}
+    update_data(vars(paper), RESEARCH_PAPER_DATABASE, filter, MONGODB_SET_OPERATION)
     return jsonify(output)
 
 
