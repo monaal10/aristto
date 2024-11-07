@@ -37,19 +37,13 @@ cors_config = {
     "supports_credentials": True,
     "max_age": 3600
 }
-# @app.after_request
-# def after_request(response):
-#     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-#     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-#     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-#     return response
+
 
 CORS(application, origins=cors_config["origins"], supports_credentials=True, methods=cors_config["methods"],
      allow_headers=cors_config["allow_headers"], expose_headers=cors_config["expose_headers"])
 CORS(user_blueprint, origins=cors_config["origins"], supports_credentials=True, methods=cors_config["methods"],
      allow_headers=cors_config["allow_headers"], expose_headers=cors_config["expose_headers"])
 application.register_blueprint(user_blueprint, url_prefix="/api/user")
-model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 @application.after_request
 def after_request(response):
@@ -147,8 +141,8 @@ def get_paper_info():
     output = extract_paper_information(final_paper.pdf_content)
     for key in output.keys():
         setattr(paper, key, output[key])
-    filter = {"open_alex_id": paper["open_alex_id"]}
-    update_data(vars(paper), RESEARCH_PAPER_DATABASE, filter, MONGODB_SET_OPERATION)
+    db_filter = {"open_alex_id": paper["open_alex_id"]}
+    update_data(vars(paper), RESEARCH_PAPER_DATABASE, db_filter, MONGODB_SET_OPERATION)
     return jsonify(output)
 
 

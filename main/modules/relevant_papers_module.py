@@ -3,7 +3,6 @@ from pyalex import Institutions, Authors
 import pyalex
 import logging
 from classes.research_paper import ResearchPaper
-# from embedding_model import get_embedding, calculate_similarity_scores
 from embeddings_module import rank_documents
 import pandas as pd
 

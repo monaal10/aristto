@@ -2,21 +2,17 @@ import json
 from langchain_community.cache import InMemoryCache
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END, START
+from utils.anthropic_utils import get_claude_haiku
 from utils.pdf_operations import download_pdfs_parallel
 from modules.relevant_papers_module import get_relevant_papers
 from typing import Dict
-from langchain_anthropic import ChatAnthropic
 from classes.lit_review_agent_classes import AgentState, PaperInformation, InsightGeneration, ThemeLiteratureReview, \
     ReferenceWithMetdadata
 from prompts.literature_review_prompts import THEME_IDENTIFICATION_PROMPT, PAPER_VALIDATION_PROMPT, \
     INFORMATION_EXTRACTION_PROMPT, \
     GRAPH_BUILDING_PROMPT, INSIGHT_GENERATION_PROMPT
 
-llm = ChatAnthropic(model="claude-3-5-haiku-latest",
-                    api_key="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",
-                    temperature=0,
-                    max_tokens=4096,
-                    timeout=None)
+llm = get_claude_haiku()
 
 # Cache setup
 langchain_cache = InMemoryCache()
@@ -196,7 +192,7 @@ def analyze_research_query(query, start_year, end_year, citation_count, publishe
         print(f"Error in research analysis: {e}")
         return None
 # Example usage
-if __name__ == "__main__":
+"""if __name__ == "__main__":
     query = ("What are the recent methods to detect deepfake and how have they evolved over the years?")
     result = analyze_research_query(query, 2000, 2024, 5, ["Q1", "Q2"], None)
 
@@ -220,4 +216,4 @@ def build_graph(state: AgentState) -> AgentState:
     except Exception as e:
         print(f"Error in graph building: {e}")
         state.graph_data = {}
-    return state
+    return state"""

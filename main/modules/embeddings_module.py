@@ -4,11 +4,11 @@ from typing import List
 
 import pandas as pd
 from classes import research_paper
-
+from utils.constants import OPENAI_API_KEY, OPENAI_EMBEDDING_MODEL_NAME
 
 # Set up the OpenAI API client
-openai.api_key = "sk-zFNU8L6Nkc1e-2VgAKoSB8tBcuEgJ140flDuDTc0muT3BlbkFJ_ChBKzjg63-HOPaPNczEzxWVoahtCUU9g1ZsZzBvgA"
-openai_model = "text-embedding-3-small"
+openai.api_key = OPENAI_API_KEY
+openai_model = OPENAI_EMBEDDING_MODEL_NAME
 def get_embedding(text: str, model: str = openai_model, max_retries: int = 3) -> List[float]:
     """
    Get an embedding for the given text using the specified OpenAI model.
