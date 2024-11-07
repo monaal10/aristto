@@ -6,6 +6,9 @@ from collections import Counter
 import re
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+from application import RESEARCH_PAPER_DATABASE
+from classes.mongodb import fetch_data
+from classes.research_paper import ResearchPaper
 from utils.pdf_operations import download_pdfs_parallel
 
 # Set up logging
@@ -15,6 +18,9 @@ logger = logging.getLogger(__name__)
 
 # Function to split text into chunks
 def chunk_text(paper):
+    result = fetch_data(paper, RESEARCH_PAPER_DATABASE)
+    if len(result) == 1 and result["pdf_content"] and result["pdf_content_chunks"]:
+        return ResearchPaper(result)
     paper_text = paper.pdf_content
     if paper_text:
         text_splitter = RecursiveCharacterTextSplitter(

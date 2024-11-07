@@ -3,6 +3,7 @@ import logging
 import datetime
 import uuid
 
+from classes.research_paper import ResearchPaper
 from modules.answer_a_question_module import answer_a_question
 from modules.chat_with_paper_module import chat
 from modules.extract_paper_info_module import extract_paper_information
@@ -27,6 +28,8 @@ application = Flask(__name__)
 CORS(application)
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 RESEARCH_PAPER_DATABASE = "researchPapers"
+LITERATURE_REVIEW_DATABASE = "literatureReviews"
+RELEVANT_CHUNKS_TO_RETRIEVE = 7
 @application.after_request
 def after_request(response):
     response.headers.add("Access-Control-Allow-Origin", "*")
@@ -49,10 +52,11 @@ def chat_with_papers():
     paper_ids = data.get('paper_ids', None)
     paper_ids_dict = [{"id": paper_id} for paper_id in paper_ids]
     papers = fetch_data(paper_ids_dict, RESEARCH_PAPER_DATABASE)
-    if len(papers) > 1:
-        relevant_chunks = get_relevant_chunks(query, papers)[:5]
+    final_papers = [ResearchPaper(paper) for paper in papers]
+    if len(final_papers) > 1:
+        relevant_chunks = get_relevant_chunks(query, final_papers)[:RELEVANT_CHUNKS_TO_RETRIEVE]
     else:
-        relevant_chunks = {"1": papers[0].pdf_content}
+        relevant_chunks = {"1": final_papers[0].pdf_content}
 
     result = chat(query, relevant_chunks)
     response = {"answer": result}
@@ -61,7 +65,7 @@ def chat_with_papers():
 
 @application.route('/askQuestion', methods=['POST'])
 def ask_question():
-    top_k = 7
+
     start_time = datetime.datetime.now()
     logger.info(f"Request received at: {start_time}")
     data = request.json
@@ -74,12 +78,13 @@ def ask_question():
     published_in = data.get('published_in', None)
     relevant_papers = get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors, model)
     papers_with_chunks = parallel_download_and_chunk_papers(relevant_papers)
-    relevant_chunks = get_relevant_chunks(query, papers_with_chunks)[:top_k]
+    relevant_chunks = get_relevant_chunks(query, papers_with_chunks)[:RELEVANT_CHUNKS_TO_RETRIEVE]
     result = answer_a_question(query, relevant_chunks, papers_with_chunks)
     papers = result.get('papers', None)
     json_strings = []
     for paper in papers:
         json_strings.append(vars(paper))
+    insert_data(json_strings, RESEARCH_PAPER_DATABASE)
     return vars(result)
 
 
@@ -106,7 +111,7 @@ def get_literature_review():
         "literatureReviewId": literature_review_id,
         "literatureReview": json_strings
     }
-    insert_data(json_strings, "LiteratureReviews")
+    insert_data(json_strings, LITERATURE_REVIEW_DATABASE)
     return jsonify(response)
 
 
@@ -117,7 +122,8 @@ def get_paper_info():
     data = request.json
     paper_id = data.get('paper_id', None)
     paper = fetch_data({"id": paper_id}, RESEARCH_PAPER_DATABASE)
-    output = extract_paper_information(paper.pdf_content)
+    final_paper = ResearchPaper(paper)
+    output = extract_paper_information(final_paper.pdf_content)
     for key in output.keys():
         setattr(paper, key, output[key])
     update_data(paper, RESEARCH_PAPER_DATABASE)
