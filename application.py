@@ -12,18 +12,10 @@ from utils.chunk_operations import parallel_download_and_chunk_papers, get_relev
 from modules.literature_review_agent_module import analyze_research_query
 from modules.relevant_papers_module import get_relevant_papers
 from flask_cors import CORS
-import os
-from sentence_transformers import SentenceTransformer
 from classes.mongodb import insert_data, fetch_data, update_data
 from utils.constants import RESEARCH_PAPER_DATABASE, LITERATURE_REVIEW_DATABASE, RELEVANT_CHUNKS_TO_RETRIEVE, \
-    MONGODB_SET_OPERATION, OPENAI_API_KEY, ANTHROPIC_API_KEY, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, \
-    SEMANTIC_SCHOLAR_API_KEY
-
-os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY
-os.environ['ANTHROPIC_API_KEY'] = ANTHROPIC_API_KEY
-os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
-os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
-os.environ['SEMANTIC_SCHOLAR_API_KEY'] = SEMANTIC_SCHOLAR_API_KEY
+    MONGODB_SET_OPERATION
+from utils.string_utils import JsonResp
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -38,12 +30,12 @@ cors_config = {
     "max_age": 3600
 }
 
-
 CORS(application, origins=cors_config["origins"], supports_credentials=True, methods=cors_config["methods"],
      allow_headers=cors_config["allow_headers"], expose_headers=cors_config["expose_headers"])
 CORS(user_blueprint, origins=cors_config["origins"], supports_credentials=True, methods=cors_config["methods"],
      allow_headers=cors_config["allow_headers"], expose_headers=cors_config["expose_headers"])
 application.register_blueprint(user_blueprint, url_prefix="/api/user")
+
 
 @application.after_request
 def after_request(response):
@@ -51,6 +43,11 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
+
+
+@application.route("/api")
+def index():
+    return JsonResp({"status": "Online"}, 200)
 
 
 @application.route('/', methods=['GET'])
@@ -80,7 +77,6 @@ def chat_with_papers():
 
 @application.route('/askQuestion', methods=['POST'])
 def ask_question():
-
     start_time = datetime.datetime.now()
     logger.info(f"Request received at: {start_time}")
     data = request.json
@@ -146,7 +142,5 @@ def get_paper_info():
     return jsonify(output)
 
 
-
 if __name__ == '__main__':
     application.run(host='0.0.0.0', port=8000, debug=True)
-

@@ -61,12 +61,12 @@ def find_papers(state: AgentState) -> AgentState:
     try:
         state.themes_with_papers = {}
         papers_to_download = 5
-        for theme in (state.themes):
+        for theme in state.themes:
             final_papers = []
             papers_found = 0
             # Update the function call with actual values
             papers = get_relevant_papers(theme, state.start_year, state.end_year, state.citation_count,
-                                         state.published_in, None, state.authors)
+                                         state.published_in, state.authors)
             for i in range(0, len(papers), papers_to_download):
                 if not (papers_to_download - papers_found > 0):
                     break
