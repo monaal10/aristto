@@ -111,8 +111,7 @@ def get_literature_review():
     citation_count = data.get('citation_count', None)
     authors = data.get('authors', None)
     published_in = data.get('published_in', None)
-    results = analyze_research_query(query, start_year, end_year, citation_count, published_in, authors)
-    literature_review = results.literature_review
+    literature_review = analyze_research_query(query, start_year, end_year, citation_count, published_in, authors)
     json_strings = []
     for theme_literature_review in literature_review:
         json_strings.append(vars(theme_literature_review))

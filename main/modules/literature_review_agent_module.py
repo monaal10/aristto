@@ -1,4 +1,7 @@
 import json
+from asyncio import as_completed
+from concurrent.futures import ProcessPoolExecutor
+
 from langchain_community.cache import InMemoryCache
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END, START
@@ -44,17 +47,15 @@ def create_claude_message(prompt: str, state: Dict, output_format):
 
 
 # Node implementations with error handling
-def identify_themes(state: AgentState) -> AgentState:
+def identify_themes(query):
     try:
-        themes_text = create_claude_message(THEME_IDENTIFICATION_PROMPT, {"query": state.query}, None)
-        state.themes = [theme.strip() for theme in themes_text.split(',')]
-        state.themes.append(state.query)
-
-        state.memory["themes_identified"] = len(state.themes)
+        themes_text = create_claude_message(THEME_IDENTIFICATION_PROMPT, {"query": query}, None)
+        themes = [theme.strip() for theme in themes_text.split(',')]
+        themes.append(query)
+        return themes
     except Exception as e:
-        state.themes = []
         raise f"Error in theme identification: {e}"
-    return state
+
 
 
 def find_papers(state: AgentState) -> AgentState:
@@ -108,8 +109,6 @@ def extract_information(state: AgentState) -> AgentState:
         raise f"Error in information extraction: {e}"
 
 
-
-
 def generate_insights(state: AgentState) -> AgentState:
     try:
         final_summaries = []
@@ -154,40 +153,28 @@ def generate_insights(state: AgentState) -> AgentState:
     return state
 
 
-def create_research_graph():
-    # Create the graph with the updated state
-    workflow = StateGraph(AgentState)
-
-    # Add nodes
-    workflow.add_node("theme_identification", identify_themes)
-    workflow.add_node("paper_finding", find_papers)
-    workflow.add_node("information_extraction", extract_information)
-    # workflow.add_node("graph_building", build_graph)
-    workflow.add_node("insight_generation", generate_insights)
-
-    # Add edges
-    workflow.add_edge(START, "theme_identification")
-    workflow.add_edge("theme_identification", "paper_finding")
-    workflow.add_edge("paper_finding", "information_extraction")
-    workflow.add_edge("information_extraction", "insight_generation")
-    # workflow.add_edge("graph_building", "insight_generation")
-    workflow.add_edge("insight_generation", END)
-    return workflow.compile()
-
-
+def process_theme(state):
+    find_papers_state = find_papers(state)
+    extract_information_state = extract_information(find_papers_state)
+    generate_insights_state = generate_insights(extract_information_state)
+    return generate_insights_state
 # Usage example
 def analyze_research_query(query, start_year, end_year, citation_count, published_in, authors):
     try:
-        graph = create_research_graph()
-        config = RunnableConfig(
-            callbacks=[],
-            tags=["research-analysis"],
-            metadata={"query": query, "start_year": start_year, "end_year": end_year, "citation_count": citation_count, "published_in": published_in, "authors": authors}
-        )
-
-        initial_state = AgentState(query=query, start_year=start_year, end_year=end_year, citation_count=citation_count, published_in=published_in, authors=authors)
-        result = graph.invoke(initial_state, config=config)
-        return result
+        literature_review = []
+        states = []
+        themes = identify_themes(query)
+        for theme in themes:
+            initial_state = AgentState(query=query, start_year=start_year, end_year=end_year,
+                                       citation_count=citation_count, published_in=published_in, authors=authors,
+                                       theme=theme)
+            states.append(initial_state)
+        with ProcessPoolExecutor(max_workers=len(themes)) as executor:  # Adjust number of workers based on CPU capacity
+            futures = {executor.submit(process_theme, state): state for state in states}
+            for future in as_completed(futures):
+                theme_result = future.result()
+                literature_review.append(theme_result.literature_review)
+        return literature_review
     except Exception as e:
         print(f"Error in research analysis: {e}")
         return None
