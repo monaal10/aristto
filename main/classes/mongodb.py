@@ -13,8 +13,6 @@ database = client['aristto']
 
 def insert_data(data, database_name):
     collection = database[database_name]
-    collection.create_index("id", unique=True)
-
     # Prepare bulk operations
     operations = [
         InsertOne(paper) for paper in data

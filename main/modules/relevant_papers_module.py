@@ -3,8 +3,10 @@ from pyalex import Institutions, Authors
 import pyalex
 import logging
 from classes.research_paper import ResearchPaper
-from embeddings_module import rank_documents
+# from embeddings_module import rank_documents
 import pandas as pd
+
+from utils.convert_data import convert_oa_response_to_research_paper
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -87,7 +89,7 @@ def get_relevant_papers(query, start_year, end_year, citation_count, published_i
                                              authors)
     response = requests.get(http_url)
     data = response.json()
-    papers = [ResearchPaper(work) for work in data['results']]
+    papers = [convert_oa_response_to_research_paper(work) for work in data['results']]
     for paper in papers:
         try:
             publisher_ids = get_publisher_id_list(published_in)
@@ -98,11 +100,6 @@ def get_relevant_papers(query, start_year, end_year, citation_count, published_i
                 return papers
         except Exception as e:
             raise(f"Error processing paper: {e}")
-
-    logger.info(f"Valid URLs count = {len(paper_urls)}")
     # relevant_papers = rank_documents(query, papers)
-    logger.info("Fetched relevant papers")
-    return papers
-
 
 #get_relevant_papers("Deepfake Detection using Computer vision", 2018, 2023, None, ["Q1", "Q2"], None, None)

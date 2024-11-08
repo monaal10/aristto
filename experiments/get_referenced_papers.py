@@ -1,7 +1,7 @@
 import requests
 import logging
 
-from classes.research_paper import ResearchPaper
+from utils.convert_data import convert_oa_response_to_research_paper
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ def fetch_referenced_papers(original_paper):
             response = requests.get(open_alex_url[:-2] + sort_suffix)
             data = response.json()
             for referenced_work_data in data['results'][:4]:
-                referenced_papers.append(vars(ResearchPaper(referenced_work_data)))
+                referenced_papers.append(vars(convert_oa_response_to_research_paper(referenced_work_data)))
     except Exception:
         raise ("Error while getting referenced papers")
     return referenced_papers

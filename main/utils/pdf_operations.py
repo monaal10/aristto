@@ -6,7 +6,7 @@ import PyPDF2
 
 from utils.constants import RESEARCH_PAPER_DATABASE
 from classes.mongodb import fetch_data
-from classes.research_paper import ResearchPaper
+from utils.convert_data import convert_mongodb_to_research_paper
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 
 # Function to download a single PDF from a URL
 def download_pdf(paper):
-    result = fetch_data(paper, RESEARCH_PAPER_DATABASE)
-    if len(result) == 1 and result["pdf_content"]:
-        return ResearchPaper(result)
+    result = fetch_data({"open_alex_id": paper.open_alex_id}, RESEARCH_PAPER_DATABASE)
+    if len(result) == 1 and result[0].get("pdf_content"):
+        return convert_mongodb_to_research_paper(result)
     url = paper.oa_url
     try:
         user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.44/72.124 Safari/537.36'
@@ -33,8 +33,7 @@ def download_pdf(paper):
         return paper  # Return URL and its content
     except Exception as e:
         logger.error(f"Failed to download {url}: {e}")
-        paper.pdf_content = None
-        return paper  # Return None if there's an error
+        return paper
 
 
 # Function to download PDFs in parallel and return contents

@@ -17,8 +17,15 @@ class Answer(BaseModel):
                      """)
 
 
+class AnswerReference(BaseModel):
+    reference_text: str
+    chunk_id: str
+    paper: ResearchPaper
+
+    class Config:
+        arbitrary_types_allowed = True
 class AskQuestionOutput(BaseModel):
-    papers: List[ResearchPaper] = Field(default_factory=List)
+    references: List[AnswerReference] = Field(default_factory=List)
     answer: str = Field(default_factory=str)
 
     class Config:
