@@ -1,5 +1,5 @@
 from typing import List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from classes.research_paper import ResearchPaper
 
 
@@ -20,3 +20,6 @@ class Answer(BaseModel):
 class AskQuestionOutput(BaseModel):
     papers: List[ResearchPaper] = Field(default_factory=List)
     answer: str = Field(default_factory=str)
+
+    class Config:
+        arbitrary_types_allowed = True

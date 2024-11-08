@@ -3,11 +3,11 @@ from flask import request
 from functools import wraps
 
 from classes.mongodb import fetch_data
-from main.tools import JsonResp
-from jose import jwt
+import jwt
 import datetime
 
 from utils.constants import USERS_DATABASE
+from utils.string_utils import JsonResp
 
 
 # Auth Decorator

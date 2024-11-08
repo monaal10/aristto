@@ -20,14 +20,17 @@ def create_strings_for_filters(filter_list):
 
 
 def get_author_id_list(authors):
-    author_ids = ""
-    author_list = []
-    if authors:
-        author_list = Authors().search(create_strings_for_filters(authors)).get()
-    for author in author_list:
-        id = author['id'].split(".org/")
-        author_ids += id[1] + "|"
-    return author_ids[:len(author_ids) - 1]
+    try:
+        author_ids = ""
+        author_list = []
+        if authors:
+            author_list = Authors().search(create_strings_for_filters(authors)).get()
+        for author in author_list:
+            id = author['id'].split(".org/")
+            author_ids += id[1] + "|"
+        return author_ids[:len(author_ids) - 1]
+    except Exception as e:
+        raise f" Could not get author ids from openAlex : {e}"
 
 
 def get_institution_id_list(institutions):
@@ -45,7 +48,7 @@ def get_publisher_id_list(publisher_ranks):
 
     try:
         publisher_ids = {}
-        df = pd.read_csv('jqr.csv')
+        df = pd.read_csv('main/modules/jqr.csv')
         df_final = pd.DataFrame()
         for publisher_rank in publisher_ranks:
             df_filtered = df[df['SJR Best Quartile'] == publisher_rank]
@@ -73,12 +76,11 @@ def create_http_url_for_open_alex(query, start_year, end_year, citation_count, p
         http_url = http_url + "&sort=relevance_score:desc&per-page=200&page="
         return http_url
     except Exception as e:
-        raise e
+        raise f"Could not form http url from given parameters: {e}"
 
 
 def get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors):
-    filtered_papers =[]
-    paper_urls = []
+    filtered_papers = []
     if not published_in:
         published_in = ["Q1", "Q2", "Q3", "Q4"]
     http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in,
@@ -90,9 +92,10 @@ def get_relevant_papers(query, start_year, end_year, citation_count, published_i
         try:
             publisher_ids = get_publisher_id_list(published_in)
             if paper.oa_url and paper.oa_url.endswith(".pdf") and paper.publication_id and publisher_ids.get(paper.publication_id, None):
-                paper.publication_quartile = publisher_ids[paper.publication_id]
-                paper_urls.append(paper.oa_url)
+                setattr(paper, "publication_quartile", publisher_ids[paper.publication_id])
                 filtered_papers.append(paper)
+                logger.info("Fetched relevant papers")
+                return papers
         except Exception as e:
             raise(f"Error processing paper: {e}")
 

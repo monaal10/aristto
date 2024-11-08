@@ -39,8 +39,8 @@ def fetch_data(data, database_name):
         for result in collection.find(data):
             results.append(result)
         return results
-    except Exception:
-        raise Exception("Could not fetch data from MongoDB")
+    except Exception as e:
+        raise Exception("Could not fetch data from MongoDB" + e)
 
 
 def update_data(data, database_name, filter, operation):

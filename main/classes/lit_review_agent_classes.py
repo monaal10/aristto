@@ -84,9 +84,12 @@ class Reference(BaseModel):
     reference_text: str = Field(description="Actual text that is used as the reference to form the answer")
 
 
-class ReferenceWithMetdadata(BaseModel):
+class ReferenceWithMetadata(BaseModel):
     reference: Reference
     reference_metadata: ResearchPaper
+
+    class Config:
+        arbitrary_types_allowed = True
 
 class InsightGeneration(BaseModel):
     references: Dict[str, Reference] = Field(
@@ -98,11 +101,16 @@ class InsightGeneration(BaseModel):
     research_gaps: str = Field(description=" An in depth explaination of across the papers, the issues that have not yet been resolved and need more work" + PROMPT_FOR_CITATIONS)
     future_directions: str = Field(description="An in depth explaination of Where is this domain heading?" + PROMPT_FOR_CITATIONS)
 
+    class Config:
+        arbitrary_types_allowed = True
 
 class ThemeLiteratureReview(BaseModel):
     theme: str = Field(default_factory=str)
-    references: List[ReferenceWithMetdadata] = Field(default_factory=list)
+    references: List[ReferenceWithMetadata] = Field(default_factory=list)
     insights: Dict = Field(default_factory=dict)
+
+    class Config:
+        arbitrary_types_allowed = True
 class AgentState(BaseModel):
     query: str
     start_year: int

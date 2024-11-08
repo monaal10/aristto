@@ -45,15 +45,19 @@ def download_pdfs_parallel(papers):
 
         for future in as_completed(futures):
             paper = future.result()
-            final_papers.append(paper)
+            if paper.pdf_content:
+                final_papers.append(paper)
 
     return final_papers  # Return dictionary with URLs and their content
 
 
 def extract_text_from_pdf(pdf_content):
-    text = ""
-    pdf_stream = io.BytesIO(pdf_content)
-    reader = PyPDF2.PdfReader(pdf_stream)
-    for page in reader.pages:
-        text += page.extract_text()
-    return text
+    try:
+        text = ""
+        pdf_stream = io.BytesIO(pdf_content)
+        reader = PyPDF2.PdfReader(pdf_stream)
+        for page in reader.pages:
+            text += page.extract_text()
+        return text
+    except Exception as e:
+        raise f"Failed to extract text from PDF: {e}"

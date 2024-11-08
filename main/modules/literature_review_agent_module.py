@@ -10,7 +10,7 @@ from utils.pdf_operations import download_pdfs_parallel
 from modules.relevant_papers_module import get_relevant_papers
 from typing import Dict
 from classes.lit_review_agent_classes import AgentState, PaperInformation, InsightGeneration, ThemeLiteratureReview, \
-    ReferenceWithMetdadata
+    ReferenceWithMetadata
 from prompts.literature_review_prompts import THEME_IDENTIFICATION_PROMPT, PAPER_VALIDATION_PROMPT, \
     INFORMATION_EXTRACTION_PROMPT, \
     GRAPH_BUILDING_PROMPT, INSIGHT_GENERATION_PROMPT
@@ -134,7 +134,7 @@ def generate_insights(state: AgentState) -> AgentState:
                 for paper in papers:
                     if paper.oa_url == paper_id:
                         reference_with_metadata_list.append(
-                            ReferenceWithMetdadata(reference=reference, reference_metadata=paper_object))
+                            ReferenceWithMetadata(reference=reference, reference_metadata=paper_object))
             summary = ThemeLiteratureReview(theme=theme, papers=reference_with_metadata_list, insights=response)
             final_summaries.append(summary)
         state.literature_review = final_summaries

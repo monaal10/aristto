@@ -3,7 +3,7 @@ from json import JSONDecodeError
 
 from flask import current_app as app, request
 from flask import json
-from jose import jwt
+import jwt
 from passlib.hash import pbkdf2_sha256
 
 from classes.mongodb import fetch_data, update_data, insert_data

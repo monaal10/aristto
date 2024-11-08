@@ -18,11 +18,10 @@ logger = logging.getLogger(__name__)
 
 # Function to split text into chunks
 def chunk_text(paper):
-    result = fetch_data(paper, RESEARCH_PAPER_DATABASE)
-    if len(result) == 1 and result["pdf_content"] and result["pdf_content_chunks"]:
-        return ResearchPaper(result)
-    paper_text = paper.pdf_content
-    if paper_text:
+    try:
+        if paper.pdf_content_chunks:
+            return paper
+        paper_text = paper.pdf_content
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=100,
@@ -35,6 +34,8 @@ def chunk_text(paper):
             chunks[paper.oa_url + "_" + str(i)] = texts[i]
         paper.pdf_content_chunks = chunks
         return paper
+    except Exception as e:
+        raise f"Could not chunk text: {e}"
 
 
 def parallel_chunk_text(papers):
