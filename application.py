@@ -96,6 +96,7 @@ def chat_with_papers():
         data = request.json
         query = data.get('query', None)
         paper_ids = data.get('paper_ids', None)
+        conversation_history = data.get('conversation_history', [])
         paper_ids_dict = [{"id": paper_id} for paper_id in paper_ids]
         papers = fetch_data(paper_ids_dict, RESEARCH_PAPER_DATABASE)
         final_papers = [convert_oa_response_to_research_paper(paper) for paper in papers]
@@ -103,9 +104,10 @@ def chat_with_papers():
             relevant_chunks = get_relevant_chunks(query, final_papers)[:RELEVANT_CHUNKS_TO_RETRIEVE]
         else:
             relevant_chunks = {"1": final_papers[0].pdf_content}
-
-        result = chat(query, relevant_chunks)
-        return jsonify(result.dict())
+        result = chat(query, relevant_chunks, conversation_history[:-5])
+        conversation_history.append({"human_message": query, "Assistant message": result})
+        response = {"answer": result, "conversation_history": conversation_history}
+        return jsonify(response)
     except Exception as e:
         raise e
 

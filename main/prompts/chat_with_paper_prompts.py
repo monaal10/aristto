@@ -12,5 +12,5 @@ ASK_A_QUESTION_PROMPT = """You are an expert scientific research assistant. Your
 
                      Here is the question from the user : {question}
                      Here is the list of references : {reference_list}
-
+                     Here is the previous conversation history fot context : {conversation_history}
                     """

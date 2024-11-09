@@ -11,9 +11,12 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-def chat(query, relevant_chunks):
+
+
+def chat(query, relevant_chunks, conversation_history):
     model = get_claude_haiku()
     prompt_template = PromptTemplate.from_template(ANSWER_A_QUESTION_PROMPT)
-    prompt = prompt_template.invoke({"question": {query}, "reference_list": json.dumps(relevant_chunks)})
+    prompt = prompt_template.invoke({"question": {query}, "reference_list": json.dumps(relevant_chunks),
+                                     "conversation_history": conversation_history})
     output = model.invoke(prompt)
     return output

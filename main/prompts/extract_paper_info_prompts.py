@@ -7,6 +7,7 @@ You are an expert scientific research assistant. Your audience is highly technic
                             "datasets": "Datasets used",\n
                             "limitations": "Drawbacks/Limitations",\n
                             "results": "Results of the experiments in the paper"\n
+                            "summary" : A 2 line summary of the paper
                            \n \nIf there is no relevant text, write "No relevant Info" instead. 
                            Don\'t say "According to Quote [1]" when answering. This will directly go in wikipedia so type 
                            in a style that is appropriate without extra wordls like "according to info given"

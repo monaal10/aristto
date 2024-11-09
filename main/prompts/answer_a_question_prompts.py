@@ -12,5 +12,4 @@ ANSWER_A_QUESTION_PROMPT = """You are an expert scientific research assistant. Y
 
                      Here is the question from the user : {question}
                      Here is the list of references : {reference_list}
-
                     """

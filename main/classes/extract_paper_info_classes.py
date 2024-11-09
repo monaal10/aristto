@@ -13,3 +13,4 @@ class ExtractedPaperInformation(BaseModel):
         description="datasets used in the paper if any."),
     results: str = Field(
         description="final results/conclusions of the paper.")
+    summary: str = Field(description="2 line summary of the paper.")
