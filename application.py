@@ -6,7 +6,6 @@ import uuid
 from modules.answer_a_question_module import answer_a_question
 from modules.chat_with_paper_module import chat
 from modules.extract_paper_info_module import extract_paper_information
-from user.routes import user_blueprint
 from utils.chunk_operations import parallel_download_and_chunk_papers, get_relevant_chunks
 from modules.literature_review_agent_module import analyze_research_query
 from modules.relevant_papers_module import get_relevant_papers
@@ -16,11 +15,48 @@ from utils.constants import RESEARCH_PAPER_DATABASE, LITERATURE_REVIEW_DATABASE,
     MONGODB_SET_OPERATION
 from utils.convert_data import convert_oa_response_to_research_paper
 from utils.string_utils import JsonResp
+from flask import Blueprint
+from flask import current_app as app
+
+from main.user.models import User
+from utils.auth_utils import token_required
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+user_blueprint = Blueprint("user", __name__)
+
+
+@user_blueprint.route("/profile", methods=["GET"])
+@token_required
+def get():
+    return User().get()
+
+
+@user_blueprint.route("/auth", methods=["GET"])
+@token_required
+def getAuth():
+    return User().getAuth()
+
+
+@user_blueprint.route("/login", methods=["POST"])
+def login():
+    return User().login()
+
+
+@user_blueprint.route("/logout", methods=["GET"])
+@token_required
+def logout():
+    return User().logout()
+
+
+@user_blueprint.route("/create", methods=["POST"])
+def add():
+    return User().add()
+
+
 application = Flask(__name__)
+application.register_blueprint(user_blueprint, url_prefix="/api/user")
 cors_config = {
     "origins": ["http://localhost:3000"],
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -32,9 +68,6 @@ cors_config = {
 
 CORS(application, origins=cors_config["origins"], supports_credentials=True, methods=cors_config["methods"],
      allow_headers=cors_config["allow_headers"], expose_headers=cors_config["expose_headers"])
-CORS(user_blueprint, origins=cors_config["origins"], supports_credentials=True, methods=cors_config["methods"],
-     allow_headers=cors_config["allow_headers"], expose_headers=cors_config["expose_headers"])
-application.register_blueprint(user_blueprint, url_prefix="/api/user")
 
 
 @application.after_request
@@ -116,11 +149,12 @@ def get_literature_review():
         authors = data.get('authors', None)
         published_in = data.get('published_in', None)
         literature_review = analyze_research_query(query, start_year, end_year, citation_count, published_in, authors)
+        literature_review_json = [theme.dict() for theme in literature_review]
         literature_review_id = uuid.uuid4()
         response = {
             "userId": user_id,
             "literatureReviewId": literature_review_id,
-            "literatureReview": literature_review.dict()
+            "literatureReview": literature_review_json
         }
         insert_data(response, LITERATURE_REVIEW_DATABASE)
         return jsonify(response)

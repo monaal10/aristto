@@ -41,14 +41,14 @@ def convert_oa_response_to_research_paper(work):
         primary_topic = fetch_primary_topic(work)
         publication = fetch_publication_name(work)
         publication_id = fetch_publication_id(work)
-        summary = get_summary_reference(extract_doi(work['doi'])) if work['doi'] else ""
+        # summary = get_summary_reference(extract_doi(work['doi'])) if work['doi'] else ""
         return ResearchPaper(user_id=user_id, search_id=search_id, open_alex_id=open_alex_id, title=title,
                              authors=authors, abstract=abstract, publication_year=publication_year,
                              publication_date=publication_date, referenced_works_ids=referenced_works_ids,
                              referenced_works_count=referenced_works_count, oa_url=oa_url, concepts=concepts,
                              cited_by_count=cited_by_count, cited_by_url=cited_by_url, biblio=biblio,
                              institutions=institutions, key_words=key_words, primary_topic=primary_topic,
-                             publication=publication, publication_id=publication_id, summary=summary,
+                             publication=publication, publication_id=publication_id
                              )
     except Exception as e:
         raise f"Could not convert open_alex response to research paper: {e}"
