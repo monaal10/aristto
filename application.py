@@ -16,7 +16,6 @@ from utils.constants import RESEARCH_PAPER_DATABASE, LITERATURE_REVIEW_DATABASE,
 from utils.convert_data import convert_oa_response_to_research_paper
 from utils.string_utils import JsonResp
 from flask import Blueprint
-from flask import current_app as app
 
 from main.user.models import User
 from utils.auth_utils import token_required
@@ -81,11 +80,6 @@ def after_request(response):
 @application.route("/api")
 def index():
     return JsonResp({"status": "Online"}, 200)
-
-
-@application.route('/', methods=['GET'])
-def main():
-    return render_template("start-basic-search.html")
 
 
 @application.route('/chatWithPapers', methods=['POST'])
