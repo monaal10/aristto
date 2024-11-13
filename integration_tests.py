@@ -37,7 +37,7 @@ class TestIntegration(unittest.TestCase):
             response_data = json.loads(response.data)
             self.assertIsNotNone(response_data.get('literatureReviewId'))
             self.assertIsNotNone(response_data.get('literatureReview'))
-            self.assertIsNotNone(response_data.get('user_id'))
+            self.assertIsNotNone(response_data.get('userId'))
 
 
 
