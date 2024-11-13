@@ -146,15 +146,18 @@ def get_literature_review():
         authors = data.get('authors', None)
         published_in = data.get('published_in', None)
         literature_review = execute_literature_review(query, start_year, end_year, citation_count, published_in, authors)
+        literature_review_dict = literature_review.dict()
         papers = [reference.dict() for reference in literature_review.references]
         literature_review_id = uuid.uuid4()
         response = {
             "userId": user_id,
             "literatureReviewId": str(literature_review_id),
-            "literatureReview": literature_review.dict()
+            "literatureReview": literature_review_dict
         }
         insert_data(response, LITERATURE_REVIEW_DATABASE)
         insert_data(papers, RESEARCH_PAPER_DATABASE)
+        if response.get("_id"):
+            response["_id"] = str(response.get("_id"))
         return jsonify(response)
     except Exception as e:
         raise e
