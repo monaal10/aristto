@@ -1,206 +1,191 @@
 import json
-from asyncio import as_completed
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import as_completed, ThreadPoolExecutor
 
 from langchain_community.cache import InMemoryCache
-from langchain_core.runnables import RunnableConfig
-from langgraph.graph import StateGraph, END, START
-from utils.anthropic_utils import get_claude_haiku
-from utils.pdf_operations import download_pdfs_parallel
+
+from modules.embeddings_module import rank_documents
+from modules.get_llm_response_module import get_model_response
+from utils.constants import THEME_NUMBER_LIMIT
+from utils.azure_openai_utils import get_openai_4o_mini
+from utils.pdf_operations import download_pdf
 from modules.relevant_papers_module import get_relevant_papers
-from typing import Dict
-from classes.lit_review_agent_classes import AgentState, PaperInformation, InsightGeneration, ThemeLiteratureReview, \
-    ReferenceWithMetadata
+from classes.lit_review_agent_classes import AgentState, LiteratureReview, \
+    ReferenceWithMetadata, Themes, PaperValidation
 from prompts.literature_review_prompts import THEME_IDENTIFICATION_PROMPT, PAPER_VALIDATION_PROMPT, \
-    INFORMATION_EXTRACTION_PROMPT, \
-    GRAPH_BUILDING_PROMPT, INSIGHT_GENERATION_PROMPT
+    INFORMATION_EXTRACTION_RESPONSE_PROMPT, CREATE_LITERATURE_REVIEW_PROMPT, \
+    EXTRACT_PAPER_INFO_PROMPT
 
-llm = get_claude_haiku()
-
+llm = get_openai_4o_mini()
 # Cache setup
 langchain_cache = InMemoryCache()
 
-topic_extraction_dict = {
-    "methodology": " Methodology/Processes/Algorithms used to conduct the research.",
-    "contributions": "Major Findings/New Contributions of the paper.",
-    "datasets": "Datasets used",
-    "limitations": "Drawbacks/Limitations",
-    "results": "Results of the experiments in the paper"
-}
-
-# Helper function to create Claude message
-def create_claude_message(prompt: str, state: Dict, output_format):
-    try:
-        messages = [{
-            "role": "user",
-            "content": prompt.format(**state)
-        }]
-        llm_with_output = llm
-        if output_format:
-            llm_with_output = llm.with_structured_output(output_format)
-            response = llm_with_output.invoke(messages)
-            return response
-        response = llm_with_output.invoke(messages)
-        return response.content
-    except Exception as e:
-        raise f"Error in Claude API call: {e}"
-
-
-# Node implementations with error handling
 def identify_themes(query):
     try:
-        themes_text = create_claude_message(THEME_IDENTIFICATION_PROMPT, {"query": query}, None)
-        themes = [theme.strip() for theme in themes_text.split(',')]
-        themes.append(query)
-        return themes
+        llm_with_output = llm.with_structured_output(Themes)
+        themes = get_model_response(llm_with_output, THEME_IDENTIFICATION_PROMPT, {"query": query})
+        return themes.get("themes")[:THEME_NUMBER_LIMIT]
     except Exception as e:
         raise f"Error in theme identification: {e}"
 
-
-
-def find_papers(state: AgentState) -> AgentState:
+def validate_and_download_paper(paper, theme):
     try:
+        llm_with_output = llm.with_structured_output(PaperValidation)
+        downloaded_paper = paper
+        response = get_model_response(llm_with_output,
+                                      PAPER_VALIDATION_PROMPT,
+                                      {"theme": theme,
+             "paper": f""" paper_title : {paper.title} , paper_abstract : {paper.abstract}"""})
+        if response["answer"] == True:
+            downloaded_paper = download_pdf(paper)
+        return downloaded_paper
+    except Exception as e:
+                raise(f"Error in paper validation and downloading: {e}")
+
+def find_papers(state: AgentState):
+    try:
+        final_papers = []
         state.themes_with_papers = {}
         papers_to_download = 5
         for theme in state.themes:
-            final_papers = []
+
             papers_found = 0
             # Update the function call with actual values
             papers = get_relevant_papers(theme, state.start_year, state.end_year, state.citation_count,
-                                         state.published_in, state.authors)
+                                         state.published_in, state.authors)[:20]
             for i in range(0, len(papers), papers_to_download):
                 if not (papers_to_download - papers_found > 0):
                     break
-                downloaded_papers = download_pdfs_parallel(paper for paper in papers[i:i + papers_to_download])
-                for paper in downloaded_papers[i:i + papers_to_download]:
+                with ThreadPoolExecutor(max_workers=8) as executor:  # Adjust number of workers based on CPU capacity
+                    futures = {executor.submit(validate_and_download_paper, paper, theme): paper for paper in papers}
+                    for future in as_completed(futures):
+                        paper = future.result()
                         if paper.pdf_content:
-                            response = create_claude_message(
-                                PAPER_VALIDATION_PROMPT,
-                                {"theme": theme,
-                                 "paper": f""" paper_title : {paper.title} , paper_abstract : {paper.abstract}"""}, None
-                            )
-                            if response.lower() == "true":
-                                final_papers.append(paper)
-                                papers_found += 1
-                        if not (papers_to_download - papers_found > 0):
-                            break
+                            final_papers.append(paper)
+                            papers_found += 1
+                    if not (papers_to_download - papers_found > 0):
+                        break
             state.themes_with_papers[theme] = final_papers
-        return state
+        return final_papers
     except Exception as e:
-        raise (f"Error in paper finding: {e}")
+                raise(f"Error in paper finding: {e}")
 
 
-def extract_information(state: AgentState) -> AgentState:
+from json.decoder import JSONDecodeError
+from time import sleep
+
+
+def extract_information(papers, max_retries=3, retry_delay=1):
+    """
+    Extract information from papers with retry mechanism for JSONDecodeError.
+
+    Args:
+        papers: List of paper objects to process
+        max_retries: Maximum number of retry attempts per paper
+        retry_delay: Delay in seconds between retries
+    """
+
+    def process_single_paper(paper, attempt=1):
+        try:
+            json_llm = llm.bind(response_format={"type": "json_object"})
+            message = get_model_response(
+                json_llm,
+                EXTRACT_PAPER_INFO_PROMPT,
+                {"pdf_content": paper.pdf_content, "response_format": INFORMATION_EXTRACTION_RESPONSE_PROMPT}
+            )
+
+            json_message = json.loads(message.content)
+            for key in json_message.keys():
+                section = json_message.get(key)
+                for i in range(len(section.keys())):
+                    section[paper.open_alex_id + "_" + key + "_" + str(i + 1)] = section.get(str(i + 1))
+                    del section[str(i + 1)]
+                setattr(paper, key, json_message.get(key))
+            return paper
+
+        except JSONDecodeError as e:
+            if attempt < max_retries:
+                sleep(retry_delay)
+                return process_single_paper(paper, attempt + 1)
+            else:
+                print(
+                    f"Failed to decode JSON after {max_retries} attempts for paper {paper.open_alex_id}: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Error in information extraction: {str(e)}")
+
     try:
-        for theme, papers in state.themes_with_papers.items():
-            updated_papers = []
-            for paper in papers:
-                for key, value in topic_extraction_dict.items():
-                    message = create_claude_message(
-                        INFORMATION_EXTRACTION_PROMPT,
-                        {"pdf_content": paper.pdf_content, "query": state.query, "information_to_extract": value},
-                        PaperInformation
-                    )
-                    setattr(paper, key, message)
-                updated_papers.append(paper)
-            state.themes_with_papers[theme] = updated_papers
-        return state
+        updated_papers = []
+        for paper in papers:
+            processed_paper = process_single_paper(paper)
+            updated_papers.append(processed_paper)
+        return updated_papers
+
     except Exception as e:
-        raise f"Error in information extraction: {e}"
+        raise Exception(f"Error processing papers: {str(e)}")
 
 
-def generate_insights(state: AgentState) -> AgentState:
+def generate_insights(papers, query):
     try:
-        final_summaries = []
-        for theme, papers in state.themes_with_papers.items():
-            papers_with_section_info = []
-            for paper in papers:
+        section_list = ["methodology", "datasets", "results", "contributions", "limitations"]
+        references = {}
+        papers_with_section_info = []
+        for paper in papers:
+            if paper:
                 selected_paper_info = {'id': paper.open_alex_id, 'title': paper.title,
-                                       'abstract': paper.abstract, 'publication_year': paper.publication_year,
+                                       'publication_year': paper.publication_year,
                                        'methodology': paper.methodology,
                                        'datasets': paper.datasets, 'contributions': paper.contributions,
                                        'results': paper.results, 'limitations': paper.limitations}
                 papers_with_section_info.append(selected_paper_info)
+                for section in section_list:
+                    dic = selected_paper_info[section]
+                    for key, value in dic.items():
+                        references[key] = value
 
-            response = create_claude_message(
-                INSIGHT_GENERATION_PROMPT,
-                {"papers": json.dumps(papers_with_section_info), "query": state.query}, InsightGeneration
-            )
-            reference_with_metadata_list = []
-            references = response.get("references")
-            for reference in references.values():
-                paper_object = None
-                paper_id = reference.get("paper_id")
-                for paper in papers:
-                    if paper.oa_url == paper_id:
-                        reference_with_metadata_list.append(
-                            ReferenceWithMetadata(reference=reference, reference_metadata=paper_object))
-            summary = ThemeLiteratureReview(theme=theme, papers=reference_with_metadata_list, insights=response)
-            final_summaries.append(summary)
-        state.literature_review = final_summaries
-        """final_summaries = []
-        for graph in state.graph_data:
-            message = create_claude_message(
-                INSIGHT_GENERATION_PROMPT,
-                {"graph": graph, "query": state.query}, None
-            )
-            final_summaries.append(message)
-        state.insights = final_summaries
-        state.memory["insights_generated"] = len(state.insights)"""
+        response = get_model_response(llm,
+                                      CREATE_LITERATURE_REVIEW_PROMPT,
+                                      {"papers": json.dumps(papers_with_section_info), "query": query}
+                                      )
+        return format_response(response.content, references, papers)
     except Exception as e:
-        state.literature_review = []
-        raise(f"Error in insight generation: {e}")
-    return state
-
-
-def process_theme(state):
-    find_papers_state = find_papers(state)
-    extract_information_state = extract_information(find_papers_state)
-    generate_insights_state = generate_insights(extract_information_state)
-    return generate_insights_state
-# Usage example
-def analyze_research_query(query, start_year, end_year, citation_count, published_in, authors):
+        raise (f"Error in insight generation: {e}")
+def format_response(response, references, papers):
     try:
-        literature_review = []
+        reference_with_metadata_list = []
+        filtered_references = {}
+        for reference in references.keys():
+            if reference in response:
+                filtered_references[reference] = references[reference]
+        for key, value in filtered_references.items():
+            split_reference = key.split("_")
+            paper_id = split_reference[0]
+            for paper in papers:
+                if paper and paper.open_alex_id == paper_id:
+                    reference_with_metadata_list.append(
+                        ReferenceWithMetadata(reference_id=key, paper_id=paper_id, reference_metadata=paper, reference_text=value))
+        summary = LiteratureReview(references=reference_with_metadata_list, insights=response)
+        return summary
+    except Exception as e:
+        raise (f"Error in formatting response: {e}")
+
+def execute_literature_review(query, start_year, end_year, citation_count, published_in, authors):
+    try:
         states = []
         themes = identify_themes(query)
+        papers = []
         for theme in themes:
-            initial_state = AgentState(query=query, start_year=start_year, end_year=end_year,
+            initial_state = AgentState(query=theme, start_year=start_year, end_year=end_year,
                                        citation_count=citation_count, published_in=published_in, authors=authors,
-                                       theme=theme)
+                                       themes=[theme])
             states.append(initial_state)
-        with ProcessPoolExecutor(max_workers=len(themes)) as executor:  # Adjust number of workers based on CPU capacity
-            futures = {executor.submit(process_theme, state): state for state in states}
+        with ThreadPoolExecutor(max_workers=8) as executor:  # Adjust number of workers based on CPU capacity
+            futures = {executor.submit(find_papers, state): state for state in states}
             for future in as_completed(futures):
-                theme_result = future.result()
-                literature_review.append(theme_result.literature_review)
-        return literature_review
+                paper = future.result()
+                papers.extend(paper)
+        unique_papers = list({paper.open_alex_id: paper for paper in papers}.values())
+        ranked_papers = rank_documents(query, unique_papers)[:20]
+        papers_with_info = extract_information(ranked_papers)
+        answer = generate_insights(papers_with_info, query)
+        return answer
     except Exception as e:
-        print(f"Error in research analysis: {e}")
-        return None
-# Example usage
-"""if __name__ == "__main__":
-    query = ("What are the recent methods to detect deepfake and how have they evolved over the years?")
-    result = analyze_research_query(query, 2000, 2024, 5, ["Q1", "Q2"], None)
-
-def build_graph(state: AgentState) -> AgentState:
-    try:
-        graphs = []
-        for theme, papers in state.themes_with_papers.items():
-            papers_for_graph = []
-            for paper in papers:
-                selected_paper_info = {'id': paper.open_alex_id, 'title': paper.title,
-                                       'extracted_content': paper.extracted_info, 'abstract': paper.abstract}
-                papers_for_graph.append(selected_paper_info)
-
-            message = create_claude_message(
-                GRAPH_BUILDING_PROMPT,
-                {"papers": papers_for_graph, "query": state.query}, None
-            )
-            graphs.append({"paper_info": papers_for_graph, "graph": message})
-        state.graph_data = graphs
-        state.memory["graph_built"] = True
-    except Exception as e:
-        print(f"Error in graph building: {e}")
-        state.graph_data = {}
-    return state"""
+        raise (f"Error in getting literature review: {e}")

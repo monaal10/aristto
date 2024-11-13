@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 
 
 class ResearchPaper(BaseModel):
-    search_id: Optional[int] = Field(default=None)
     open_alex_id: Optional[str] = Field(default=None)
     title: Optional[str] = Field(default=None)
     authors: Optional[List[str]] = Field(default=None)
@@ -31,11 +30,11 @@ class ResearchPaper(BaseModel):
     pdf_content: Optional[str] = Field(default=None)
     pdf_content_chunks: Optional[List[str]] = Field(default=None)
     extracted_info: Optional[str] = Field(default=None)
-    methodology: Optional[str] = Field(default=None)
-    datasets: Optional[str] = Field(default=None)
-    contributions: Optional[str] = Field(default=None)
-    results: Optional[str] = Field(default=None)
-    limitations: Optional[str] = Field(default=None)
+    methodology: Optional[Dict] = Field(default=None)
+    datasets: Optional[Dict] = Field(default=None)
+    contributions: Optional[Dict] = Field(default=None)
+    results: Optional[Dict] = Field(default=None)
+    limitations: Optional[Dict] = Field(default=None)
 
     class Config:
         arbitrary_types_allowed = True

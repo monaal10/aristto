@@ -22,7 +22,6 @@ def convert_mongodb_to_research_paper(paper):
 def convert_oa_response_to_research_paper(work):
     try:
         user_id = fetch_user_id()
-        search_id = create_search_id()
         open_alex_id = fetch_id(work['id'])
         title = work['title']
         authors = fetch_authors(work)
@@ -42,7 +41,7 @@ def convert_oa_response_to_research_paper(work):
         publication = fetch_publication_name(work)
         publication_id = fetch_publication_id(work)
         # summary = get_summary_reference(extract_doi(work['doi'])) if work['doi'] else ""
-        return ResearchPaper(user_id=user_id, search_id=search_id, open_alex_id=open_alex_id, title=title,
+        return ResearchPaper(user_id=user_id, open_alex_id=open_alex_id, title=title,
                              authors=authors, abstract=abstract, publication_year=publication_year,
                              publication_date=publication_date, referenced_works_ids=referenced_works_ids,
                              referenced_works_count=referenced_works_count, oa_url=oa_url, concepts=concepts,

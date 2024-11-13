@@ -11,7 +11,7 @@ from utils.convert_data import convert_oa_response_to_research_paper
 # Configure logging
 logger = logging.getLogger(__name__)
 pyalex.config.email = "monaalsanghvi1998@gmail.com"
-min_cited_by_count = 20
+min_cited_by_count = 0
 
 
 def create_strings_for_filters(filter_list):
@@ -46,17 +46,17 @@ def get_institution_id_list(institutions):
     return institution_ids[:len(institution_ids) - 1]
 
 
-def get_publisher_id_list(publisher_ranks):
+def get_publisher_id_list(publisher_ranks, dataset_id):
 
     try:
         publisher_ids = {}
         df = pd.read_csv('main/modules/jqr.csv')
         df_final = pd.DataFrame()
         for publisher_rank in publisher_ranks:
-            df_filtered = df[df['SJR Best Quartile'] == publisher_rank]
+            df_filtered = df[df['sjr'] == publisher_rank]
             df_final = pd.concat([df_final, df_filtered], ignore_index=True)
         for i in range(len(df_final)):
-            publisher_ids[df_final['source_id'][i]] = df_final['SJR Best Quartile'][i]
+            publisher_ids[df_final[dataset_id][i]] = df_final['sjr'][i]
         return publisher_ids
     except Exception as e:
         raise ("Error getting SJR rank", e)
@@ -82,24 +82,32 @@ def create_http_url_for_open_alex(query, start_year, end_year, citation_count, p
 
 
 def get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors):
-    filtered_papers = []
-    if not published_in:
-        published_in = ["Q1", "Q2", "Q3", "Q4"]
     http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in,
                                              authors)
     response = requests.get(http_url)
     data = response.json()
     papers = [convert_oa_response_to_research_paper(work) for work in data['results']]
+    unique_papers = list({paper.open_alex_id: paper for paper in papers}.values())
+    if published_in:
+        unique_papers = get_filtered_by_sjr_papers(published_in, unique_papers)
+    return unique_papers
+
+
+def get_filtered_by_sjr_papers(published_in, papers):
+    filtered_papers = []
     for paper in papers:
         try:
-            publisher_ids = get_publisher_id_list(published_in)
-            if paper.oa_url and paper.oa_url.endswith(".pdf") and paper.publication_id and publisher_ids.get(paper.publication_id, None):
+            publisher_ids = get_publisher_id_list(published_in, "source_id")
+            if paper.oa_url and paper.oa_url.endswith(".pdf") and paper.publication_id and publisher_ids.get(
+                    paper.publication_id, None):
                 setattr(paper, "publication_quartile", publisher_ids[paper.publication_id])
                 filtered_papers.append(paper)
                 logger.info("Fetched relevant papers")
-                return papers
+                return filtered_papers
         except Exception as e:
-            raise(f"Error processing paper: {e}")
+            raise (f"Error processing paper: {e}")
+
+
     # relevant_papers = rank_documents(query, papers)
 
 #get_relevant_papers("Deepfake Detection using Computer vision", 2018, 2023, None, ["Q1", "Q2"], None, None)

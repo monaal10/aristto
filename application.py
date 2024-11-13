@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify, render_template
+import bson
+from flask import Flask, request, jsonify
 import logging
 import datetime
 import uuid
@@ -7,7 +8,7 @@ from modules.answer_a_question_module import answer_a_question
 from modules.chat_with_paper_module import chat
 from modules.extract_paper_info_module import extract_paper_information
 from utils.chunk_operations import parallel_download_and_chunk_papers, get_relevant_chunks
-from modules.literature_review_agent_module import analyze_research_query
+from modules.literature_review_agent_module import execute_literature_review
 from modules.relevant_papers_module import get_relevant_papers
 from flask_cors import CORS
 from classes.mongodb import insert_data, fetch_data, update_data
@@ -144,15 +145,16 @@ def get_literature_review():
         citation_count = data.get('citation_count', None)
         authors = data.get('authors', None)
         published_in = data.get('published_in', None)
-        literature_review = analyze_research_query(query, start_year, end_year, citation_count, published_in, authors)
-        literature_review_json = [theme.dict() for theme in literature_review]
+        literature_review = execute_literature_review(query, start_year, end_year, citation_count, published_in, authors)
+        papers = [reference.dict() for reference in literature_review.references]
         literature_review_id = uuid.uuid4()
         response = {
             "userId": user_id,
-            "literatureReviewId": literature_review_id,
-            "literatureReview": literature_review_json
+            "literatureReviewId": str(literature_review_id),
+            "literatureReview": literature_review.dict()
         }
         insert_data(response, LITERATURE_REVIEW_DATABASE)
+        insert_data(papers, RESEARCH_PAPER_DATABASE)
         return jsonify(response)
     except Exception as e:
         raise e
