@@ -22,19 +22,21 @@ def get_embedding(text: str, model: str = openai_model, max_retries: int = 3) ->
    """
     for attempt in range(max_retries):
         try:
-            response = openai.embeddings.create(
-                input=[text],
-                model=model
-            )
-            return response.data[0].embedding
+            if text:
+                response = openai.embeddings.create(
+                    input=[text],
+                    model=model
+                )
+                return response.data[0].embedding
         except Exception as e:
             if attempt == max_retries - 1:
                 print(f"Max retries reached. Final error: {e}")
                 return []
 
             print(f"Attempt {attempt + 1} failed: {e}")
-            text = text[:len(text) // 2]  # Halve the text length
-            print(f"Retrying with text length: {len(text)}")
+            if text:
+                text = text[:len(text) // 2]  # Halve the text length
+                print(f"Retrying with text length: {len(text)}")
 
     return []
 

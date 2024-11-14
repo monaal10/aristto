@@ -1,4 +1,3 @@
-import bson
 from flask import Flask, request, jsonify
 import logging
 import datetime
@@ -18,7 +17,7 @@ from utils.convert_data import convert_oa_response_to_research_paper
 from utils.string_utils import JsonResp
 from flask import Blueprint
 
-from main.user.models import User
+from user.models import User
 from utils.auth_utils import token_required
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -26,65 +25,53 @@ logger = logging.getLogger(__name__)
 
 user_blueprint = Blueprint("user", __name__)
 
-
-@user_blueprint.route("/profile", methods=["GET"])
+@user_blueprint.route("/profile", methods=["GET", 'OPTIONS'])
 @token_required
 def get():
     return User().get()
 
-
-@user_blueprint.route("/auth", methods=["GET"])
+@user_blueprint.route("/auth", methods=["GET", 'OPTIONS'])
 @token_required
 def getAuth():
     return User().getAuth()
 
-
-@user_blueprint.route("/login", methods=["POST"])
+@user_blueprint.route("/login", methods=["POST", 'OPTIONS'])
 def login():
     return User().login()
 
-
-@user_blueprint.route("/logout", methods=["GET"])
+@user_blueprint.route("/logout", methods=["GET", 'OPTIONS'])
 @token_required
 def logout():
     return User().logout()
 
-
-@user_blueprint.route("/create", methods=["POST"])
+@user_blueprint.route("/create", methods=["POST", 'OPTIONS'])
 def add():
     return User().add()
 
-
 application = Flask(__name__)
-application.register_blueprint(user_blueprint, url_prefix="/api/user")
-cors_config = {
-    "origins": ["http://localhost:3000"],
-    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin", "accesstoken"],
-    "expose_headers": ["Content-Type", "Authorization"],
-    "supports_credentials": True,
-    "max_age": 3600
-}
 
-CORS(application, origins=cors_config["origins"], supports_credentials=True, methods=cors_config["methods"],
-     allow_headers=cors_config["allow_headers"], expose_headers=cors_config["expose_headers"])
+# Configure CORS
+CORS(application)
 
-
+# Add CORS headers to all responses
 @application.after_request
 def after_request(response):
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,Access-Control-Allow-Origin,accesstoken')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
 
+application.register_blueprint(user_blueprint, url_prefix="/user")
 
-@application.route("/api")
+@application.route("/")
 def index():
     return JsonResp({"status": "Online"}, 200)
 
-
-@application.route('/chatWithPapers', methods=['POST'])
+@application.route('/chatWithPapers', methods=['POST', 'OPTIONS'])
 def chat_with_papers():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'}), 200
     try:
         start_time = datetime.datetime.now()
         logger.info(f"Request received at: {start_time}")
@@ -106,9 +93,10 @@ def chat_with_papers():
     except Exception as e:
         raise e
 
-
-@application.route('/askQuestion', methods=['POST'])
+@application.route('/askQuestion', methods=['POST', 'OPTIONS'])
 def ask_question():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'}), 200
     try:
         start_time = datetime.datetime.now()
         logger.info(f"Request received at: {start_time}")
@@ -131,9 +119,10 @@ def ask_question():
     except Exception as e:
         raise e
 
-
-@application.route('/getLiteratureReview', methods=['POST'])
+@application.route('/getLiteratureReview', methods=['POST', 'OPTIONS'])
 def get_literature_review():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'}), 200
     try:
         start_time = datetime.datetime.now()
         logger.info(f"Request received at: {start_time}")
@@ -162,9 +151,10 @@ def get_literature_review():
     except Exception as e:
         raise e
 
-
-@application.route('/getPaperInfo', methods=['POST'])
+@application.route('/getPaperInfo', methods=['POST', 'OPTIONS'])
 def get_paper_info():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'}), 200
     try:
         start_time = datetime.datetime.now()
         logger.info(f"Request received at: {start_time}")
@@ -181,6 +171,5 @@ def get_paper_info():
     except Exception as e:
         raise e
 
-
 if __name__ == '__main__':
-    application.run(host='0.0.0.0', port=8000, debug=True)
+    application.run(debug=True)
