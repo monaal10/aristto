@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 from classes.research_paper import ResearchPaper
-from prompts.literature_review_prompts import PROMPT_FOR_CITATIONS
 
 
 class PaperInformation(BaseModel):
@@ -84,7 +83,7 @@ class InsightGeneration(BaseModel):
 
 class LiteratureReview(BaseModel):
     references: List[ReferenceWithMetadata] = Field(default_factory=list)
-    insights: str = Field(default_factory=str)
+    insights: Dict[str, str] = Field(default_factory=Dict)
 
     class Config:
         arbitrary_types_allowed = True

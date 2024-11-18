@@ -10,7 +10,7 @@ from utils.azure_openai_utils import get_openai_4o_mini
 from utils.pdf_operations import download_pdf
 from modules.relevant_papers_module import get_relevant_papers
 from classes.lit_review_agent_classes import AgentState, LiteratureReview, \
-    ReferenceWithMetadata, Themes, PaperValidation
+    ReferenceWithMetadata, Themes, PaperValidation, InsightGeneration
 from prompts.literature_review_prompts import THEME_IDENTIFICATION_PROMPT, PAPER_VALIDATION_PROMPT, \
     INFORMATION_EXTRACTION_RESPONSE_PROMPT, CREATE_LITERATURE_REVIEW_PROMPT, \
     EXTRACT_PAPER_INFO_PROMPT
@@ -23,7 +23,7 @@ def identify_themes(query):
     try:
         llm_with_output = llm.with_structured_output(Themes)
         themes = get_model_response(llm_with_output, THEME_IDENTIFICATION_PROMPT, {"query": query})
-        return themes.get("themes")[:THEME_NUMBER_LIMIT]
+        return themes.themes[:THEME_NUMBER_LIMIT]
     except Exception as e:
         raise f"Error in theme identification: {e}"
 
@@ -35,7 +35,7 @@ def validate_and_download_paper(paper, theme):
                                       PAPER_VALIDATION_PROMPT,
                                       {"theme": theme,
              "paper": f""" paper_title : {paper.title} , paper_abstract : {paper.abstract}"""})
-        if response["answer"] == True:
+        if response.answer == True:
             downloaded_paper = download_pdf(paper)
         return downloaded_paper
     except Exception as e:
@@ -140,7 +140,6 @@ def generate_insights(papers, query):
                     dic = selected_paper_info[section]
                     for key, value in dic.items():
                         references[key] = value
-
         response = get_model_response(llm,
                                       CREATE_LITERATURE_REVIEW_PROMPT,
                                       {"papers": json.dumps(papers_with_section_info), "query": query}
@@ -162,10 +161,22 @@ def format_response(response, references, papers):
                 if paper and paper.open_alex_id == paper_id:
                     reference_with_metadata_list.append(
                         ReferenceWithMetadata(reference_id=key, paper_id=paper_id, reference_metadata=paper, reference_text=value))
-        summary = LiteratureReview(references=reference_with_metadata_list, insights=response)
+        dict_response = extract_sections(response)
+        summary = LiteratureReview(references=reference_with_metadata_list, insights=dict_response)
         return summary
     except Exception as e:
         raise (f"Error in formatting response: {e}")
+
+def extract_sections(literature_review):
+    try:
+        dict_response = {}
+        section_headers_split = literature_review.split("###")
+        section_headers = [i.split("\n\n", 1) for i in section_headers_split[2:]]
+        for i in section_headers:
+                dict_response[i[0]] = i[1]
+        return dict_response
+    except Exception as e:
+        raise (f"Error in extracting sections: {e}")
 
 def execute_literature_review(query, start_year, end_year, citation_count, published_in, authors):
     try:
