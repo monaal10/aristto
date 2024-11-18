@@ -33,11 +33,9 @@ def insert_data(data, database_name):
 
 
 def fetch_data(data, database_name):
-    results = []
     try:
         collection = database[database_name]
-        for result in collection.find(data):
-            results.append(result)
+        results = list(collection.find(data))
         return results
     except Exception as e:
         raise Exception("Could not fetch data from MongoDB" + e)
