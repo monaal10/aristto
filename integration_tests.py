@@ -40,6 +40,15 @@ class TestIntegration(unittest.TestCase):
             self.assertIsNotNone(response_data.get('userId'))
 
 
+    def test_login(self):
+        with application.app_context():
+            data = {
+                'email': 'monaalsanghvi1998@gmail.com',
+                'password': 'Abcd1234!',
+
+            }
+            response = application.test_client().post('/user/login', data=json.dumps(data), content_type='application/json')
+            self.assertEqual(response.status_code, 200)
 
 
 
