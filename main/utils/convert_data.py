@@ -11,10 +11,7 @@ logger = logging.getLogger(__name__)
 
 def convert_mongodb_to_research_paper(paper):
     try:
-        response = ResearchPaper()
-        for key in paper.keys():
-            response[key] = paper[key]
-        return response
+        return ResearchPaper(**paper)
     except Exception as e:
         raise f"Could not convert mongoDB response to research paper: {e}"
 
