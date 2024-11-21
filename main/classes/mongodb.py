@@ -1,5 +1,5 @@
-from pymongo import MongoClient, InsertOne
-from pymongo.errors import BulkWriteError
+from pymongo import MongoClient, InsertOne, UpdateOne
+from pymongo.errors import BulkWriteError, DuplicateKeyError
 from pymongo.server_api import ServerApi
 import logging
 
@@ -15,21 +15,13 @@ database = client['aristto']
 
 def insert_data(data, database_name):
     collection = database[database_name]
-    # Prepare bulk operations
-    operations = [
-        InsertOne(paper) for paper in data
-    ] if database_name == RESEARCH_PAPER_DATABASE else [InsertOne(data)]
-
-    # Perform bulk write operation
     try:
-        result = collection.bulk_write(operations, ordered=False)
-        inserted_count = result.inserted_count
-        logger.info(f"Successfully inserted {inserted_count} new papers.")
-    except BulkWriteError as bwe:
-        inserted_count = bwe.details['nInserted']
-        logger.info(f"Inserted {inserted_count} new papers. Some papers were already in the database.")
+        [collection.update_one({"id": doc["open_alex_id"]}, {"$set": doc}, upsert=True) for doc in data]
+        logger.info(f"Successfully inserted {len(data)} new documents.")
+    except DuplicateKeyError:
+        logger.info(f"This paper was already in database")
     except Exception as e:
-        raise f"Could not insert data in mongodb, {e}"
+        raise e
 
 
 def fetch_data(data, database_name):
@@ -42,7 +34,6 @@ def fetch_data(data, database_name):
 
 
 def update_data(data, database_name, filter, operation):
-    # Update multiple documents
     try:
         update_data = {
             operation: data
@@ -54,3 +45,4 @@ def update_data(data, database_name, filter, operation):
         )
     except Exception as e:
         raise Exception("Could not update data in MongoDB :", e)
+

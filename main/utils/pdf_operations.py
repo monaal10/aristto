@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 def download_pdf(paper):
     result = fetch_data({"open_alex_id": paper.open_alex_id}, RESEARCH_PAPER_DATABASE)
     if len(result) == 1 and result[0].get("pdf_content"):
-        return convert_mongodb_to_research_paper(result)
+        return convert_mongodb_to_research_paper(result[0])
     url = paper.oa_url
     try:
         user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.44/72.124 Safari/537.36'

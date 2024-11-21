@@ -150,7 +150,7 @@ class User:
                     "error": "email_exists"
                 }, 400)
 
-            result = insert_data(user, USERS_DATABASE)
+            insert_data([user], USERS_DATABASE)
 
             # Log the user in (create and return tokens)
             access_token = encodeAccessToken(user["id"], user["email"], user["plan"])

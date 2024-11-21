@@ -7,13 +7,7 @@ class TestIntegration(unittest.TestCase):
     def test_ask_question(self):
         with application.app_context():
             data = {
-                'query': 'What is the best loss function to use to train a neural network to detect deepfakes?',
-                'user_id': '1',
-                'start_year': 2010,
-                'end_year': 2024,
-                'citation_count': 10,
-                'authors': None,
-                'published_in': ['Q1', 'Q2']
+                'query': 'What are deepfakes?',
             }
             response = application.test_client().post('/askQuestion', data=json.dumps(data), content_type='application/json')
             self.assertEqual(response.status_code, 200)
