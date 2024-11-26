@@ -45,4 +45,16 @@ class TestIntegration(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
 
 
+    def test_chat(self):
+        with application.app_context():
+            data = {
+                'query': 'Give me a summary',
+                'paper_ids': ['W3047499317'],
+                'conversation_history': []
+            }
+            response = application.test_client().post('/chatWithPapers', data=json.dumps(data), content_type='application/json')
+            self.assertEqual(response.status_code, 200)
+            response_data = json.loads(response.data)
+
+
 

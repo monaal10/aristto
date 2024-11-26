@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask
 import logging
 import datetime
 import uuid
@@ -6,21 +6,24 @@ import uuid
 from modules.answer_a_question_module import answer_a_question
 from modules.chat_with_paper_module import chat
 from modules.extract_paper_info_module import extract_paper_information
+from modules.literature_review_agent_module import execute_literature_review
 from utils import string_utils
 from utils.chunk_operations import parallel_download_and_chunk_papers, get_relevant_chunks
-from modules.literature_review_agent_module import execute_literature_review
 from modules.relevant_papers_module import get_relevant_papers
 from flask_cors import CORS
 from classes.mongodb import insert_data, fetch_data, update_data
 from utils.constants import RESEARCH_PAPER_DATABASE, LITERATURE_REVIEW_DATABASE, RELEVANT_CHUNKS_TO_RETRIEVE, \
     MONGODB_SET_OPERATION, APPLICATION_SECRET_KEY, SAVED_PAPERS_DATABASE
 from utils.convert_data import convert_oa_response_to_research_paper, convert_mongodb_to_research_paper
+from utils.json_encoder import JSONEncoder
 from utils.string_utils import JsonResp
 from flask import Blueprint
-from utils.mocks import MOCK_RESPONSE_JSON, ASK_QUESTION_MOCK_RESPONSE
+from utils.mocks import MOCK_RESPONSE_JSON
 from user.models import User
 from utils.auth_utils import token_required
-
+from flask import jsonify, request
+from bson.json_util import dumps
+import json
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -102,15 +105,17 @@ def chat_with_papers():
         paper_ids = data.get('paper_ids', None)
         conversation_history = data.get('conversation_history', [])
         paper_ids_dict = [{"id": paper_id} for paper_id in paper_ids]
-        papers = fetch_data(paper_ids_dict, RESEARCH_PAPER_DATABASE)
-        final_papers = [convert_oa_response_to_research_paper(paper) for paper in papers]
+        papers = []
+        for paper_id in paper_ids_dict:
+            papers.extend(fetch_data(paper_id, RESEARCH_PAPER_DATABASE))
+        final_papers = [convert_mongodb_to_research_paper(paper) for paper in papers]
         if len(final_papers) > 1:
             relevant_chunks = get_relevant_chunks(query, final_papers)[:RELEVANT_CHUNKS_TO_RETRIEVE]
         else:
             relevant_chunks = {"1": final_papers[0].pdf_content}
         result = chat(query, relevant_chunks, conversation_history[:-5])
-        conversation_history.append({"human_message": query, "Assistant message": result})
-        response = {"answer": result, "conversation_history": conversation_history}
+        conversation_history.append({"human_message": query, "assistant_message": result.content})
+        response = {"answer": result.content, "conversation_history": conversation_history}
         return jsonify(response)
     except Exception as e:
         raise e
@@ -151,10 +156,9 @@ def get_literature_review():
         start_time = datetime.datetime.now()
         logger.info(f"Request received at: {start_time}")
         data = request.json
-
         user_id = data.get('user_id', None)
         query = data.get('query', None)
-        if not query or len(query) == 0:
+        if not query:
             return string_utils.JsonResp({"message": "No query provided"}, 400)
         start_year = data.get('start_year', None)
         end_year = data.get('end_year', None)
@@ -163,9 +167,10 @@ def get_literature_review():
         published_in = data.get('published_in', None)
         literature_review = execute_literature_review(query, start_year, end_year, citation_count, published_in, authors)
         literature_review_dict = literature_review.dict()
-        papers = [reference.dict() for reference in literature_review.references]
+        papers = [reference.reference_metadata.dict() for reference in literature_review.references]
         literature_review_id = uuid.uuid4()
         response = {
+            "literatureReviewName": query,
             "userId": user_id,
             "literatureReviewId": str(literature_review_id),
             "literatureReview": literature_review_dict
@@ -177,7 +182,7 @@ def get_literature_review():
         return jsonify(response)
     except Exception as e:
         raise e
-
+    #return jsonify(MOCK_RESPONSE_JSON)
 
 
 @application.route('/getPaperInfo', methods=['POST', 'OPTIONS'])
@@ -210,7 +215,8 @@ def get_saved_literature_reviews():
         user_id = data.get('user_id', None)
         if not user_id:
             return string_utils.JsonResp({"message": "User not logged in"}, 400)
-        return jsonify(fetch_data({"userId": user_id}, LITERATURE_REVIEW_DATABASE)[0])
+        response = fetch_data({"userId": user_id}, LITERATURE_REVIEW_DATABASE)
+        return json.dumps(response, cls=JSONEncoder), 200, {'Content-Type': 'application/json'}
     except Exception as e:
         raise e
 
@@ -236,21 +242,76 @@ def get_saved_papers():
         raise e
 
 
-@application.route('/savePaper', methods=['POST', 'OPTIONS'])
-def save_paper():
+@application.route('/savePapers', methods=['POST', 'OPTIONS'])
+def save_papers():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'}), 200
     try:
         data = request.json
         user_id = data.get('user_id', None)
         paper_id = data.get('paper_id', None)
+        collection_id = data.get('collection_id', None)
+        collection_name = data.get('collection_name', None)
         if not user_id:
             return string_utils.JsonResp({"message": "User not logged in"}, 400)
-        insert_data({"userId": user_id, "paperId": paper_id}, SAVED_PAPERS_DATABASE)
+        if not collection_id:
+            collection_id = str(uuid.uuid4())
+        insert_data({"userId": user_id, "paperId": paper_id, "collectionId": collection_id,
+                     "collectionName": collection_name}, SAVED_PAPERS_DATABASE)
         return jsonify({'status': 'ok'}), 200
     except Exception as e:
         raise e
 
+
+@application.route('/getCollections', methods=['POST', 'OPTIONS'])
+def get_collections():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'}), 200
+    try:
+        data = request.json
+        user_id = data.get('user_id', None)
+        papers_in_collection = {}
+
+        if not user_id:
+            return string_utils.JsonResp({"message": "User not logged in"}, 400)
+
+        collections = fetch_data({"userId": user_id}, SAVED_PAPERS_DATABASE)
+        if len(collections) == 0:
+            return jsonify([])
+
+        unique_collections = {}
+        for entry in collections:
+            if entry:
+                collection_id = str(entry["collectionId"])  # Convert ObjectId to string
+                collection_name = entry["collectionName"]
+                paper = fetch_data({"id": entry["paperId"]}, RESEARCH_PAPER_DATABASE)[0]
+
+            # Convert any ObjectId in paper to string
+                paper = json.loads(dumps(paper))
+
+                if papers_in_collection.get(collection_id):
+                    papers_in_collection[collection_id].append(paper)
+                else:
+                    papers_in_collection[collection_id] = [paper]
+
+                if collection_id not in unique_collections:
+                    unique_collections[collection_id] = collection_name
+
+        filtered_list = [
+            {
+                "collection_id": k,
+                "collection_name": v,
+                "papers": papers_in_collection[k]
+            }
+            for k, v in unique_collections.items()
+        ]
+
+        # Use custom JSON encoder to handle any remaining ObjectId instances
+        return json.dumps(filtered_list, cls=JSONEncoder), 200, {'Content-Type': 'application/json'}
+
+    except Exception as e:
+        print(f"Error in get_collections: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 

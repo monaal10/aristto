@@ -16,6 +16,9 @@ database = client['aristto']
 def insert_data(data, database_name):
     collection = database[database_name]
     try:
+        if database_name != RESEARCH_PAPER_DATABASE:
+            collection.insert_one(data)
+            return
         [collection.update_one({"id": doc["open_alex_id"]}, {"$set": doc}, upsert=True) for doc in data]
         logger.info(f"Successfully inserted {len(data)} new documents.")
     except DuplicateKeyError:

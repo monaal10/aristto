@@ -100,9 +100,9 @@ class PaperValidation(BaseModel):
 
 class AgentState(BaseModel):
     query: str
-    start_year: Optional[int]
-    end_year: Optional[int]
-    citation_count: Optional[int]
+    start_year: Optional[str]
+    end_year: Optional[str]
+    citation_count: Optional[str]
     published_in: Optional[List[str]]
     authors: Optional[List[str]]
     themes: List[str] = Field(default_factory=list)
