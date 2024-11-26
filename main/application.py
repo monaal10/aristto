@@ -67,7 +67,12 @@ def add():
         return jsonify({'status': 'ok'}), 200
     return User().add()
 
-
+@user_blueprint.route("/refresh-token", methods=["POST", 'OPTIONS'])
+@token_required
+def refresh_token():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'}), 200
+    return User().refresh()
 application = Flask(__name__)
 application.config["secret_key"] = APPLICATION_SECRET_KEY
 # Configure CORS

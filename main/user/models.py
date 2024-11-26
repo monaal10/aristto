@@ -34,32 +34,40 @@ class User:
         }
 
     def get(self):
-        token_data = jwt.decode(request.headers.get('accesstoken'), app.config['secret_key'])
-        user = fetch_data({"id": token_data['user_id']}, USERS_DATABASE)
-        if not user or len(user) == 0:
-            user = {"_id": 0, "password": 0}
-        if user:
-            resp = string_utils.JsonResp(user, 200)
-        else:
-            resp = string_utils.JsonResp({"message": "User not found"}, 404)
+        try:
+            token_data = jwt.decode(request.headers.get('accesstoken'), app.config['secret_key'], algorithms=["HS256"])
+            user = fetch_data({"id": token_data['user_id']}, USERS_DATABASE)
+            if not user or len(user) == 0:
+                user = {"_id": 0, "password": 0}
+            if user:
+                resp = string_utils.JsonResp(user, 200)
+            else:
+                resp = string_utils.JsonResp({"message": "User not found"}, 404)
+        except jwt.ExpiredSignatureError:
+            resp = string_utils.JsonResp({"message": "Token has expired"}, 401)
+        except jwt.InvalidTokenError:
+            resp = string_utils.JsonResp({"message": "Token is invalid"}, 401)
+        except Exception as e:
+            resp = string_utils.JsonResp({"message": str(e)}, 401)
         return resp
 
     def getAuth(self):
-        access_token = request.headers.get("accesstoken")
-        if access_token:
-            try:
-                decoded = jwt.decode(access_token, app.config["secret_key"])
-                resp = string_utils.JsonResp(decoded, 200)
-            except Exception as e:
-                resp = string_utils.JsonResp({"message": str(e)}, 401)
-        else:
-            resp = string_utils.JsonResp({"message": "User not logged in"}, 401)
+        access_token = request.headers.get("accesstoken")  # Make sure header name matches
+        if not access_token:
+            return string_utils.JsonResp({"message": "No access token provided"}, 401)
 
-        return resp
+        try:
+            decoded = jwt.decode(access_token, app.config["secret_key"], algorithms=["HS256"])
+            return string_utils.JsonResp(decoded, 200)
+        except jwt.ExpiredSignatureError:
+            return string_utils.JsonResp({"message": "Token has expired"}, 401)
+        except jwt.InvalidTokenError:
+            return string_utils.JsonResp({"message": "Token is invalid"}, 401)
+        except Exception as e:
+            print(f"Auth error: {str(e)}")  # Add logging for debugging
+            return string_utils.JsonResp({"message": str(e)}, 401)
 
     def login(self):
-        resp = string_utils.JsonResp({"message": "Invalid user credentials"}, 403)
-
         try:
             data = json.loads(request.data)
             email = data["email"].lower()
@@ -69,22 +77,18 @@ class User:
                 # Ensure all values passed to token encoding are strings
                 user_id = str(user["_id"])
                 user_email = str(user["email"])
-                user_plan = str(user["plan"])  # Convert plan to string if it's not already
+                user_plan = str(user["plan"])
 
                 access_token = encodeAccessToken(user_id, user_email, user_plan)
                 refresh_token = encodeRefreshToken(user_id, user_email, user_plan)
 
-                # Convert ObjectId back for MongoDB query
-
                 filter = {"_id": ObjectId(user["_id"])}
-
-                data = {
+                update_data({
                     "refresh_token": refresh_token,
                     "last_login": string_utils.nowDatetimeUTC()
-                }
-                update_data(data, USERS_DATABASE, filter, MONGODB_SET_OPERATION)
+                }, USERS_DATABASE, filter, MONGODB_SET_OPERATION)
 
-                resp = string_utils.JsonResp({
+                return string_utils.JsonResp({
                     "id": user_id,
                     "email": user_email,
                     "first_name": user["first_name"],
@@ -93,19 +97,19 @@ class User:
                     "access_token": access_token,
                     "refresh_token": refresh_token
                 }, 200)
-        except JSONDecodeError:
-            resp = string_utils.JsonResp({"message": "Invalid JSON format"}, 400)
-        except Exception as e:
-            resp = string_utils.JsonResp({"message": str(e)}, 500)
 
-        return resp
+            return string_utils.JsonResp({"message": "Invalid user credentials"}, 403)
+        except Exception as e:
+            print(f"Login error: {str(e)}")  # Add logging for debugging
+            return string_utils.JsonResp({"message": str(e)}, 500)
 
     def logout(self):
         try:
-            token_data = jwt.decode(request.headers.get("AccessToken"), app.config["secret_key"])
+            # Add algorithms parameter to decode
+            token_data = jwt.decode(request.headers.get("AccessToken"), app.config["secret_key"], algorithms=["HS256"])
             filter = {"id": token_data["user_id"]}
             data = {
-                {"refresh_token": ""}
+                "refresh_token": ""
             }
             update_data(data, USERS_DATABASE, filter, MONGODB_UNSET_OPERATION)
             resp = string_utils.JsonResp({"message": "User logged out"}, 200)
@@ -169,3 +173,54 @@ class User:
             }, 201)
         except Exception:
             return string_utils.JsonResp({"message": "User could not be added"}, 400)
+
+    def refresh(self):
+        try:
+            data = json.loads(request.data)
+            refresh_token = data.get('refresh_token')
+
+            if not refresh_token:
+                return string_utils.JsonResp({"message": "Refresh token is required"}, 400)
+
+            # Verify the refresh token exists in the database
+            users = fetch_data({"refresh_token": refresh_token}, USERS_DATABASE)
+            if not users or len(users) == 0:
+                return string_utils.JsonResp({"message": "Invalid refresh token"}, 401)
+
+            user = users[0]
+
+            try:
+                # Decode the refresh token
+                decoded = jwt.decode(refresh_token, app.config["secret_key"], algorithms=["HS256"])
+
+                # Generate new access token
+                new_access_token = encodeAccessToken(
+                    str(user["_id"]),  # Ensure we convert ObjectId to string
+                    user["email"],
+                    user["plan"]
+                )
+
+                return string_utils.JsonResp({
+                    "new_access_token": new_access_token,
+                    "message": "Token refreshed successfully"
+                }, 200)
+
+            except jwt.ExpiredSignatureError:
+                # Remove expired refresh token from database
+                update_data(
+                    {"refresh_token": ""},
+                    USERS_DATABASE,
+                    {"refresh_token": refresh_token},
+                    MONGODB_UNSET_OPERATION
+                )
+                return string_utils.JsonResp({"message": "Refresh token has expired"}, 401)
+
+            except jwt.InvalidTokenError:
+                return string_utils.JsonResp({"message": "Invalid refresh token format"}, 401)
+
+        except JSONDecodeError:
+            return string_utils.JsonResp({"message": "Invalid JSON format"}, 400)
+        except Exception as e:
+            # Log the actual error for debugging
+            print(f"Refresh token error: {str(e)}")
+            return string_utils.JsonResp({"message": "Internal server error", "error": str(e)}, 500)
