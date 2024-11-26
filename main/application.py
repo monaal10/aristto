@@ -189,6 +189,28 @@ def get_literature_review():
         raise e
     #return jsonify(MOCK_RESPONSE_JSON)
 
+@application.route('/getRelevantPapers', methods=['POST', 'OPTIONS'])
+def get_papers():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'}), 200
+    try:
+        start_time = datetime.datetime.now()
+        logger.info(f"Request received at: {start_time}")
+        data = request.json
+        query = data.get('query', None)
+        if not query or len(query) == 0:
+            return string_utils.JsonResp({"message": "No query provided"}, 400)
+        start_year = data.get('start_year', None)
+        end_year = data.get('end_year', None)
+        citation_count = data.get('citation_count', None)
+        authors = data.get('authors', None)
+        published_in = data.get('published_in', None)
+        relevant_papers = get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors)
+        papers_json = [paper.dict() for paper in relevant_papers]
+        insert_data(papers_json, RESEARCH_PAPER_DATABASE)
+        return jsonify({"references": papers_json})
+    except Exception as e:
+        raise e
 
 @application.route('/getPaperInfo', methods=['POST', 'OPTIONS'])
 def get_paper_info():
