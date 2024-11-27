@@ -19,10 +19,10 @@ class TestIntegration(unittest.TestCase):
         with application.app_context():
             data = {
                 'query': 'Give me an overview of the research done around the topic deepfake detection',
-                'start_year': 2010,
+                'start_year': "2010",
                 'user_id': '1',
-                'end_year': 2024,
-                'citation_count': 5,
+                'end_year': "2024",
+                'citation_count': "5",
                 'authors': None,
                 'published_in': None
             }
