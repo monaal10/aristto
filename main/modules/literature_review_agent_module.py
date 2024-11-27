@@ -47,21 +47,17 @@ def find_papers(state: AgentState):
         state.themes_with_papers = {}
         papers_to_download = 5
         for theme in state.themes:
-
             papers_found = 0
-            # Update the function call with actual values
             papers = get_relevant_papers(theme, state.start_year, state.end_year, state.citation_count,
                                          state.published_in, state.authors)[:20]
             for i in range(0, len(papers), papers_to_download):
                 if not (papers_to_download - papers_found > 0):
                     break
-                with ThreadPoolExecutor(max_workers=8) as executor:  # Adjust number of workers based on CPU capacity
-                    futures = {executor.submit(validate_and_download_paper, paper, theme): paper for paper in papers}
-                    for future in as_completed(futures):
-                        paper = future.result()
-                        if paper.pdf_content:
-                            final_papers.append(paper)
-                            papers_found += 1
+                for paper in papers:
+                    validated_paper = validate_and_download_paper(paper, theme)
+                    if validated_paper.pdf_content:
+                        final_papers.append(paper)
+                        papers_found += 1
                     if not (papers_to_download - papers_found > 0):
                         break
             state.themes_with_papers[theme] = final_papers
