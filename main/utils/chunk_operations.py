@@ -122,6 +122,7 @@ def get_relevant_chunks(query: str, papers, k1: float = 1.5, b: float = 0.75):
                     'paper_id': metadata['doc_id'],
                     'chunk_id': metadata['chunk_id'],
                     'chunk_text': metadata['text'],
+                    'title': metadata['title'],
                     'score': score
                 })
 

@@ -114,10 +114,15 @@ def chat_with_papers():
         for paper_id in paper_ids_dict:
             papers.extend(fetch_data(paper_id, RESEARCH_PAPER_DATABASE))
         final_papers = [convert_mongodb_to_research_paper(paper) for paper in papers]
+        relevant_chunks = []
         if len(final_papers) > 1:
-            relevant_chunks = get_relevant_chunks(query, final_papers)[:RELEVANT_CHUNKS_TO_RETRIEVE]
+            for paper in final_papers:
+                if not paper.pdf_content:
+                    paper = parallel_download_and_chunk_papers([paper])[0]
+                    insert_data(paper.dict(), RESEARCH_PAPER_DATABASE)
+                relevant_chunks.extend(get_relevant_chunks(query, [paper])[:5])
         else:
-            relevant_chunks = {"1": final_papers[0].pdf_content}
+            relevant_chunks = {final_papers[0].title: final_papers[0].pdf_content}
         result = chat(query, relevant_chunks, conversation_history[:-5])
         conversation_history.append({"human_message": query, "assistant_message": result.content})
         response = {"answer": result.content, "conversation_history": conversation_history}
