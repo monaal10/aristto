@@ -122,7 +122,7 @@ def chat_with_papers():
                     insert_data(paper.dict(), RESEARCH_PAPER_DATABASE)
                 relevant_chunks.extend(get_relevant_chunks(query, [paper])[:5])
         else:
-            relevant_chunks = {final_papers[0].title: final_papers[0].pdf_content}
+            relevant_chunks = [{"title": final_papers[0].title, "chunk_text": final_papers[0].pdf_content}]
         result = chat(query, relevant_chunks, conversation_history[:-5])
         conversation_history.append({"human_message": query, "assistant_message": result.content})
         response = {"answer": result.content, "conversation_history": conversation_history}
@@ -162,7 +162,7 @@ def ask_question():
 def get_literature_review():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'}), 200
-    try:
+    """try:
         start_time = datetime.datetime.now()
         logger.info(f"Request received at: {start_time}")
         data = request.json
@@ -191,8 +191,8 @@ def get_literature_review():
             response["_id"] = str(response.get("_id"))
         return jsonify(response)
     except Exception as e:
-        raise e
-    #return jsonify(MOCK_RESPONSE_JSON)
+        raise e"""
+    return jsonify(MOCK_RESPONSE_JSON)
 
 @application.route('/getRelevantPapers', methods=['POST', 'OPTIONS'])
 def get_papers():
