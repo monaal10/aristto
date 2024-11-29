@@ -14,10 +14,12 @@ from classes.lit_review_agent_classes import AgentState, LiteratureReview, \
 from prompts.literature_review_prompts import THEME_IDENTIFICATION_PROMPT, PAPER_VALIDATION_PROMPT, \
     INFORMATION_EXTRACTION_RESPONSE_PROMPT, CREATE_LITERATURE_REVIEW_PROMPT, \
     EXTRACT_PAPER_INFO_PROMPT
-
+from json.decoder import JSONDecodeError
+from time import sleep
 llm = get_openai_4o_mini()
 # Cache setup
 langchain_cache = InMemoryCache()
+
 
 def identify_themes(query):
     try:
@@ -26,6 +28,7 @@ def identify_themes(query):
         return themes.themes[:THEME_NUMBER_LIMIT]
     except Exception as e:
         raise f"Error in theme identification: {e}"
+
 
 def validate_and_download_paper(paper, theme):
     try:
@@ -39,7 +42,8 @@ def validate_and_download_paper(paper, theme):
             downloaded_paper = download_pdf(paper)
         return downloaded_paper
     except Exception as e:
-                raise(f"Error in paper validation and downloading: {e}")
+        raise (f"Error in paper validation and downloading: {e}")
+
 
 def find_papers(state: AgentState):
     try:
@@ -55,19 +59,18 @@ def find_papers(state: AgentState):
                     break
                 for paper in papers:
                     validated_paper = validate_and_download_paper(paper, theme)
-                    if validated_paper.pdf_content:
-                        final_papers.append(paper)
+                    if validated_paper.pdf_content is not None:
+                        final_papers.append(validated_paper)
                         papers_found += 1
                     if not (papers_to_download - papers_found > 0):
                         break
             state.themes_with_papers[theme] = final_papers
         return final_papers
     except Exception as e:
-                raise(f"Error in paper finding: {e}")
+        raise (f"Error in paper finding: {e}")
 
 
-from json.decoder import JSONDecodeError
-from time import sleep
+
 
 
 def extract_information(papers, max_retries=3, retry_delay=1):
@@ -156,12 +159,14 @@ def format_response(response, references, papers):
             for paper in papers:
                 if paper and paper.open_alex_id == paper_id:
                     reference_with_metadata_list.append(
-                        ReferenceWithMetadata(reference_id=key, paper_id=paper_id, reference_metadata=paper, reference_text=value))
+                        ReferenceWithMetadata(reference_id=key, paper_id=paper_id, reference_metadata=paper,
+                                              reference_text=value))
         dict_response = extract_sections(response)
         summary = LiteratureReview(references=reference_with_metadata_list, insights=dict_response)
         return summary
     except Exception as e:
         raise (f"Error in formatting response: {e}")
+
 
 def extract_sections(literature_review):
     try:
@@ -169,10 +174,11 @@ def extract_sections(literature_review):
         section_headers_split = literature_review.split("###")
         section_headers = [i.split("\n", 1) for i in section_headers_split[1:]]
         for i in section_headers:
-                dict_response[i[0]] = i[1]
+            dict_response[i[0]] = i[1]
         return dict_response
     except Exception as e:
         raise (f"Error in extracting sections: {e}")
+
 
 def execute_literature_review(query, start_year, end_year, citation_count, published_in, authors):
     try:
