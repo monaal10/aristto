@@ -167,7 +167,7 @@ def extract_sections(literature_review):
     try:
         dict_response = {}
         section_headers_split = literature_review.split("###")
-        section_headers = [i.split("\n\n", 1) for i in section_headers_split[2:]]
+        section_headers = [i.split("\n", 1) for i in section_headers_split[1:]]
         for i in section_headers:
                 dict_response[i[0]] = i[1]
         return dict_response
