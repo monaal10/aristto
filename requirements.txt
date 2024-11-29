@@ -3,7 +3,6 @@ datasets
 Flask
 openai
 pandas
-paper-qa
 pillow
 PyMuPDF
 tqdm
@@ -15,3 +14,17 @@ gunicorn
 pyalex
 flask-cors
 pymongo
+jwt
+langchain_anthropic
+langchain_openai
+langchain_text_splitters
+bson
+PyPDF2
+pytz
+pydantic
+pymongo
+langchain_core
+langchain_community
+langchain
+pyalex
+passlib
