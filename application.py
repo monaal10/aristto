@@ -44,7 +44,8 @@ ALLOWED_ORIGINS = [
     "http://[::1]:3000",
     "http://[::1]:5000",
     "http://[::1]:5173",
-    "http://[::1]:8080"
+    "http://[::1]:8080",
+    "https://aristto.com"
 ]
 
 user_blueprint = Blueprint("user", __name__)
