@@ -1,6 +1,6 @@
 from typing import List
 from pydantic import BaseModel, Field, ConfigDict
-from classes.research_paper import ResearchPaper
+from main.classes.research_paper import ResearchPaper
 
 
 class Answer(BaseModel):

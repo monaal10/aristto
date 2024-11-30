@@ -1,8 +1,8 @@
 import logging
 from langchain_core.prompts import PromptTemplate
 
-from prompts.chat_with_paper_prompts import CHAT_WITH_PAPER_PROMPT
-from utils.anthropic_utils import get_claude_haiku
+from main.prompts.chat_with_paper_prompts import CHAT_WITH_PAPER_PROMPT
+from main.utils.anthropic_utils import get_claude_haiku
 
 # Configure the logger
 logging.basicConfig(

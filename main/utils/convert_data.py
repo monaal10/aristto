@@ -4,7 +4,7 @@ import re
 
 import requests
 
-from classes.research_paper import ResearchPaper
+from main.classes.research_paper import ResearchPaper
 
 logger = logging.getLogger(__name__)
 

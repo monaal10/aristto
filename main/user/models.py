@@ -6,10 +6,10 @@ from flask import json
 import jwt
 from passlib.hash import pbkdf2_sha256
 
-from classes.mongodb import fetch_data, update_data, insert_data
-from utils import string_utils
-from utils.auth_utils import encodeAccessToken, encodeRefreshToken
-from utils.constants import USERS_DATABASE, MONGODB_SET_OPERATION, MONGODB_UNSET_OPERATION
+from main.classes.mongodb import fetch_data, update_data, insert_data
+from main.utils import string_utils
+from main.utils.auth_utils import encodeAccessToken, encodeRefreshToken
+from main.utils.constants import USERS_DATABASE, MONGODB_SET_OPERATION, MONGODB_UNSET_OPERATION
 from bson import ObjectId
 
 class Plan(Enum):

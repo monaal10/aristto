@@ -1,8 +1,8 @@
 from langchain_core.prompts import PromptTemplate
-from classes.extract_paper_info_classes import ExtractedPaperInformation
-from prompts.extract_paper_info_prompts import EXTRACT_PAPER_INFO_PROMPT
+from main.classes.extract_paper_info_classes import ExtractedPaperInformation
+from main.prompts.extract_paper_info_prompts import EXTRACT_PAPER_INFO_PROMPT
 
-from utils.anthropic_utils import get_claude_haiku
+from main.utils.anthropic_utils import get_claude_haiku
 
 
 def extract_paper_information(pdf_content):

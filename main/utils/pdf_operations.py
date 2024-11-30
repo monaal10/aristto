@@ -4,9 +4,9 @@ import io
 import requests
 import PyPDF2
 
-from utils.constants import RESEARCH_PAPER_DATABASE
-from classes.mongodb import fetch_data
-from utils.convert_data import convert_mongodb_to_research_paper
+from main.utils.constants import RESEARCH_PAPER_DATABASE
+from main.classes.mongodb import fetch_data
+from main.utils.convert_data import convert_mongodb_to_research_paper
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

@@ -1,9 +1,9 @@
 import json
 from langchain_core.prompts import PromptTemplate
-from classes.answer_a_question_classes import Answer, AskQuestionOutput, AnswerReference
-from prompts.answer_a_question_prompts import ANSWER_A_QUESTION_PROMPT
+from main.classes.answer_a_question_classes import Answer, AskQuestionOutput, AnswerReference
+from main.prompts.answer_a_question_prompts import ANSWER_A_QUESTION_PROMPT
 
-from utils.anthropic_utils import get_claude_haiku
+from main.utils.anthropic_utils import get_claude_haiku
 
 
 def construct_final_output(output, papers_with_chunks):

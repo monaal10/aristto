@@ -1,6 +1,6 @@
 from langchain_anthropic import ChatAnthropic
 
-from utils.constants import CLAUDE_HAIKU_NAME, ANTHROPIC_API_KEY
+from main.utils.constants import CLAUDE_HAIKU_NAME, ANTHROPIC_API_KEY
 
 
 def get_claude_haiku():

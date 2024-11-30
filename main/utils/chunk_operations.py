@@ -5,7 +5,7 @@ import math
 from collections import Counter
 import re
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from utils.pdf_operations import download_pdfs_parallel
+from main.utils.pdf_operations import download_pdfs_parallel
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

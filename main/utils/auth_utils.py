@@ -2,12 +2,12 @@ from flask import current_app as app, jsonify
 from flask import request
 from functools import wraps
 
-from classes.mongodb import fetch_data
+from main.classes.mongodb import fetch_data
 import jwt
 import datetime
 
-from utils.constants import USERS_DATABASE
-from utils.string_utils import JsonResp
+from main.utils.constants import USERS_DATABASE
+from main.utils.string_utils import JsonResp
 
 
 # Auth Decorator

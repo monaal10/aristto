@@ -138,7 +138,7 @@ You are an expert scientific research assistant. Your audience is highly technic
  """
 
 GRAPH_BUILDING_PROMPT = """
-You are a research analysis assistant helping to build a knowledge graph from academic papers. For each paper provided, 
+You are a research analysis assistant helping to static a knowledge graph from academic papers. For each paper provided, 
 analyze its relationship with other papers and identify key connections.
 Here are the papers for that you need to create a graph for : {papers}
 
@@ -199,7 +199,7 @@ Task:
 Guidelines:
 - Focus on substantive relationships (methodology similarities, result comparisons, dataset usage)
 - Identify contradictions or conflicting results
-- Note when papers build upon each other's work
+- Note when papers static upon each other's work
 - Highlight shared or contrasting limitations
 - Consider temporal relationships (which paper came first)
 

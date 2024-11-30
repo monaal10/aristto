@@ -3,15 +3,15 @@ from concurrent.futures import as_completed, ThreadPoolExecutor
 
 from langchain_community.cache import InMemoryCache
 
-from modules.embeddings_module import rank_documents
-from modules.get_llm_response_module import get_model_response
-from utils.constants import THEME_NUMBER_LIMIT
-from utils.azure_openai_utils import get_openai_4o_mini
-from utils.pdf_operations import download_pdf
-from modules.relevant_papers_module import get_relevant_papers
-from classes.lit_review_agent_classes import AgentState, LiteratureReview, \
+from main.modules.embeddings_module import rank_documents
+from main.modules.get_llm_response_module import get_model_response
+from main.utils.constants import THEME_NUMBER_LIMIT
+from main.utils.azure_openai_utils import get_openai_4o_mini
+from main.utils.pdf_operations import download_pdf
+from main.modules.relevant_papers_module import get_relevant_papers
+from main.classes.lit_review_agent_classes import AgentState, LiteratureReview, \
     ReferenceWithMetadata, Themes, PaperValidation, InsightGeneration
-from prompts.literature_review_prompts import THEME_IDENTIFICATION_PROMPT, PAPER_VALIDATION_PROMPT, \
+from main.prompts.literature_review_prompts import THEME_IDENTIFICATION_PROMPT, PAPER_VALIDATION_PROMPT, \
     INFORMATION_EXTRACTION_RESPONSE_PROMPT, CREATE_LITERATURE_REVIEW_PROMPT, \
     EXTRACT_PAPER_INFO_PROMPT
 from json.decoder import JSONDecodeError

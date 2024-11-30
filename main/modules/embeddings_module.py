@@ -3,8 +3,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from typing import List
 
 import pandas as pd
-from classes import research_paper
-from utils.constants import OPENAI_API_KEY, OPENAI_EMBEDDING_MODEL_NAME
+from main.classes import research_paper
+from main.utils.constants import OPENAI_API_KEY, OPENAI_EMBEDDING_MODEL_NAME
 
 # Set up the OpenAI API client
 openai.api_key = OPENAI_API_KEY

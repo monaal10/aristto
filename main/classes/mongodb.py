@@ -3,7 +3,7 @@ from pymongo.errors import BulkWriteError, DuplicateKeyError
 from pymongo.server_api import ServerApi
 import logging
 
-from utils.constants import RESEARCH_PAPER_DATABASE
+from main.utils.constants import RESEARCH_PAPER_DATABASE
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

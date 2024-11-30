@@ -2,11 +2,11 @@ import requests
 from pyalex import Institutions, Authors
 import pyalex
 import logging
-from classes.research_paper import ResearchPaper
+from main.classes.research_paper import ResearchPaper
 # from embeddings_module import rank_documents
 import pandas as pd
 
-from utils.convert_data import convert_oa_response_to_research_paper
+from main.utils.convert_data import convert_oa_response_to_research_paper
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def get_publisher_id_list(publisher_ranks, dataset_id):
 
     try:
         publisher_ids = {}
-        df = pd.read_csv('main/modules/jqr.csv')
+        df = pd.read_csv('modules/jqr.csv')
         df_final = pd.DataFrame()
         for publisher_rank in publisher_ranks:
             df_filtered = df[df['sjr'] == publisher_rank]

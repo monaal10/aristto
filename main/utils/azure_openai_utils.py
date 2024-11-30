@@ -1,4 +1,4 @@
-from utils.constants import AZURE_OPENAI_4o_MINI_ENDPOINT, AZURE_OPENAI_4o_MINI_API_KEY, AZURE_OPENAI_4_ENDPOINT, \
+from main.utils.constants import AZURE_OPENAI_4o_MINI_ENDPOINT, AZURE_OPENAI_4o_MINI_API_KEY, AZURE_OPENAI_4_ENDPOINT, \
     AZURE_OPENAI_4_API_KEY
 
 from langchain_openai import AzureChatOpenAI
