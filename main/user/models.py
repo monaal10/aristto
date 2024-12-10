@@ -13,8 +13,8 @@ from main.utils.constants import USERS_DATABASE, MONGODB_SET_OPERATION, MONGODB_
 from bson import ObjectId
 
 class Plan(Enum):
-    BASIC = "basic"
-    PREMIUM = "premium"
+    FREE = "free"
+    PRO = "pro"
 
 
 class User:
@@ -29,8 +29,11 @@ class User:
             "first_name": "",
             "last_name": "",
             "email": "",
-            "plan": Plan.BASIC.value,  # Default to "basic"
-            "refresh_token": None
+            "plan": Plan.FREE.value,  # Default to "free"
+            "refresh_token": None,
+            "stripe_customer_id": None,
+            "stripe_subscription_id": None,
+            "subscription_status": None,
         }
 
     def get(self):
@@ -39,8 +42,8 @@ class User:
             user = fetch_data({"id": token_data['user_id']}, USERS_DATABASE)
             if not user or len(user) == 0:
                 user = {"_id": 0, "password": 0}
-            if user:
-                resp = string_utils.JsonResp(user, 200)
+            if user and len(user) > 0:
+                resp = string_utils.JsonResp(user[0], 200)
             else:
                 resp = string_utils.JsonResp({"message": "User not found"}, 404)
         except jwt.ExpiredSignatureError:
@@ -127,7 +130,7 @@ class User:
                 "last_name": data.get('last_name'),
                 "email": data.get('email', '').lower(),
                 "password": data.get('password'),
-                "plan": data.get('plan', Plan.BASIC.value)  # Defaults to "basic" if not specified
+                "plan": data.get('plan', Plan.FREE.value)  # Defaults to "basic" if not specified
             }
 
             # Validate required fields
@@ -224,3 +227,24 @@ class User:
             # Log the actual error for debugging
             print(f"Refresh token error: {str(e)}")
             return string_utils.JsonResp({"message": "Internal server error", "error": str(e)}, 500)
+
+
+    def update_subscription(self):
+        try:
+            data = json.loads(request.data)
+            user_id = data.get('user_id')
+            stripe_customer_id = data.get('stripe_customer_id')
+            stripe_subscription_id = data.get('stripe_subscription_id')
+            subscription_status = data.get('subscription_status')
+            plan = data.get('plan')
+            update_data({
+            "stripe_customer_id": stripe_customer_id,
+            "stripe_subscription_id" : stripe_subscription_id,
+            "subscription_status": subscription_status,
+            "plan": plan
+        }, USERS_DATABASE, {"id": user_id}, MONGODB_SET_OPERATION)
+            return string_utils.JsonResp({"Plan updated"}, 201)
+
+        except Exception as e:
+            raise f"Failed to update subscription {e}"
+

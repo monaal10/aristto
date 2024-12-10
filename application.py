@@ -1,3 +1,4 @@
+import stripe
 from flask import Flask, send_from_directory
 import logging
 import datetime
@@ -13,13 +14,13 @@ from main.modules.relevant_papers_module import get_relevant_papers
 from flask_cors import CORS
 from main.classes.mongodb import insert_data, fetch_data, update_data
 from main.utils.constants import RESEARCH_PAPER_DATABASE, LITERATURE_REVIEW_DATABASE, RELEVANT_CHUNKS_TO_RETRIEVE, \
-    MONGODB_SET_OPERATION, APPLICATION_SECRET_KEY, SAVED_PAPERS_DATABASE
+    MONGODB_SET_OPERATION, APPLICATION_SECRET_KEY, SAVED_PAPERS_DATABASE, STRIPE_API_KEY, CLIENT_URL, USERS_DATABASE
 from main.utils.convert_data import convert_oa_response_to_research_paper, convert_mongodb_to_research_paper
 from main.utils.json_encoder import JSONEncoder
 from main.utils.string_utils import JsonResp
 from flask import Blueprint
 from main.utils.mocks import MOCK_RESPONSE_JSON
-from main.user.models import User
+from main.user.models import User, Plan
 from main.utils.auth_utils import token_required
 from flask import jsonify, request
 from bson.json_util import dumps
@@ -94,6 +95,13 @@ def refresh_token():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'}), 200
     return User().refresh()
+
+@user_blueprint.route("/update-subscription", methods=["POST", 'OPTIONS'])
+@token_required
+def update_user_subscription():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'}), 200
+    return User().update_subscription()
 application = Flask(__name__, static_folder='main/static', static_url_path='')
 application.config["secret_key"] = APPLICATION_SECRET_KEY
 # Configure CORS
@@ -382,6 +390,42 @@ def get_collections():
         return jsonify({"error": str(e)}), 500
 
 
+@application.route('/stripe_webhooks', methods=['POST'])
+def webhook():
+    endpoint_secret = 'whsec_e09f4655f9cc30e645be36403940865d3879559423bd305e6fd2cc0bf13a8775'
+    event = None
+    payload = request.data
+    sig_header = request.headers['STRIPE_SIGNATURE']
 
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, endpoint_secret
+        )
+    except ValueError as e:
+        # Invalid payload
+        raise e
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        raise e
+
+    # Handle the event
+    if event['type'] == 'customer.subscription.deleted':
+      subscription = event['data']['object']
+      stripe_customer_id = subscription['customer']
+      update_fields = {
+          "plan": Plan.FREE.value
+      }
+      update_data(
+          update_fields,
+          USERS_DATABASE,
+          {"stripe_customer_id": stripe_customer_id},
+          MONGODB_SET_OPERATION
+      )
+    elif event['type'] == 'customer.subscription.updated':
+      subscription = event['data']['object']
+    else:
+      print('Unhandled event type {}'.format(event['type']))
+
+    return jsonify(success=True)
 if __name__ == '__main__':
     application.run(port=8000, debug=True)
