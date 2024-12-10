@@ -16,10 +16,15 @@ from main.prompts.literature_review_prompts import THEME_IDENTIFICATION_PROMPT, 
     EXTRACT_PAPER_INFO_PROMPT
 from json.decoder import JSONDecodeError
 from time import sleep
+import logging
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 llm = get_openai_4o_mini()
 # Cache setup
 langchain_cache = InMemoryCache()
-
 
 def identify_themes(query):
     try:

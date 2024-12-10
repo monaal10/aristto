@@ -2,9 +2,11 @@ import json
 from langchain_core.prompts import PromptTemplate
 from main.classes.answer_a_question_classes import Answer, AskQuestionOutput, AnswerReference
 from main.prompts.answer_a_question_prompts import ANSWER_A_QUESTION_PROMPT
+from main.utils.azure_openai_utils import get_openai_4o_mini
+import logging
 
-from main.utils.anthropic_utils import get_claude_haiku
-
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 def construct_final_output(output, papers_with_chunks):
     try:
@@ -25,7 +27,7 @@ def construct_final_output(output, papers_with_chunks):
 
 def answer_a_question(query, relevant_chunks, papers_with_chunks):
     try:
-        model = get_claude_haiku()
+        model = get_openai_4o_mini()
         structured_model = model.with_structured_output(Answer)
         prompt_template = PromptTemplate.from_template(ANSWER_A_QUESTION_PROMPT)
         prompt = prompt_template.invoke({"question": {query}, "reference_list": json.dumps(relevant_chunks)})

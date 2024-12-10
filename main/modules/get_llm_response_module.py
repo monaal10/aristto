@@ -24,6 +24,6 @@ def get_model_response(llm, prompt: str, state: Dict):
                     time.sleep(retry_delay)
                     continue
                 else:
-                    raise Exception(f"Error in Claude API call after {num_retries} retries: {e}")
+                    raise Exception(f"Error in API call after {num_retries} retries: {e}")
             else:
-                raise Exception(f"Error in Claude API call: {e}")
+                raise Exception(f"Error in API call: {e}")
