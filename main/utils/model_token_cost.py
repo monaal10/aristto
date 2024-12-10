@@ -1,0 +1,1 @@
+model_tokens_to_dollars = {"gpt-4o-mini": {"input": "0.15", "output": "0.60"}}
