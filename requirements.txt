@@ -14,7 +14,7 @@ gunicorn
 pyalex
 flask-cors
 pymongo
-jwt
+PyJWT==2.8.0
 langchain_anthropic
 langchain_openai
 langchain_text_splitters
@@ -28,3 +28,4 @@ langchain_community
 langchain
 pyalex
 passlib
+stripe
