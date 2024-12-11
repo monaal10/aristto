@@ -408,8 +408,24 @@ def webhook():
         # Invalid signature
         raise e
 
-    # Handle the event
-    if event['type'] == 'customer.subscription.deleted':
+    if event['type'] == 'customer.subscription.created':
+      subscription = event['data']['object']
+      subscription_status = subscription['status']
+      if subscription_status == "trialing" or subscription_status == "active":
+          customer_id = subscription['customer']
+          customer = stripe.Customer.retrieve(customer_id)
+          customer_email = customer['email']
+          update_fields = {
+              "plan": Plan.PRO.value,
+              "stripe_customer_id": customer_id
+          }
+          update_data(
+              update_fields,
+              USERS_DATABASE,
+              {"email": customer_email},
+              MONGODB_SET_OPERATION
+          )
+    elif event['type'] == 'customer.subscription.deleted':
       subscription = event['data']['object']
       stripe_customer_id = subscription['customer']
       update_fields = {
@@ -421,11 +437,10 @@ def webhook():
           {"stripe_customer_id": stripe_customer_id},
           MONGODB_SET_OPERATION
       )
-    elif event['type'] == 'customer.subscription.updated':
-      subscription = event['data']['object']
+
     else:
       print('Unhandled event type {}'.format(event['type']))
 
     return jsonify(success=True)
 if __name__ == '__main__':
-    application.run(port=8000, debug=True)
+    application.run(host="0.0.0.0", port=8000, debug=True)
