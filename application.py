@@ -14,7 +14,8 @@ from main.modules.relevant_papers_module import get_relevant_papers
 from flask_cors import CORS
 from main.classes.mongodb import insert_data, fetch_data, update_data
 from main.utils.constants import RESEARCH_PAPER_DATABASE, LITERATURE_REVIEW_DATABASE, RELEVANT_CHUNKS_TO_RETRIEVE, \
-    MONGODB_SET_OPERATION, APPLICATION_SECRET_KEY, SAVED_PAPERS_DATABASE, STRIPE_API_KEY, CLIENT_URL, USERS_DATABASE
+    MONGODB_SET_OPERATION, APPLICATION_SECRET_KEY, SAVED_PAPERS_DATABASE, STRIPE_API_KEY, CLIENT_URL, USERS_DATABASE, \
+    STRIPE_WEBHOOKS_SECRET_KEY
 from main.utils.convert_data import convert_oa_response_to_research_paper, convert_mongodb_to_research_paper
 from main.utils.json_encoder import JSONEncoder
 from main.utils.string_utils import JsonResp
@@ -390,16 +391,14 @@ def get_collections():
         return jsonify({"error": str(e)}), 500
 
 
-@application.route('/stripe_webhooks', methods=['POST'])
+@application.route('/stripeWebhooks', methods=['POST'])
 def webhook():
-    endpoint_secret = 'whsec_e09f4655f9cc30e645be36403940865d3879559423bd305e6fd2cc0bf13a8775'
-    event = None
     payload = request.data
     sig_header = request.headers['STRIPE_SIGNATURE']
 
     try:
         event = stripe.Webhook.construct_event(
-            payload, sig_header, endpoint_secret
+            payload, sig_header, STRIPE_WEBHOOKS_SECRET_KEY
         )
     except ValueError as e:
         # Invalid payload
