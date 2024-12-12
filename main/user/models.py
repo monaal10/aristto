@@ -138,10 +138,6 @@ class User:
                 if not expected_data[field]:
                     return string_utils.JsonResp({"message": f"{field.replace('_', ' ').capitalize()} is required"}, 400)
 
-            # Validate the plan field to ensure it's either 'basic' or 'premium'
-            if expected_data['plan'] not in [plan.value for plan in Plan]:
-                return string_utils.JsonResp({"message": "Invalid plan type. Must be 'basic' or 'premium'"}, 400)
-
             # Merge the posted data with the default user attributes
             self.defaults.update(expected_data)
             user = self.defaults
@@ -151,13 +147,13 @@ class User:
 
             # Check if a user with this email already exists
             existing_email = fetch_data({"email": user["email"]}, USERS_DATABASE)
-            if existing_email:
+            if existing_email and len(existing_email) > 0:
                 return string_utils.JsonResp({
                     "message": "There's already an account with this email address",
                     "error": "email_exists"
                 }, 400)
 
-            insert_data([user], USERS_DATABASE)
+            insert_data(user, USERS_DATABASE)
 
             # Log the user in (create and return tokens)
             access_token = encodeAccessToken(user["id"], user["email"], user["plan"])

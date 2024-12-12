@@ -14,7 +14,7 @@ gunicorn
 pyalex
 flask-cors
 pymongo
-PyJWT==2.8.0
+pyjwt
 langchain_anthropic
 langchain_openai
 langchain_text_splitters

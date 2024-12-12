@@ -22,7 +22,7 @@ def insert_data(data, database_name):
         [collection.update_one({"id": doc["open_alex_id"]}, {"$set": doc}, upsert=True) for doc in data]
         logger.info(f"Successfully inserted {len(data)} new documents.")
     except DuplicateKeyError:
-        logger.info(f"This paper was already in database")
+        logger.info(f"This entry was already in database")
     except Exception as e:
         raise e
 
