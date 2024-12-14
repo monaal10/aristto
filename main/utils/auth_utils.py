@@ -8,7 +8,9 @@ import datetime
 
 from main.utils.constants import USERS_DATABASE
 from main.utils.string_utils import JsonResp
-
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Auth Decorator
 def token_required(f):
@@ -17,20 +19,35 @@ def token_required(f):
         if request.method == 'OPTIONS':
             return jsonify({'status': 'ok'}), 200
 
-        access_token = request.headers.get('accesstoken')
-        if not access_token:
-            return JsonResp({"message": "No access token provided"}, 401)
+        token = request.cookies.get('access_token')
+        if not token:
+            logger.info('No token')
+            return jsonify({'message': 'Token is missing'}), 401
 
         try:
-            jwt.decode(access_token, app.config["secret_key"], algorithms=["HS256"])
+            # Store the decoded token data
+            decoded_token = jwt.decode(token, app.config['secret_key'], algorithms=["HS256"])
+
+            # Add the decoded token to the request object so route handlers can access it
+            request.user = decoded_token
+            logger.info(decoded_token)
+            # Verify user exists in database (optional but recommended)
+            user = fetch_data({"user_id": decoded_token["user_id"]}, USERS_DATABASE)
+            if not user:
+                logger.info('No user')
+                return jsonify({'message': 'User not found'}), 401
+
             return f(*args, **kwargs)
+
         except jwt.ExpiredSignatureError:
-            return JsonResp({"message": "Token has expired"}, 401)
+            logger.info('Expired token')
+            return jsonify({'message': 'Token has expired'}), 401
         except jwt.InvalidTokenError:
-            return JsonResp({"message": "Token is invalid"}, 401)
+            logger.info('Invalid token')
+            return jsonify({'message': 'Invalid token'}), 401
         except Exception as e:
-            print(f"Token validation error: {str(e)}")  # Add logging for debugging
-            return JsonResp({"message": str(e)}, 401)
+            logger.error(e)
+            return jsonify({'message': str(e)}), 401
 
     return decorated
 

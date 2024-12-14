@@ -1,7 +1,7 @@
 from enum import Enum
 from json import JSONDecodeError
 
-from flask import current_app as app, request
+from flask import current_app as app, request, make_response
 from flask import json
 import jwt
 from passlib.hash import pbkdf2_sha256
@@ -12,6 +12,9 @@ from main.utils.auth_utils import encodeAccessToken, encodeRefreshToken
 from main.utils.constants import USERS_DATABASE, MONGODB_SET_OPERATION, MONGODB_UNSET_OPERATION
 from bson import ObjectId
 
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 class Plan(Enum):
     FREE = "free"
     PRO = "pro"
@@ -21,7 +24,7 @@ class User:
 
     def __init__(self):
         self.defaults = {
-            "id": string_utils.randID(),
+            "user_id": string_utils.randID(),
             "ip_addresses": [request.remote_addr],
             "acct_active": True,
             "date_created": string_utils.nowDatetimeUTC(),
@@ -38,24 +41,26 @@ class User:
 
     def get(self):
         try:
-            token_data = jwt.decode(request.headers.get('accesstoken'), app.config['secret_key'], algorithms=["HS256"])
-            user = fetch_data({"id": token_data['user_id']}, USERS_DATABASE)
+            # Get user data from the decoded token stored in request
+            user = fetch_data({"user_id": request.user["user_id"]}, USERS_DATABASE)
             if not user or len(user) == 0:
-                user = {"_id": 0, "password": 0}
+                return string_utils.JsonResp({"message": "User not found"}, 404)
+
             if user and len(user) > 0:
-                resp = string_utils.JsonResp(user[0], 200)
+                # Remove sensitive fields
+                user_data = user[0]
+                if "_id" in user_data: del user_data["_id"]
+                if "password" in user_data: del user_data["password"]
+                resp = string_utils.JsonResp(user_data, 200)
             else:
                 resp = string_utils.JsonResp({"message": "User not found"}, 404)
-        except jwt.ExpiredSignatureError:
-            resp = string_utils.JsonResp({"message": "Token has expired"}, 401)
-        except jwt.InvalidTokenError:
-            resp = string_utils.JsonResp({"message": "Token is invalid"}, 401)
+
         except Exception as e:
             resp = string_utils.JsonResp({"message": str(e)}, 401)
         return resp
 
     def getAuth(self):
-        access_token = request.headers.get("accesstoken")  # Make sure header name matches
+        access_token = request.cookies.get('access_token')  # Make sure header name matches
         if not access_token:
             return string_utils.JsonResp({"message": "No access token provided"}, 401)
 
@@ -77,49 +82,68 @@ class User:
             user = fetch_data({"email": email}, USERS_DATABASE)[0]
 
             if user and pbkdf2_sha256.verify(data["password"], user["password"]):
-                # Ensure all values passed to token encoding are strings
-                user_id = str(user["_id"])
+                user_id = str(user["user_id"])
                 user_email = str(user["email"])
                 user_plan = str(user["plan"])
 
                 access_token = encodeAccessToken(user_id, user_email, user_plan)
                 refresh_token = encodeRefreshToken(user_id, user_email, user_plan)
 
-                filter = {"_id": ObjectId(user["_id"])}
+                # Update user in database
+                filter = {"user_id": user["user_id"]}
                 update_data({
                     "refresh_token": refresh_token,
                     "last_login": string_utils.nowDatetimeUTC()
                 }, USERS_DATABASE, filter, MONGODB_SET_OPERATION)
 
-                return string_utils.JsonResp({
-                    "id": user_id,
+                response_data = {
+                    "user_id": user_id,
                     "email": user_email,
                     "first_name": user["first_name"],
                     "last_name": user["last_name"],
                     "plan": user_plan,
-                    "access_token": access_token,
-                    "refresh_token": refresh_token
-                }, 200)
+                }
+
+                response = make_response(string_utils.JsonResp(response_data, 200))
+
+                response.set_cookie(
+                    'access_token',
+                    access_token,
+                    httponly=True,
+                    secure=True,  # True in production (HTTPS)
+                    samesite='Strict',  # Strict in production
+                    max_age=900,  # 15 minutes
+                    path='/'
+                )
+
+                # Refresh token cookie
+                response.set_cookie(
+                    'refresh_token',
+                    refresh_token,
+                    httponly=True,
+                    secure=True,  # True in production (HTTPS)
+                    samesite='Strict',  # Strict in production
+                    max_age=2592000,  # 30 days
+                    path='/'
+                )
+
+                return response
 
             return string_utils.JsonResp({"message": "Invalid user credentials"}, 403)
         except Exception as e:
-            print(f"Login error: {str(e)}")  # Add logging for debugging
             return string_utils.JsonResp({"message": str(e)}, 500)
 
     def logout(self):
         try:
-            # Add algorithms parameter to decode
-            token_data = jwt.decode(request.headers.get("AccessToken"), app.config["secret_key"], algorithms=["HS256"])
-            filter = {"id": token_data["user_id"]}
-            data = {
-                "refresh_token": ""
-            }
-            update_data(data, USERS_DATABASE, filter, MONGODB_UNSET_OPERATION)
-            resp = string_utils.JsonResp({"message": "User logged out"}, 200)
-        except Exception as e:
-            resp = string_utils.JsonResp({"message": str(e)}, 500)
+            # Create response with cleared cookies
+            response = make_response(string_utils.JsonResp({"message": "User logged out"}, 200))
+            response.delete_cookie('access_token', path='/')
+            response.delete_cookie('refresh_token', path='/')
 
-        return resp
+            return response
+
+        except Exception as e:
+            return string_utils.JsonResp({"message": str(e)}, 500)
 
     def add(self):
         try:
@@ -156,13 +180,14 @@ class User:
             insert_data(user, USERS_DATABASE)
 
             # Log the user in (create and return tokens)
-            access_token = encodeAccessToken(user["id"], user["email"], user["plan"])
-            refresh_token = encodeRefreshToken(user["id"], user["email"], user["plan"])
+            access_token = encodeAccessToken(user["user_id"], user["email"], user["plan"])
+            refresh_token = encodeRefreshToken(user["user_id"], user["email"], user["plan"])
             update_data({
                 "refresh_token": refresh_token
-            }, USERS_DATABASE, {"id": user["id"]}, MONGODB_SET_OPERATION)
+            }, USERS_DATABASE, {"user_id": user["user_id"]}, MONGODB_SET_OPERATION)
+            logger.info(user["user_id"])
             return string_utils.JsonResp({
-                "id": user["id"],
+                "user_id": user["user_id"],
                 "email": user["email"],
                 "first_name": user["first_name"],
                 "last_name": user["last_name"],
@@ -238,7 +263,7 @@ class User:
             "stripe_subscription_id" : stripe_subscription_id,
             "subscription_status": subscription_status,
             "plan": plan
-        }, USERS_DATABASE, {"id": user_id}, MONGODB_SET_OPERATION)
+        }, USERS_DATABASE, {"user_id": user_id}, MONGODB_SET_OPERATION)
             return string_utils.JsonResp({"Plan updated"}, 201)
 
         except Exception as e:

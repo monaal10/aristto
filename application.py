@@ -106,7 +106,7 @@ def update_user_subscription():
 application = Flask(__name__, static_folder='main/static', static_url_path='')
 application.config["secret_key"] = APPLICATION_SECRET_KEY
 # Configure CORS
-CORS(application)
+CORS(application, supports_credentials=True)
 
 
 # Add CORS headers to all responses
@@ -116,9 +116,10 @@ def after_request(response):
     if origin in ALLOWED_ORIGINS or (origin and origin.endswith('elasticbeanstalk.com')):
         response.headers.add('Access-Control-Allow-Origin', origin)
     response.headers.add('Access-Control-Allow-Headers',
-                         'Content-Type,Authorization,Access-Control-Allow-Origin, accesstoken')
+                         'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
+    response.headers.add('Access-Control-Expose-Headers', 'Set-Cookie')
     return response
 
 
