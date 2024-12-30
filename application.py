@@ -396,7 +396,7 @@ def get_collections():
 def webhook():
     payload = request.data
     sig_header = request.headers['STRIPE_SIGNATURE']
-
+    stripe.api_key = STRIPE_API_KEY
     try:
         event = stripe.Webhook.construct_event(
             payload, sig_header, STRIPE_WEBHOOKS_SECRET_KEY
