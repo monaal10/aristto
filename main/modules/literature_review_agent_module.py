@@ -63,7 +63,8 @@ def find_papers(state: AgentState):
                 if not (papers_to_download - papers_found > 0):
                     break
                 for paper in papers:
-                    validated_paper = validate_and_download_paper(paper, theme)
+                    #validated_paper = validate_and_download_paper(paper, theme)
+                    validated_paper = download_pdf(paper)
                     if validated_paper.pdf_content is not None:
                         final_papers.append(validated_paper)
                         papers_found += 1
