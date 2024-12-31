@@ -103,6 +103,14 @@ def update_user_subscription():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'}), 200
     return User().update_subscription()
+
+@user_blueprint.route('/reset-password', methods=['POST'])
+def request_password_reset():
+    return User().request_password_reset()
+
+@user_blueprint.route('/reset-password/confirm', methods=['POST'])
+def reset_password():
+    return User().reset_password()
 application = Flask(__name__, static_folder='main/static', static_url_path='')
 application.config["secret_key"] = APPLICATION_SECRET_KEY
 # Configure CORS

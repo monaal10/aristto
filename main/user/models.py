@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from enum import Enum
 from json import JSONDecodeError
 
@@ -9,10 +10,13 @@ from passlib.hash import pbkdf2_sha256
 from main.classes.mongodb import fetch_data, update_data, insert_data
 from main.utils import string_utils
 from main.utils.auth_utils import encodeAccessToken, encodeRefreshToken
-from main.utils.constants import USERS_DATABASE, MONGODB_SET_OPERATION, MONGODB_UNSET_OPERATION
+from main.utils.constants import USERS_DATABASE, MONGODB_SET_OPERATION, MONGODB_UNSET_OPERATION, CLIENT_URL
 from bson import ObjectId
 
 import logging
+
+from main.utils.email_utils import SESEmailSender
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 class Plan(Enum):
@@ -268,4 +272,87 @@ class User:
 
         except Exception as e:
             raise f"Failed to update subscription {e}"
+
+    def request_password_reset(self):
+        try:
+            data = json.loads(request.data)
+            email = data.get('email', '').lower()
+
+            # Check if user exists
+            user = fetch_data({"email": email}, USERS_DATABASE)
+            if not user:
+                return string_utils.JsonResp({"message": "If an account exists with this email, you will receive a password reset link"}, 200)
+
+            user = user[0]
+            user_id = str(user["user_id"])
+
+            # Generate reset token
+            reset_token = jwt.encode({
+                'user_id': user_id,
+                'email': email,
+                'exp': datetime.utcnow() + timedelta(hours=1)
+            }, app.config['secret_key'], algorithm='HS256')
+
+            # Store reset token in database
+            update_data({
+                "reset_token": reset_token,
+                "reset_token_expires": datetime.utcnow() + timedelta(hours=1)
+            }, USERS_DATABASE, {"user_id": user_id}, MONGODB_SET_OPERATION)
+
+            # Send reset email using SES
+            reset_url = f"{CLIENT_URL}/reset-password/{reset_token}"
+            email_sender = SESEmailSender()
+            email_sender.send_reset_password_email(email, reset_url)
+
+            return string_utils.JsonResp({
+                "message": "If an account exists with this email, you will receive a password reset link"
+            }, 200)
+
+        except Exception as e:
+            logger.error(f"Password reset request error: {str(e)}")
+            return string_utils.JsonResp({"message": "Failed to process password reset request"}, 500)
+
+    def reset_password(self):
+        try:
+            data = json.loads(request.data)
+            token = data.get('token')
+            new_password = data.get('newPassword')
+
+            if not token or not new_password:
+                return string_utils.JsonResp({"message": "Invalid request"}, 400)
+
+            try:
+                # Verify token
+                payload = jwt.decode(token, app.config['secret_key'], algorithms=['HS256'])
+                user_id = payload['user_id']
+                email = payload['email']
+
+                # Check if token is valid in database
+                user = fetch_data({
+                    "user_id": user_id,
+                    "reset_token": token,
+                    "reset_token_expires": {"$gt": datetime.utcnow()}
+                }, USERS_DATABASE)
+
+                if not user:
+                    return string_utils.JsonResp({"message": "Invalid or expired reset token"}, 400)
+
+                # Update password
+                hashed_password = pbkdf2_sha256.encrypt(new_password, rounds=20000, salt_size=16)
+                update_data({
+                    "password": hashed_password,
+                    "reset_token": "",
+                    "reset_token_expires": None
+                }, USERS_DATABASE, {"user_id": user_id}, MONGODB_SET_OPERATION)
+
+                return string_utils.JsonResp({"message": "Password reset successfully"}, 200)
+
+            except jwt.ExpiredSignatureError:
+                return string_utils.JsonResp({"message": "Reset token has expired"}, 400)
+            except jwt.InvalidTokenError:
+                return string_utils.JsonResp({"message": "Invalid reset token"}, 400)
+
+        except Exception as e:
+            logger.error(f"Password reset error: {str(e)}")
+            return string_utils.JsonResp({"message": "Failed to reset password"}, 500)
 
