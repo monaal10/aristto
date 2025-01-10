@@ -151,7 +151,9 @@ def serve_files(filename):
 def index():
     return JsonResp({"status": "Online"}, 200)
 
-
+@application.route('/reset-password/<token>')
+def reset_password_route(token):
+    return send_from_directory(application.static_folder, 'index.html')
 @application.route('/chatWithPapers', methods=['POST', 'OPTIONS'])
 def chat_with_papers():
     if request.method == 'OPTIONS':
@@ -400,6 +402,7 @@ def get_collections():
         return jsonify({"error": str(e)}), 500
 
 
+
 @application.route('/stripeWebhooks', methods=['POST'])
 def webhook():
     payload = request.data
@@ -450,5 +453,10 @@ def webhook():
       print('Unhandled event type {}'.format(event['type']))
 
     return jsonify(success=True)
+@application.route('/', defaults={'path': ''})
+@application.route('/<path:path>')
+def catch_all(path):
+    return send_from_directory(application.static_folder, 'index.html')
+
 if __name__ == '__main__':
     application.run(host="0.0.0.0", port=8000, debug=True)
