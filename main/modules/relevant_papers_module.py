@@ -76,7 +76,7 @@ def create_http_url_for_open_alex(query, start_year, end_year, citation_count, p
         if author_ids:
             http_url = http_url + ',author.id:' + author_ids
 
-        http_url = http_url + "&sort=relevance_score:desc"
+        http_url = http_url + "&sort=relevance_score:desc&per-page=200&page="
         return http_url
     except Exception as e:
         raise f"Could not form http url from given parameters: {e}"
