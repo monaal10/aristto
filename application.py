@@ -47,7 +47,9 @@ ALLOWED_ORIGINS = [
     "http://[::1]:5000",
     "http://[::1]:5173",
     "http://[::1]:8080",
-    "https://aristto.com"
+    "https://aristto.com",
+    "https://www.aristto.com"
+
 ]
 
 user_blueprint = Blueprint("user", __name__)
@@ -133,23 +135,6 @@ def after_request(response):
 
 application.register_blueprint(user_blueprint, url_prefix="/user")
 
-
-@application.route('/')
-def serve_react():
-    return send_from_directory('main/static', 'index.html')
-
-@application.route('/assets/<path:filename>')
-def serve_static(filename):
-    return send_from_directory('main/static/assets', filename,
-                             mimetype='text/css' if filename.endswith('.css') else 'application/javascript')
-
-@application.route('/<path:filename>')
-def serve_files(filename):
-    return send_from_directory('main/static', filename)
-
-@application.route("/")
-def index():
-    return JsonResp({"status": "Online"}, 200)
 
 @application.route('/reset-password/<token>')
 def reset_password_route(token):
@@ -448,14 +433,43 @@ def webhook():
           {"stripe_customer_id": stripe_customer_id},
           MONGODB_SET_OPERATION
       )
-
     else:
       print('Unhandled event type {}'.format(event['type']))
 
     return jsonify(success=True)
+
+
+@application.route('/assets/<path:filename>')
+def serve_static(filename):
+    try:
+        return send_from_directory('main/static/assets', filename)
+    except Exception as e:
+        application.logger.error(f"Error serving static file: {e}")
+        return send_from_directory('main/static', 'index.html')
+
+
+# This should be the LAST route
 @application.route('/', defaults={'path': ''})
 @application.route('/<path:path>')
 def catch_all(path):
+    # Don't interfere with API routes
+    if path.startswith('api/'):
+        return jsonify({'error': 'Not found'}), 404
+
+    try:
+        # First try to serve the exact file
+        return send_from_directory(application.static_folder, path)
+    except Exception:
+        # For everything else, return index.html
+        return send_from_directory(application.static_folder, 'index.html')
+
+
+# Add error logging
+@application.errorhandler(404)
+def not_found_error(error):
+    application.logger.error(f"404 error: {request.url}")
+    if request.path.startswith('/assets/'):
+        return jsonify({'error': 'Asset not found'}), 404
     return send_from_directory(application.static_folder, 'index.html')
 
 if __name__ == '__main__':
