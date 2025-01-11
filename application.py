@@ -26,6 +26,9 @@ from main.utils.auth_utils import token_required
 from flask import jsonify, request
 from bson.json_util import dumps
 import json
+
+from main.utils.pdf_operations import download_pdf
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -269,7 +272,10 @@ def get_paper_info():
         paper_id = data.get('paper_id', None)
         paper = fetch_data({"open_alex_id": paper_id}, RESEARCH_PAPER_DATABASE)[0]
         final_paper = convert_mongodb_to_research_paper(paper)
+        if not final_paper.pdf_content:
+            final_paper = download_pdf(final_paper)
         output = extract_paper_information(final_paper.pdf_content)
+        paper["pad_content"] = final_paper.pdf_content
         paper["extracted_info"] = {}
         for key in output.model_fields.keys():
             paper["extracted_info"][key] = getattr(output, key)
