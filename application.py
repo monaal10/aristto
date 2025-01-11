@@ -225,7 +225,7 @@ def get_literature_review():
         literature_review_id = uuid.uuid4()
         response = {
             "literatureReviewName": query,
-            "userId": user_id,
+            "user_id": user_id,
             "literatureReviewId": str(literature_review_id),
             "literatureReview": literature_review_dict
         }
@@ -294,7 +294,7 @@ def get_saved_literature_reviews():
         user_id = data.get('user_id', None)
         if not user_id:
             return string_utils.JsonResp({"message": "User not logged in"}, 400)
-        response = fetch_data({"userId": user_id}, LITERATURE_REVIEW_DATABASE)
+        response = fetch_data({"user_id": user_id}, LITERATURE_REVIEW_DATABASE)
         return json.dumps(response, cls=JSONEncoder), 200, {'Content-Type': 'application/json'}
     except Exception as e:
         raise e
@@ -309,7 +309,7 @@ def get_saved_papers():
         user_id = data.get('user_id', None)
         if not user_id:
             return string_utils.JsonResp({"message": "User not logged in"}, 400)
-        mongodb_data = fetch_data({"userId": user_id}, SAVED_PAPERS_DATABASE)
+        mongodb_data = fetch_data({"user_id": user_id}, SAVED_PAPERS_DATABASE)
         paper_ids = []
         papers = []
         for paper in mongodb_data:
@@ -331,11 +331,12 @@ def save_papers():
         paper_id = data.get('paper_id', None)
         collection_id = data.get('collection_id', None)
         collection_name = data.get('collection_name', None)
+        logger.info(f" user_id is : {user_id}")
         if not user_id:
             return string_utils.JsonResp({"message": "User not logged in"}, 400)
         if not collection_id:
             collection_id = str(uuid.uuid4())
-        insert_data({"userId": user_id, "paperId": paper_id, "collectionId": collection_id,
+        insert_data({"user_id": user_id, "paperId": paper_id, "collectionId": collection_id,
                      "collectionName": collection_name}, SAVED_PAPERS_DATABASE)
         return jsonify({'status': 'ok'}), 200
     except Exception as e:
@@ -354,7 +355,7 @@ def get_collections():
         if not user_id:
             return string_utils.JsonResp({"message": "User not logged in"}, 400)
 
-        collections = fetch_data({"userId": user_id}, SAVED_PAPERS_DATABASE)
+        collections = fetch_data({"user_id": user_id}, SAVED_PAPERS_DATABASE)
         if len(collections) == 0:
             return jsonify([])
 

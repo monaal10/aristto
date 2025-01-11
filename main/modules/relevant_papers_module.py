@@ -7,6 +7,7 @@ from main.classes.research_paper import ResearchPaper
 import pandas as pd
 
 from main.utils.convert_data import convert_oa_response_to_research_paper
+from main.modules.embeddings_module import rank_documents
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -75,7 +76,7 @@ def create_http_url_for_open_alex(query, start_year, end_year, citation_count, p
         if author_ids:
             http_url = http_url + ',author.id:' + author_ids
 
-        http_url = http_url + "&sort=relevance_score:desc&per-page=200&page="
+        http_url = http_url + "&sort=relevance_score:desc"
         return http_url
     except Exception as e:
         raise f"Could not form http url from given parameters: {e}"
@@ -90,6 +91,7 @@ def get_relevant_papers(query, start_year, end_year, citation_count, published_i
     unique_papers = list({paper.open_alex_id: paper for paper in papers}.values())
     if published_in:
         unique_papers = get_filtered_by_sjr_papers(published_in, unique_papers)
+    #relevant_papers = rank_documents(query, unique_papers)
     return unique_papers
 
 
@@ -108,6 +110,5 @@ def get_filtered_by_sjr_papers(published_in, papers):
             raise (f"Error processing paper: {e}")
 
 
-    # relevant_papers = rank_documents(query, papers)
 
-#get_relevant_papers("Deepfake Detection using Computer vision", 2018, 2023, None, ["Q1", "Q2"], None, None)
+
