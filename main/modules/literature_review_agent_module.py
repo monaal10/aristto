@@ -109,14 +109,10 @@ def extract_information(papers, max_retries=3, retry_delay=1):
 
         except JSONDecodeError as e:
             if attempt < max_retries:
-                sleep(retry_delay)
                 return process_single_paper(paper, attempt + 1)
-            else:
-                raise f"Failed to decode JSON after {max_retries} attempts for paper {paper.open_alex_id}: {str(e)}"
         except AttributeError as e:
             if attempt < max_retries:
                 print(f"AttributeError on attempt {attempt}: {e}. Retrying...")
-                sleep(retry_delay)
                 return process_single_paper(paper, attempt + 1)
         except Exception as e:
             raise Exception(f"Error in information extraction: {str(e)}")
