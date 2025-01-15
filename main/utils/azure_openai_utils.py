@@ -14,7 +14,7 @@ def get_openai_4o_mini():
             max_tokens=16384,
             timeout=None,
             max_retries=2,
-            azure_deployment="gpt-4o-mini",
+            azure_deployment="gpt-4o-mini-2",
             model="gpt-4o-mini"
         )
     except Exception as e:
