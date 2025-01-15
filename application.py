@@ -290,6 +290,8 @@ def get_saved_literature_reviews():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'}), 200
     try:
+        start_time = datetime.datetime.now()
+        logger.info(f"Request received at: {start_time}")
         data = request.json
         user_id = data.get('user_id', None)
         if not user_id:
@@ -305,6 +307,8 @@ def get_saved_papers():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'}), 200
     try:
+        start_time = datetime.datetime.now()
+        logger.info(f"Request received at: {start_time}")
         data = request.json
         user_id = data.get('user_id', None)
         if not user_id:
@@ -326,6 +330,8 @@ def save_papers():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'}), 200
     try:
+        start_time = datetime.datetime.now()
+        logger.info(f"Request received at: {start_time}")
         data = request.json
         user_id = data.get('user_id', None)
         paper_id = data.get('paper_id', None)
@@ -348,6 +354,8 @@ def get_collections():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'}), 200
     try:
+        start_time = datetime.datetime.now()
+        logger.info(f"Request received at: {start_time}")
         data = request.json
         user_id = data.get('user_id', None)
         papers_in_collection = {}
