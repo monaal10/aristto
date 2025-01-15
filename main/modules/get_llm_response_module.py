@@ -12,7 +12,7 @@ def get_model_response(llm, prompt: str, state: Dict):
         try:
             messages = [{
                 "role": "user",
-                "content": prompt.format(**state)
+                "content": prompt.format(**state).encode("utf-8", "replace").decode("utf-8")
             }]
             response = llm.invoke(messages)
             return response
