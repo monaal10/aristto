@@ -107,13 +107,13 @@ def extract_information(papers, max_retries=3, retry_delay=1):
                 setattr(paper, key, json_message.get(key))
             return paper
 
-        except JSONDecodeError as e:
+        except (JSONDecodeError, AttributeError) as e:
             if attempt < max_retries:
                 return process_single_paper(paper, attempt + 1)
-        except AttributeError as e:
-            if attempt < max_retries:
-                print(f"AttributeError on attempt {attempt}: {e}. Retrying...")
-                return process_single_paper(paper, attempt + 1)
+            else:
+                print(f"All attempts failed for paper {paper.open_alex_id}: {str(e)}. Skipping paper.")
+                return paper
+
         except Exception as e:
             raise Exception(f"Error in information extraction: {str(e)}")
 
@@ -121,7 +121,8 @@ def extract_information(papers, max_retries=3, retry_delay=1):
         updated_papers = []
         for paper in papers:
             processed_paper = process_single_paper(paper)
-            updated_papers.append(processed_paper)
+            if processed_paper.methodology is not None:
+                updated_papers.append(processed_paper)
         return updated_papers
 
     except Exception as e:
