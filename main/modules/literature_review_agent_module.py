@@ -144,8 +144,9 @@ def generate_insights(papers, query):
                 papers_with_section_info.append(selected_paper_info)
                 for section in section_list:
                     dic = selected_paper_info[section]
-                    for key, value in dic.items():
-                        references[key] = value
+                    if dic is not None:
+                        for key, value in dic.items():
+                            references[key] = value
         response = get_model_response(llm,
                                       CREATE_LITERATURE_REVIEW_PROMPT,
                                       {"papers": json.dumps(papers_with_section_info), "query": query}
