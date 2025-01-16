@@ -463,6 +463,10 @@ def serve_static(filename):
         return send_from_directory('main/static', 'index.html')
 
 
+@application.route('/robots.txt')
+@application.route('/sitemap.xml')
+def static_files():
+    return send_from_directory(application.root_path, request.path[1:])
 # This should be the LAST route
 @application.route('/', defaults={'path': ''})
 @application.route('/<path:path>')
