@@ -76,15 +76,15 @@ Each section contains a dictionary where each entry has a unique `reference_id` 
    - **In-line citations**: Use each `reference_id` directly in the text after each claim ([W3174508664_methodology_2]), and ensure the section is self-contained without requiring additional references.
 
 **2. Methodology Analysis**
-   - Compare and contrast the main methodological approaches in detail, addressing strengths and weaknesses.
+   - Compare and contrast the main methodological approaches in detail, addressing strengths and weaknesses. Make this section very specific,technical and long, minimum 100 words.
    - **In-line citations**: Support each technical point with `reference_ids` directly in the text ([W3213933678_results_3]).
 
 **3. Key Findings and Contradictions**
-   - Summarize major findings and any conflicting results, analyzing why these contradictions may exist.
+   - Summarize major findings and any conflicting results, analyzing why these contradictions may exist. Make this section very specific,technical and long, minimum 100 words.
    - **In-line citations**: Include multiple `reference_ids` as needed for each point ([W3174508664_limitations_1], [W3213933678_datasets_3]).
 
 **4. Research Gaps**
-   - Identify consistent research gaps, underexplored areas, and missing methodologies.
+   - Identify consistent research gaps, underexplored areas, and missing methodologies. Make this section very specific,technical and long, minimum 100 words.
    - **In-line citations**: Use `reference_ids` from a variety of papers to substantiate each identified gap ([W32539343678_methodology_4]).
 
 **5. Future Directions**
