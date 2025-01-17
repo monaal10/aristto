@@ -30,7 +30,6 @@ def token_required(f):
 
             # Add the decoded token to the request object so route handlers can access it
             request.user = decoded_token
-            logger.info(decoded_token)
             # Verify user exists in database (optional but recommended)
             user = fetch_data({"user_id": decoded_token["user_id"]}, USERS_DATABASE)
             if not user:
