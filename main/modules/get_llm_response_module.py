@@ -16,7 +16,7 @@ def get_model_response(llm, prompt: str, state: Dict):
         try:
             messages = [{"role": "user", "content": formatted_prompt}]
             response = llm.invoke(messages)
-            return response.content if hasattr(response, 'content') else str(response)
+            return response
 
         except Exception as e:
             if isinstance(e, BadRequestError):
