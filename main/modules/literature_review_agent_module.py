@@ -26,13 +26,16 @@ llm = get_openai_4o_mini()
 # Cache setup
 langchain_cache = InMemoryCache()
 
-def identify_themes(query):
+def identify_themes(query, retry_number=1):
     try:
         llm_with_output = llm.with_structured_output(Themes)
         themes = get_model_response(llm_with_output, THEME_IDENTIFICATION_PROMPT, {"query": query})
         return themes.themes[:THEME_NUMBER_LIMIT]
     except Exception as e:
-        raise f"Error in theme identification: {e}"
+        if isinstance(e, AttributeError):
+            if retry_number<3:
+                identify_themes(query, retry_number+1)
+        raise Exception(f"Error in theme identification: {e}")
 
 
 def validate_and_download_paper(paper, theme):
@@ -47,7 +50,7 @@ def validate_and_download_paper(paper, theme):
             downloaded_paper = download_pdf(paper)
         return downloaded_paper
     except Exception as e:
-        raise (f"Error in paper validation and downloading: {e}")
+        raise Exception(f"Error in paper validation and downloading: {e}")
 
 
 def find_papers(state: AgentState):
@@ -73,7 +76,7 @@ def find_papers(state: AgentState):
             state.themes_with_papers[theme] = final_papers
         return final_papers
     except Exception as e:
-        raise (f"Error in paper finding: {e}")
+        raise Exception(f"Error in paper finding: {e}")
 
 
 def extract_information(papers, max_retries=3, retry_delay=1):
@@ -149,7 +152,7 @@ def generate_insights(papers, query):
                                       )
         return format_response(response.content, references, papers)
     except Exception as e:
-        raise (f"Error in insight generation: {e}")
+        raise Exception(f"Error in insight generation: {e}")
 
 
 def format_response(response, references, papers):
@@ -171,7 +174,7 @@ def format_response(response, references, papers):
         summary = LiteratureReview(references=reference_with_metadata_list, insights=dict_response)
         return summary
     except Exception as e:
-        raise (f"Error in formatting response: {e}")
+        raise Exception(f"Error in formatting response: {e}")
 
 
 def extract_sections(literature_review):
@@ -183,7 +186,7 @@ def extract_sections(literature_review):
             dict_response[i[0]] = i[1]
         return dict_response
     except Exception as e:
-        raise (f"Error in extracting sections: {e}")
+        raise Exception(f"Error in extracting sections: {e}")
 
 
 def execute_literature_review(query, start_year, end_year, citation_count, published_in, authors):
@@ -207,4 +210,4 @@ def execute_literature_review(query, start_year, end_year, citation_count, publi
         answer = generate_insights(papers_with_info, query)
         return answer
     except Exception as e:
-        raise (f"Error in getting literature review: {e}")
+        raise Exception(f"Error in getting literature review: {e}")
