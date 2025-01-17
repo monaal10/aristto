@@ -192,7 +192,11 @@ def ask_question():
         authors = data.get('authors', None)
         published_in = data.get('published_in', None)
         relevant_papers = get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors)
+        if len(relevant_papers) == 0:
+            return jsonify({"message": "No relevant papers found, please update your search query and/or filters."}), 200
         papers_with_chunks = parallel_download_and_chunk_papers(relevant_papers[:10])
+        if len(papers_with_chunks) == 0:
+            return jsonify({"message": "No relevant open source papers found, please update your search query and/or filters."}), 200
         relevant_chunks = get_relevant_chunks(query, papers_with_chunks)[:RELEVANT_CHUNKS_TO_RETRIEVE]
         result = answer_a_question(query, relevant_chunks, papers_with_chunks)
         papers_json = [paper.dict() for paper in papers_with_chunks]

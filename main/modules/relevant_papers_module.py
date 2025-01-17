@@ -92,6 +92,8 @@ def get_relevant_papers(query, start_year, end_year, citation_count, published_i
     if published_in:
         unique_papers = get_filtered_by_sjr_papers(published_in, unique_papers)
     #relevant_papers = rank_documents(query, unique_papers)
+    if len(unique_papers) == 0:
+        logger.info(f"No relevant papers found")
     return unique_papers
 
 
