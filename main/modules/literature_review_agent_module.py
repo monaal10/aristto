@@ -42,7 +42,7 @@ def validate_and_download_paper(paper, theme):
         response = get_model_response(llm_with_output,
                                       PAPER_VALIDATION_PROMPT,
                                       {"theme": theme,
-             "paper": f""" paper_title : {paper.title} , paper_abstract : {paper.abstract}"""})
+                                       "paper": f""" paper_title : {paper.title} , paper_abstract : {paper.abstract}"""})
         if response.answer == True:
             downloaded_paper = download_pdf(paper)
         return downloaded_paper
@@ -74,9 +74,6 @@ def find_papers(state: AgentState):
         return final_papers
     except Exception as e:
         raise (f"Error in paper finding: {e}")
-
-
-
 
 
 def extract_information(papers, max_retries=3, retry_delay=1):
@@ -117,16 +114,15 @@ def extract_information(papers, max_retries=3, retry_delay=1):
         except Exception as e:
             raise Exception(f"Error in information extraction: {str(e)}")
 
-    try:
-        updated_papers = []
-        for paper in papers:
+    updated_papers = []
+    for paper in papers:
+        try:
             processed_paper = process_single_paper(paper)
             if processed_paper.methodology is not None:
                 updated_papers.append(processed_paper)
-        return updated_papers
-
-    except Exception as e:
-        raise Exception(f"Error processing papers: {str(e)}")
+        except Exception:
+            continue
+    return updated_papers
 
 
 def generate_insights(papers, query):
@@ -154,6 +150,8 @@ def generate_insights(papers, query):
         return format_response(response.content, references, papers)
     except Exception as e:
         raise (f"Error in insight generation: {e}")
+
+
 def format_response(response, references, papers):
     try:
         reference_with_metadata_list = []
