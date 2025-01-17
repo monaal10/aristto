@@ -28,32 +28,35 @@ def split_text_into_chunks(text: str, max_tokens: int = 100000) -> list:
 
 
 def get_model_response(llm, prompt: str, state: Dict):
-    num_retries = 3  # Maximum number of retries
-    retry_delay = 60  # Delay in seconds before retrying
-    max_tokens = 120000  # Setting a safe limit below the 128k maximum
+    num_retries = 3
+    retry_delay = 60
+    max_tokens = 120000
 
     formatted_prompt = prompt.format(**state).encode("utf-8", "replace").decode("utf-8")
 
     for i in range(num_retries):
         try:
-            # If context length error occurs, try splitting into chunks
             try:
                 messages = [{"role": "user", "content": formatted_prompt}]
                 response = llm.invoke(messages)
-                return response
+                # Extract the string content from the response
+                return response.content if hasattr(response, 'content') else str(response)
 
             except Exception as e:
                 if "context_length_exceeded" in str(e):
                     print("Context length exceeded, splitting into chunks...")
                     chunks = split_text_into_chunks(formatted_prompt, max_tokens)
-                    combined_response = ""
+                    combined_response = []
 
                     for chunk in chunks:
                         messages = [{"role": "user", "content": chunk}]
                         chunk_response = llm.invoke(messages)
-                        combined_response += chunk_response + "\n"
+                        # Extract the string content from each chunk response
+                        chunk_content = chunk_response.content if hasattr(chunk_response, 'content') else str(
+                            chunk_response)
+                        combined_response.append(chunk_content)
 
-                    return combined_response
+                    return "\n".join(combined_response)
                 else:
                     raise e
 
