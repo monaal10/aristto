@@ -452,6 +452,19 @@ def webhook():
           {"stripe_customer_id": stripe_customer_id},
           MONGODB_SET_OPERATION
       )
+
+    elif event['type'] == 'customer.subscription.paused':
+      subscription = event['data']['object']
+      stripe_customer_id = subscription['customer']
+      update_fields = {
+          "plan": Plan.FREE.value
+      }
+      update_data(
+          update_fields,
+          USERS_DATABASE,
+          {"stripe_customer_id": stripe_customer_id},
+          MONGODB_SET_OPERATION
+      )
     else:
       print('Unhandled event type {}'.format(event['type']))
 
