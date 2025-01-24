@@ -1,5 +1,5 @@
 from main.utils.constants import AZURE_OPENAI_4o_MINI_ENDPOINT, AZURE_OPENAI_4o_MINI_API_KEY, AZURE_OPENAI_4_ENDPOINT, \
-    AZURE_OPENAI_4_API_KEY
+    AZURE_OPENAI_4_API_KEY, AZURE_OPENAI_4o_API_KEY, AZURE_OPENAI_4o_ENDPOINT
 
 from langchain_openai import AzureChatOpenAI
 import os
@@ -36,3 +36,19 @@ def get_openai_gpt4():
         )
     except Exception as e:
         raise f"Failed to get openai gpt-4: {e}"
+
+def get_openai_4o():
+    try:
+        return AzureChatOpenAI(
+            api_key=AZURE_OPENAI_4o_API_KEY,
+            azure_endpoint=AZURE_OPENAI_4o_ENDPOINT,
+            api_version="2024-08-01-preview",
+            temperature=0.2,
+            max_tokens=16384,
+            timeout=None,
+            max_retries=2,
+            azure_deployment="gpt-4o",
+            model="gpt-4o"
+        )
+    except Exception as e:
+        raise f"Failed to get openai 4o-mini: {e}"

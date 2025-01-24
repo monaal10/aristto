@@ -6,7 +6,7 @@ from langchain_community.cache import InMemoryCache
 from main.modules.embeddings_module import rank_documents
 from main.modules.get_llm_response_module import get_model_response
 from main.utils.constants import THEME_NUMBER_LIMIT
-from main.utils.azure_openai_utils import get_openai_4o_mini
+from main.utils.azure_openai_utils import get_openai_4o_mini, get_openai_4o
 from main.utils.pdf_operations import download_pdf
 from main.modules.relevant_papers_module import get_relevant_papers
 from main.classes.lit_review_agent_classes import AgentState, LiteratureReview, \
