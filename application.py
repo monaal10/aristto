@@ -224,6 +224,8 @@ def get_literature_review():
         authors = data.get('authors', None)
         published_in = data.get('published_in', None)
         literature_review = execute_literature_review(query, start_year, end_year, citation_count, published_in, authors)
+        if len(literature_review.references) == 0:
+            return jsonify({"message": "No relevant open source papers found, please update your search query and/or filters."}), 200
         literature_review_dict = literature_review.dict()
         papers = [reference.reference_metadata.dict() for reference in literature_review.references]
         literature_review_id = uuid.uuid4()
