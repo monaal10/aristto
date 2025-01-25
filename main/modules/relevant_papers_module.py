@@ -29,9 +29,18 @@ def get_author_id_list(authors):
         author_ids = ""
         author_list = []
         if authors:
-            author_list = Authors().search(create_strings_for_filters(authors)).get()
+            for author in authors:
+                try:
+                    response = requests.get("https://api.openalex.org/authors?search=" + author)
+                    data = response.json()
+                    logger.info(data)
+                    if len(data["results"]) > 0:
+                        author_list.append(data["results"][0]["id"])
+                except JSONDecodeError:
+                    logger.error("Unable to get Author id")
+
         for author in author_list:
-            id = author['id'].split(".org/")
+            id = author.split(".org/")
             author_ids += id[1] + "|"
         return author_ids[:len(author_ids) - 1]
     except Exception as e:
@@ -74,9 +83,11 @@ def create_http_url_for_open_alex(query, start_year, end_year, citation_count, p
         end_year_final = (str(end_year) if end_year else "2024")
         http_url = 'https://api.openalex.org/works?mailto=monaalsanghvi1998@gmail.com&search=' + query + '&filter=cited_by_count:>' + str(
             cited_by_count) + ',publication_year:>' + start_year_final + ',publication_year:<' + end_year_final
-
         if author_ids:
-            http_url = http_url + ',author.id:' + author_ids
+            if len(author_ids) > 0:
+                http_url = http_url + ',author.id:' + author_ids
+            else:
+                return ""
 
         http_url = http_url + "&sort=relevance_score:desc&per-page=200&page="
         return http_url
@@ -88,6 +99,8 @@ def get_relevant_papers(query, start_year, end_year, citation_count, published_i
     try:
         http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in,
                                                  authors)
+        if len(http_url) == 0:
+            return []
         response = requests.get(http_url)
         data = response.json()
         papers = [convert_oa_response_to_research_paper(work) for work in data['results']]
@@ -98,7 +111,7 @@ def get_relevant_papers(query, start_year, end_year, citation_count, published_i
         if len(unique_papers) == 0:
             logger.info(f"No relevant papers found")
         return unique_papers
-    except JSONDecodeError as e:
+    except JSONDecodeError:
         return []
 
 
