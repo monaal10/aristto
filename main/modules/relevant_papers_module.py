@@ -1,3 +1,5 @@
+from json import JSONDecodeError
+
 import requests
 from pyalex import Institutions, Authors
 import pyalex
@@ -83,18 +85,21 @@ def create_http_url_for_open_alex(query, start_year, end_year, citation_count, p
 
 
 def get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors):
-    http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in,
-                                             authors)
-    response = requests.get(http_url)
-    data = response.json()
-    papers = [convert_oa_response_to_research_paper(work) for work in data['results']]
-    unique_papers = list({paper.open_alex_id: paper for paper in papers}.values())
-    if published_in:
-        unique_papers = get_filtered_by_sjr_papers(published_in, unique_papers)
-    #relevant_papers = rank_documents(query, unique_papers)
-    if len(unique_papers) == 0:
-        logger.info(f"No relevant papers found")
-    return unique_papers
+    try:
+        http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in,
+                                                 authors)
+        response = requests.get(http_url)
+        data = response.json()
+        papers = [convert_oa_response_to_research_paper(work) for work in data['results']]
+        unique_papers = list({paper.open_alex_id: paper for paper in papers}.values())
+        if published_in:
+            unique_papers = get_filtered_by_sjr_papers(published_in, unique_papers)
+        #relevant_papers = rank_documents(query, unique_papers)
+        if len(unique_papers) == 0:
+            logger.info(f"No relevant papers found")
+        return unique_papers
+    except JSONDecodeError as e:
+        return []
 
 
 def get_filtered_by_sjr_papers(published_in, papers):
