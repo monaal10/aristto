@@ -103,7 +103,7 @@ class AgentState(BaseModel):
     start_year: Optional[str]
     end_year: Optional[str]
     citation_count: Optional[str]
-    published_in: Optional[List[str]]
+    published_in: Optional[str]
     authors: Optional[List[str]]
     themes: List[str] = Field(default_factory=list)
     papers: Dict[str, List[str]] = Field(default_factory=dict)

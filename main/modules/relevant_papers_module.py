@@ -10,7 +10,7 @@ import pandas as pd
 
 from main.utils.convert_data import convert_oa_response_to_research_paper
 from main.modules.embeddings_module import rank_documents
-
+from main.utils.convert_data import convert_ss_response_to_research_paper
 # Configure logging
 logger = logging.getLogger(__name__)
 pyalex.config.email = "monaalsanghvi1998@gmail.com"
@@ -95,15 +95,57 @@ def create_http_url_for_open_alex(query, start_year, end_year, citation_count, p
         raise f"Could not form http url from given parameters: {e}"
 
 
+
+
+
+def create_hhtp_url_for_ss(query, start_year, end_year, citation_count, published_in):
+    try:
+        initial_string = f"https://api.semanticscholar.org/graph/v1/paper/search?query={query}&fields=title,openAccessPdf,abstract,authors,publicationVenue,citationCount,year"
+        if start_year or end_year:
+            if not start_year:
+                start_year = ""
+            if not end_year:
+                end_year = ""
+            initial_string += f"&year={str(start_year)}-{str(end_year)}"
+        if citation_count:
+            initial_string += f"&minCitationCount={str(citation_count)}"
+        if published_in and len(published_in) > 0:
+            initial_string += f"&venue={published_in}"
+        return initial_string + "&openAccessPdf&limit=100"
+    except Exception as e:
+     raise f"Could not form semantic scholar hhtp url from given parameters: {e}"
+
+
+
+
+def get_ss_papers(query, start_year, end_year, citation_count, published_in):
+    headers = {
+        "x-api-key": "vd5G9VoPYk3hfCYyPjZR334dvZCumbEF2tkdeQhK",
+    }
+    http_url = create_hhtp_url_for_ss(query, start_year, end_year, citation_count, published_in)
+    response = requests.get(http_url)
+    data = response.json().get("data")
+    papers = []
+    if data:
+        for paper in data:
+            papers.append(convert_ss_response_to_research_paper(paper))
+    return papers
+
+
+
+
+
 def get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors):
     try:
-        http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in,
-                                                 authors)
+        #http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in,authors)
+        http_url = create_hhtp_url_for_ss(query, start_year, end_year, citation_count, published_in)
         if len(http_url) == 0:
             return []
         response = requests.get(http_url)
-        data = response.json()
-        papers = [convert_oa_response_to_research_paper(work) for work in data['results']]
+        #data = response.json()
+        #papers = [convert_oa_response_to_research_paper(work) for work in data['results']]
+        data = response.json().get("data")
+        papers = [convert_ss_response_to_research_paper(work) for work in data]
         unique_papers = list({paper.open_alex_id: paper for paper in papers}.values())
         if published_in:
             unique_papers = get_filtered_by_sjr_papers(published_in, unique_papers)

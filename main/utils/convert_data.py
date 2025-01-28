@@ -8,6 +8,23 @@ from main.classes.research_paper import ResearchPaper
 
 logger = logging.getLogger(__name__)
 
+def convert_ss_response_to_research_paper(ss_response):
+    try :
+        user_id = fetch_user_id()
+        open_alex_id = ss_response.get('paperId')
+        title = ss_response.get('title')
+        abstract = ss_response.get('abstract')
+        publication_year = ss_response.get('year')
+        cited_by_count = ss_response.get('citationCount')
+        authors = fetch_authors_from_ss_response(ss_response.get('authors'))
+        publication, publication_id = fetch_publication_from_ss_response(ss_response.get('publicationVenue'))
+        oa_url = fetch_pdf_url_from_ss_response(ss_response.get('openAccessPdf'))
+        return ResearchPaper(user_id=user_id, open_alex_id=open_alex_id, title=title,
+                             authors=authors, abstract=abstract, publication_year=publication_year,
+                             cited_by_count=cited_by_count, publication=publication, publication_id=publication_id,
+                             oa_url=oa_url)
+    except Exception as e:
+        raise f"Could not convert ss response to ResearchPaper: {e}"
 
 def convert_mongodb_to_research_paper(paper):
     try:
@@ -165,3 +182,23 @@ def extract_doi(doi_url):
         doi = "/".join(parts[index + 1:])
         return doi
     return None
+
+def fetch_authors_from_ss_response(author_list):
+    author_names =[]
+    if author_list and len(author_list) > 0:
+        for author in author_list:
+            author_names.append(author['name'])
+    return author_names
+
+def fetch_publication_from_ss_response(publication):
+    name = ''
+    id = ''
+    if publication:
+        name = publication['name']
+        id = publication['id']
+    return name, id
+
+def fetch_pdf_url_from_ss_response(openAccessPdf):
+    if openAccessPdf:
+        return openAccessPdf.get("url") if openAccessPdf.get("url") else ""
+
