@@ -35,6 +35,7 @@ class ResearchPaper(BaseModel):
     contributions: Optional[Dict] = Field(default=None)
     results: Optional[Dict] = Field(default=None)
     limitations: Optional[Dict] = Field(default=None)
+    publication_alternate_names: Optional[List] = Field(default=None)
 
     class Config:
         arbitrary_types_allowed = True

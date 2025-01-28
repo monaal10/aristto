@@ -9,7 +9,7 @@ from main.classes.research_paper import ResearchPaper
 logger = logging.getLogger(__name__)
 
 def convert_ss_response_to_research_paper(ss_response):
-    try :
+    try:
         user_id = fetch_user_id()
         open_alex_id = ss_response.get('paperId')
         title = ss_response.get('title')
@@ -17,12 +17,12 @@ def convert_ss_response_to_research_paper(ss_response):
         publication_year = ss_response.get('year')
         cited_by_count = ss_response.get('citationCount')
         authors = fetch_authors_from_ss_response(ss_response.get('authors'))
-        publication, publication_id = fetch_publication_from_ss_response(ss_response.get('publicationVenue'))
+        publication, publication_id, alternate_names = fetch_publication_from_ss_response(ss_response.get('publicationVenue'))
         oa_url = fetch_pdf_url_from_ss_response(ss_response.get('openAccessPdf'))
         return ResearchPaper(user_id=user_id, open_alex_id=open_alex_id, title=title,
                              authors=authors, abstract=abstract, publication_year=publication_year,
                              cited_by_count=cited_by_count, publication=publication, publication_id=publication_id,
-                             oa_url=oa_url)
+                             oa_url=oa_url, publication_alternate_names=alternate_names)
     except Exception as e:
         raise f"Could not convert ss response to ResearchPaper: {e}"
 
@@ -193,10 +193,12 @@ def fetch_authors_from_ss_response(author_list):
 def fetch_publication_from_ss_response(publication):
     name = ''
     id = ''
+    alternate_names = []
     if publication:
         name = publication['name']
         id = publication['id']
-    return name, id
+        alternate_names = publication.get("alternate_names", [])
+    return name, id, alternate_names
 
 def fetch_pdf_url_from_ss_response(openAccessPdf):
     if openAccessPdf:
