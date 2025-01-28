@@ -191,7 +191,8 @@ def ask_question():
         citation_count = data.get('citation_count', None)
         authors = data.get('authors', None)
         published_in = data.get('published_in', None)
-        relevant_papers = get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors)
+        searchable_query = generate_searchable_query(query)
+        relevant_papers = get_relevant_papers(searchable_query, start_year, end_year, citation_count, published_in, authors)
         if len(relevant_papers) == 0:
             return jsonify({"message": "No relevant papers found, please update your search query and/or filters."}), 200
         papers_with_chunks = parallel_download_and_chunk_papers(relevant_papers[:10])
