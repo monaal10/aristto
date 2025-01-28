@@ -67,25 +67,25 @@ You are a research assistant tasked with generating a detailed literature review
     - Publication year
     - Structured content in the following categories: Methodology, Major Findings, Datasets, Limitations, Results.
 
-Each section contains a dictionary where each entry has a unique `reference_id` (e.g., W3174508664_methodology_1) and an excerpt relevant to that section.
+Each section contains a dictionary where each entry has a unique `reference_id` (e.g., 70c3ef5767a7ec93252e0f1f3230b9f304bd43d0_methodology_1) and an excerpt relevant to that section.
 
 **Literature Review Sections:**
 
 **1. Research Evolution**
    - Describe how the field has evolved, noting significant shifts and key studies that represent turning points.
-   - **In-line citations**: Use each `reference_id` directly in the text after each claim ([W3174508664_methodology_2]), and ensure the section is self-contained without requiring additional references.
+   - **In-line citations**: Use each `reference_id` directly in the text after each claim ([uyh4ghf63jf4h674hf7_methodology_2]), and ensure the section is self-contained without requiring additional references.
 
 **2. Methodology Analysis**
    - Compare and contrast the main methodological approaches in detail, addressing strengths and weaknesses. Make this section very specific,technical and long, minimum 100 words.
-   - **In-line citations**: Support each technical point with `reference_ids` directly in the text ([W3213933678_results_3]).
+   - **In-line citations**: Support each technical point with `reference_ids` directly in the text ([8543852893652430f1f3230b9f304bd43d0_results_3]).
 
 **3. Key Findings and Contradictions**
    - Summarize major findings and any conflicting results, analyzing why these contradictions may exist. Make this section very specific,technical and long, minimum 100 words.
-   - **In-line citations**: Include multiple `reference_ids` as needed for each point ([W3174508664_limitations_1], [W3213933678_datasets_3]).
+   - **In-line citations**: Include multiple `reference_ids` as needed for each point ([327684ewyfveeuytf43hjvf74hf7rf4_limitations_1], [3478526439856934265hvdfvgdsyd7643_datasets_3]).
 
 **4. Research Gaps**
    - Identify consistent research gaps, underexplored areas, and missing methodologies. Make this section very specific,technical and long, minimum 100 words.
-   - **In-line citations**: Use `reference_ids` from a variety of papers to substantiate each identified gap ([W32539343678_methodology_4]).
+   - **In-line citations**: Use `reference_ids` from a variety of papers to substantiate each identified gap ([yer4ufbde87t43ubfg8734therb_methodology_4]).
 
 **5. Future Directions**
    - Propose promising directions for future research based on current limitations and gaps.
@@ -97,9 +97,9 @@ Each section contains a dictionary where each entry has a unique `reference_id` 
    - **Requirement**: Reference as many different papers as possible across each section. Draw from a broad range to ensure comprehensive analysis.
 
 2. **In-line Citations Only**:
-   - **Requirement**: Use exact `reference_ids` in square brackets (e.g., [W3174508664_methodology_1]) for all citations and do not include a separate reference list.
+   - **Requirement**: Use exact `reference_ids` in square brackets (e.g., [feusrogierouwg87werjbfsd_methodology_1]) for all citations and do not include a separate reference list.
    - Every statement or claim should end with one or more precise in-line citations that directly match the data input.
-   - **Multiple citations** can be included for statements requiring support from multiple sources ([W3174508664_methodology_1], [W3213933678_contributions_2]).
+   - **Multiple citations** can be included for statements requiring support from multiple sources ([grfdegsuioghsiuhgs_methodology_1], [dfgsswuergerjbger78435_contributions_2]).
 
 3. **Comprehensive Depth and Technicality**:
    - **Length**: Each section should be at least **300-500 words** for an in-depth review.

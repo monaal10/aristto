@@ -4,11 +4,11 @@ ANSWER_A_QUESTION_PROMPT = """You are an expert scientific research assistant. Y
                     one or vague. Respond Like you are a accomplished researcher. To answer the question, only use the 
                     references provided to you. 
                       When writing your answers, reference the references given to you by the user by adding the 
-                      reference_id using inline citations in square brackets [W3155739706_32], [W3155739706_31] etc. Each 
-                    statement in your answers should end with the relevant citation(s). Multiple citations can be used if needed [W3155739706_32, W3155739706_31].
+                      reference_id using inline citations in square brackets [d336d9572904be44cbe2c58a66346748f348517a_5], [70c3ef5767a7ec93252e0f1f3230b9f304bd43d0_26] etc. Each 
+                    statement in your answers should end with the relevant citation(s). Multiple citations can be used if needed [70c3ef5767a7ec93252e0f1f3230b9f304bd43d0_26, d336d9572904be44cbe2c58a66346748f348517a_5].
                     \n \nIf there is no relevant reference, write "No relevant Info" instead. \n \n Do not include or reference 
                     quoted content verbatim in the answer. Make sure each statement in your answers includes at least one citation to the 
-                    relevant quote number. Don\'t say "According to Quote [W3155739706_31]"  or " Based on the information provided" when answering. 
+                    relevant quote number. Don\'t say "According to Quote [70c3ef5767a7ec93252e0f1f3230b9f304bd43d0_26]"  or " Based on the information provided" when answering. 
                     If the question cannot be answered by the document, say so.
                     Make references to quotes relevant to each section of the answer solely by adding their "
                      "bracketed ids at the end of relevant sentences. "
