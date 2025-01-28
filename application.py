@@ -4,7 +4,7 @@ import logging
 import datetime
 import uuid
 
-from main.modules.answer_a_question_module import answer_a_question
+from main.modules.answer_a_question_module import answer_a_question, generate_searchable_query
 from main.modules.chat_with_paper_module import chat
 from main.modules.extract_paper_info_module import extract_paper_information
 from main.modules.literature_review_agent_module import execute_literature_review
