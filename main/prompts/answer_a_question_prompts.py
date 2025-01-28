@@ -20,6 +20,5 @@ ANSWER_A_QUESTION_PROMPT = """You are an expert scientific research assistant. Y
 
 GENERATE_SEARCHABLE_QUERY = """
 Here is a query given from the user : {query}
-Convert this into a phrase/keywords that I could directly use to search for papers on Google scholar. 
-Only give me the updated query that can be directly copy pasted in google scholar, don't print anything else. 
+Understand the question and figure out what topic the question is about. Give me the topic that I can use to search for relevant research papers. Just print the answer.
 """
