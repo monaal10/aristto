@@ -56,7 +56,7 @@ def encodeAccessToken(user_id, email, plan):
             "user_id": user_id,
             "email": email,
             "plan": plan,
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=600)
         }
         return jwt.encode(payload, app.config["secret_key"], algorithm="HS256")
     except Exception as e:
