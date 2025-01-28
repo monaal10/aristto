@@ -7,7 +7,7 @@ import logging
 from main.classes.research_paper import ResearchPaper
 # from embeddings_module import rank_documents
 import pandas as pd
-
+from rapidfuzz import process
 from main.utils.convert_data import convert_oa_response_to_research_paper
 from main.modules.embeddings_module import rank_documents
 from main.utils.convert_data import convert_ss_response_to_research_paper
@@ -111,7 +111,7 @@ def create_hhtp_url_for_ss(query, start_year, end_year, citation_count, publishe
             initial_string += f"&minCitationCount={str(citation_count)}"
         if published_in and len(published_in) > 0:
             initial_string += f"&venue={published_in}"
-        return initial_string + "&openAccessPdf&limit=100"
+        return initial_string + "&limit=100"
     except Exception as e:
      raise f"Could not form semantic scholar hhtp url from given parameters: {e}"
 
@@ -132,7 +132,22 @@ def get_ss_papers(query, start_year, end_year, citation_count, published_in):
     return papers
 
 
+def get_sjr_rank_fuzzy_search(journal_names, threshold=80):
+    try:
 
+        df = pd.read_csv('main/modules/jqr.csv')
+        for journal in journal_names:
+            # Find the closest match in the 'title' column
+            best_match, score, temp = process.extractOne(journal, df['title'])
+
+            # If the match score is above the threshold, we consider it a valid match
+            if score >= threshold:
+                # Retrieve the corresponding SJR value
+                sjr_value = df[df['title'] == best_match]['sjr'].values[0]
+                return sjr_value
+        return ''
+    except Exception as e:
+        raise e
 
 
 def get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors):
@@ -144,17 +159,29 @@ def get_relevant_papers(query, start_year, end_year, citation_count, published_i
         response = requests.get(http_url)
         #data = response.json()
         #papers = [convert_oa_response_to_research_paper(work) for work in data['results']]
+
         data = response.json().get("data")
-        papers = [convert_ss_response_to_research_paper(work) for work in data]
-        unique_papers = list({paper.open_alex_id: paper for paper in papers}.values())
-        if published_in:
-            unique_papers = get_filtered_by_sjr_papers(published_in, unique_papers)
-        #relevant_papers = rank_documents(query, unique_papers)
-        if len(unique_papers) == 0:
-            logger.info(f"No relevant papers found")
-        return unique_papers
+        if data:
+            papers = [convert_ss_response_to_research_paper(work) for work in data]
+            unique_papers = list({paper.open_alex_id: paper for paper in papers}.values())
+            filtered_papers = []
+            for paper in unique_papers:
+                if paper.publication:
+                    publication_names = paper.publication_alternate_names + [paper.publication]
+                    sjr = get_sjr_rank_fuzzy_search(publication_names)
+                    if sjr == "Q1":
+                        filtered_papers.append(paper)
+
+            #relevant_papers = rank_documents(query, unique_papers)
+            if len(unique_papers) == 0:
+                logger.info(f"No relevant papers found")
+            return filtered_papers
+        return []
     except JSONDecodeError:
         return []
+
+    except Exception as e:
+        raise e
 
 
 def get_filtered_by_sjr_papers(published_in, papers):
