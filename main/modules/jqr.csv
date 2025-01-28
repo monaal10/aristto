@@ -49,7 +49,7 @@ Chemical Society Reviews,Q1,S316438,73ec17ce-c146-416b-a1f9-5c9142741115
 American Economic Journal: Macroeconomics,Q1,S170166683,a24fc3de-d273-4771-ad81-269c16439b85
 Nature Reviews Methods Primers,Q1,S4210231269,93906da2-687f-4184-8437-40998086f409
 eScience,Q1,S4210209524,7ec19773-02ec-4b44-bd9d-338e6da82040
-Proceedings of the IEEE International Conference on Computer Vision,-,,
+Proceedings of the IEEE International Conference on Computer Vision,Q1,,
 Nature Neuroscience,Q1,S2298632,7892f01e-f701-4d07-8c36-e108b84ec6ab
 Handbook of Econometrics,Q1,S9967140,767b9acf-3e24-4be7-9367-435e91d9b3cd
 "Lancet Oncology, The",Q1,S116900674,
@@ -69,7 +69,7 @@ Energy and Environmental Science,Q1,S117082959,
 Physiological Reviews,Q1,S203035050,d2a88b2a-7295-4af6-8f52-99424522515b
 Journal of Clinical Oncology,Q1,S15137598,a5913268-3957-484f-b41f-347b0ba23338
 Academy of Management Review,Q1,S46763546,3f217ee1-1adb-45a8-8eed-aef32e6b0d8d
-Proceedings of the IEEE Computer Society Conference on Computer Vision and Pattern Recognition,-,,
+Proceedings of the IEEE Computer Society Conference on Computer Vision and Pattern Recognition,Q1,,
 MMWR Surveillance Summaries,Q1,S4210189843,
 Cell Stem Cell,Q1,S128124174,5477f7c0-28f2-473a-9dcb-9f1cd6614f20
 "Lancet Diabetes and Endocrinology,The",Q1,S2529869117,
@@ -730,7 +730,7 @@ npj Precision Oncology,Q1,S4210211538,adf0b60b-d3a4-4ec1-b1a1-04313d832403
 IEEE Transactions on Knowledge and Data Engineering,Q1,S30698027,c6840156-ee10-4d78-8832-7f8909811576
 Cancer and Metastasis Reviews,Q1,S114927911,
 Journal of the ACM,Q1,S118992489,5c1ee4fd-f14f-4d2a-9d42-1a1be373786a
-Proceedings - IEEE INFOCOM,-,S4363608785,
+Proceedings - IEEE INFOCOM,Q1,S4363608785,
 Medicinal Research Reviews,Q1,S22382660,
 Transportation Research Part C: Emerging Technologies,Q1,S64511102,a8fbd64a-2df2-4275-b527-7935d0142fff
 Biochar,Q1,S4210190674,f601b953-4f15-4b81-980c-7c8242a1f56b
@@ -849,7 +849,7 @@ Methods in Ecology and Evolution,Q1,S1131227,d66cff25-03a5-432c-b3c8-fbdc8723307
 Annales de l'Institut Henri Poincare (C) Analyse Non Lineaire,Q1,,
 Computers in Human Behavior,Q1,S204030396,435ffef1-21df-491d-b69a-605eee1b7f7f
 Digital Journalism,Q1,S2764497610,75cba1e7-a0b5-42e4-85de-336ba27b2cf1
-Proceedings of the ACM SIGMOD International Conference on Management of Data,-,,c7bbd260-cab4-44b5-8650-302dd3aae182
+Proceedings of the ACM SIGMOD International Conference on Management of Data,Q1,,c7bbd260-cab4-44b5-8650-302dd3aae182
 IEEE Industrial Electronics Magazine,Q1,S32918732,f699409d-207c-4518-91b2-4900bd77ee43
 Journal of Health and Social Behavior,Q1,S122290859,87939dac-71f4-4443-9937-38088540d384
 American Journal of Clinical Dermatology,Q1,S71020152,467bd474-7fe2-4a8c-a29d-8a8b0525e78c
@@ -1054,7 +1054,7 @@ Modern Pathology,Q1,S33606366,e5a14861-14ee-4a88-a5aa-d13a448a7075
 "Transportation Research, Part D: Transport and Environment",Q1,S45181156,
 Probability Theory and Related Fields,Q1,S105693234,2db0a74c-c07a-4595-a875-4aa7c5f6ef4f
 Personality and Social Psychology Bulletin,Q1,S187348256,e58ea5aa-0704-4636-9014-a8617e95d726
-Proceedings of the Annual ACM-SIAM Symposium on Discrete Algorithms,-,S4363608732,4deca85d-c5ad-43bb-9864-8e7263a5926f
+Proceedings of the Annual ACM-SIAM Symposium on Discrete Algorithms,Q1,S4363608732,4deca85d-c5ad-43bb-9864-8e7263a5926f
 European Journal of Operational Research,Q1,S103321696,0acd87e7-c1b4-434a-955a-c26983a4b9f4
 Journal of Neuroscience,Q1,S5555990,52edfc09-8d65-4876-8560-84530d7259b9
 Energy Research and Social Science,Q1,S2764593084,
@@ -1444,7 +1444,7 @@ Green Synthesis and Catalysis,Q1,S4210174164,88c4e5ae-8179-42f7-b5a0-24dc63fe482
 Renewable Energy,Q1,S815301,26190f1b-cdff-4280-96ba-ba2c4dae2a27
 Transcription,Q1,S4210168212,60371fca-8dbe-40c5-904d-794370172a1a
 Aging and Disease,Q1,S2738790859,1f5164a6-54c8-4b23-bc6a-cef488c1c528
-Proceedings of the Annual ACM Symposium on Principles of Distributed Computing,-,,
+Proceedings of the Annual ACM Symposium on Principles of Distributed Computing,Q1,,
 Horticulture Research,Q1,S2764753230,c54bb9b1-fb21-432d-a957-edcc5c96f1a7
 Journal of Philosophy,Q1,S41650241,37fca5b0-41da-4c23-b996-81d8a18ee69c
 Mathematische Annalen,Q1,S192217950,9d43d1b8-321f-432a-9726-584c406fe37f
@@ -1874,7 +1874,7 @@ Journal of Banking and Finance,Q1,S2876017,
 Teaching and Teacher Education,Q1,S94618750,
 Asian Journal of Pharmaceutical Sciences,Q1,S2764650913,4237947a-77a1-418b-b96c-e9ccd2fda65e
 Chinese Chemical Letters,Q1,S167919573,1b60e44b-dc29-4a1b-b711-f0d70316805c
-Proceedings of the ACM SIGACT-SIGMOD-SIGART Symposium on Principles of Database Systems,-,S4393916800,
+Proceedings of the ACM SIGACT-SIGMOD-SIGART Symposium on Principles of Database Systems,Q1,S4393916800,
 Tectonics,Q1,S6410836,678293fb-e84f-4d26-bf26-9596a9bb53c6
 Engineering Structures,Q1,S165454098,a957d2b3-bedb-47b7-9074-8cf3277cab30
 JPhys Energy,Q1,S4210231992,
@@ -1965,7 +1965,7 @@ SciPost Physics,Q1,S4210195687,51571f5d-dd70-4af8-b981-935888dadd67
 Analytical Chemistry,Q1,S191963794,164cf9d6-c9e8-41f0-b15d-00fa34cb4bd1
 Monthly Notices of the Royal Astronomical Society,Q1,S195663288,b0d34fc8-4511-4e50-9ae9-a811116075c1
 Annals of Applied Probability,Q1,S9093621,
-Proceedings - IEEE International Conference on Robotics and Automation,-,S4210217939,
+Proceedings - IEEE International Conference on Robotics and Automation,Q1,S4210217939,
 Systematic Reviews,Q1,S82452678,7bcfec9d-4ece-43ad-8a9f-b653e1b3ec4e
 Current Opinion in Green and Sustainable Chemistry,Q1,S4210195801,a2b319b4-d96c-4034-87b3-744e53cd1a54
 International Soil and Water Conservation Research,Q1,S2764733428,9898e1b7-3b52-4026-b872-872d898d2054
@@ -2448,7 +2448,7 @@ Journal of Orthopaedic and Sports Physical Therapy,Q1,S7609525,b2a0cdaa-ade9-43b
 Police Quarterly,Q1,S167107504,b6f3aedc-3b1e-4289-8801-c659b7348855
 American Journal of Physiology - Renal Physiology,Q1,S200780590,
 Development and Psychopathology,Q1,S6115874,2ad84655-bbad-4ef4-b7f0-6c0256c0e25d
-Proceedings of the ACM Conference on Computer and Communications Security,-,S4363608815,53c0f25f-7976-4361-9cf8-d2c7a15f302b
+Proceedings of the ACM Conference on Computer and Communications Security,Q1,S4363608815,53c0f25f-7976-4361-9cf8-d2c7a15f302b
 Sport Management Review,Q1,S121058368,8a73b5a7-14b6-47dc-83ab-12b717081978
 Higher Education Research and Development,Q1,S4210176587,3cf9367f-7ebd-4570-ae3d-b6c9c198ff96
 Rare Metals,Q1,S172552266,008e2987-09fe-48a1-8846-a3b4509bce17
@@ -2841,7 +2841,7 @@ Bulletin of the American Museum of Natural History,Q1,S72004196,68586c93-3756-41
 Elements,Q1,S65722409,5cd955e7-ea08-4134-8bc5-b6fcebdeb260
 Information and Inference,Q1,S2734669121,
 Journal of the Association for Consumer Research,Q1,S2735010472,91ed684b-ad94-4221-8eaf-aa3406c951ad
-Proceedings - International Conference on Data Engineering,-,S4210210321,
+Proceedings - International Conference on Data Engineering,Q1,S4210210321,
 Security Dialogue,Q1,S132665167,2eece863-5bc1-483c-a248-b8db86bd82eb
 Journal of Wind Engineering and Industrial Aerodynamics,Q1,S22685659,acceba7d-5bc1-4d91-910c-2b7ff247cd2c
 Current Opinion in Ophthalmology,Q1,S145244763,80b93887-97a2-4929-ab96-2717403a9c69
@@ -2874,7 +2874,7 @@ American Journal of Orthopsychiatry,Q1,S84156235,d9e47e02-f442-491d-b42d-f049408
 Current Neuropharmacology,Q1,S85221069,00b197ad-db71-4e63-95d6-23c50400ab53
 Journal of Proteome Research,Q1,S74367812,c7bbca07-9604-48a6-85d8-512fa663722e
 Perspectives on Public Management and Governance,Q1,S2735938357,984052fb-5f56-4dc7-bb4d-c4a8b7de258d
-Proceedings - Symposium on Logic in Computer Science,-,S4210192682,
+Proceedings - Symposium on Logic in Computer Science,Q1,S4210192682,
 Quality of Life Research,Q1,S90347677,4608c3c9-528c-4faa-8313-56b15f88f0cf
 Complex System Modeling and Simulation,Q1,S4210192143,e4690cc1-7998-4df1-85c2-f00437df6120
 IEEE Transactions on Consumer Electronics,Q1,S126824455,afe1e422-be11-407c-b015-42ce93aac874
@@ -3674,7 +3674,7 @@ Clinical eHealth,Q1,S2898090536,93d532d1-89ac-4074-8d73-30b313638e64
 Endocrinology and Metabolism,Q1,S196637695,2f23365f-3e58-464e-b9ca-6c4880dfbef2
 Health Expectations,Q1,S134406477,4672b2e0-de9c-4a4c-8275-1ac1064050e3
 Interfaces and Free Boundaries,Q1,S90065678,
-Proceedings of the Custom Integrated Circuits Conference,-,S4393916068,
+Proceedings of the Custom Integrated Circuits Conference,Q1,S4393916068,
 World Wide Web,Q1,S129236917,
 International Psychogeriatrics,Q1,S175287009,b5cd95a9-0809-4289-9d11-cdfe92157c86
 npj Materials Degradation,Q1,S4210234193,7f95b24c-f729-41c4-ae03-625fa29d615e
@@ -7256,7 +7256,7 @@ Journal of Clinical Pharmacology,Q2,S13842274,33b50733-0be0-44b0-844a-63653da913
 Journal of Imaging,Q2,S132538424,c0fc53c7-b0ed-487d-9191-1262c8322621
 Journal of Information Technology Education:Research,Q1,,
 Pathogens and Global Health,Q2,S2505153014,af2ee47e-d5c4-4a13-ae8a-9988a572b67f
-Proceedings of the IEEE Symposium on Reliable Distributed Systems,-,S4210201925,
+Proceedings of the IEEE Symposium on Reliable Distributed Systems,Q2,S4210201925,
 Aerosol and Air Quality Research,Q2,S103097414,87172852-0c9a-4ff1-9b60-1511717adab3
 Archives of Psychiatric Nursing,Q2,S69840963,45344537-85b5-42a5-abc4-b0c94f0b021c
 British Journal of Social Work,Q1,S202740514,b1161566-adb7-41f1-8958-0199e138f7f2
@@ -7527,7 +7527,7 @@ AIDS Care - Psychological and Socio-Medical Aspects of AIDS/HIV,Q2,,
 AoB PLANTS,Q1,S77453907,77c49749-cbcf-489e-aaad-67a8b6a4bf46
 European Journal of Management and Business Economics,Q2,S4210218316,5f61b65c-2ae8-42d2-b0cc-59c916ac5a89
 Fungal Biology,Q1,S187344466,1f6493ed-be22-47cf-ab85-1408bccec95a
-IEEE International Symposium on Information Theory - Proceedings,-,,
+IEEE International Symposium on Information Theory - Proceedings,Q1,,
 International Journal of Advanced Manufacturing Technology,Q2,S77056576,
 Journal of Cardiovascular Pharmacology and Therapeutics,Q2,S130832228,d91aa7f7-9859-4e61-8fed-adf5048cf6a3
 Journal of Food Biochemistry,Q1,S53703007,d5daaf44-a1ca-41e3-90f6-6852215c5c02
@@ -7942,7 +7942,7 @@ European Journal of Medical Genetics,Q2,S160362754,867818c2-8630-4e1c-8503-f4067
 Journal for Nature Conservation,Q2,S77407326,7b3796e8-3277-45f5-8c36-15995668b674
 Journal of Music Therapy,Q1,S111237879,
 Photochemistry and Photobiology,Q2,S61245073,0010bc02-e3f5-46bf-ab92-f2936eee742b
-"Proceedings of the ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming, PPOPP",-,,
+"Proceedings of the ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming, PPOPP",Q1,,
 Quaternary International,Q2,S68052730,d879d714-d390-4972-95e4-d0125ffbc4fc
 Arthropod Structure and Development,Q1,S38044275,
 Bulletin of Environmental Contamination and Toxicology,Q2,S106502101,18bd75fb-03db-4a15-ba44-fe2fecdef51b
@@ -8927,7 +8927,7 @@ European Political Science,Q1,S202288906,c5b8f178-1d77-4e1c-b430-cd566c5f18b2
 Foresight,Q1,S2358700,d04c484e-f612-4e01-a2d4-beba8913cea2
 Glycoconjugate Journal,Q3,S3923916,cc0ce00a-d9be-4066-a380-e9e86dd64629
 Hematology/ Oncology and Stem Cell Therapy,Q2,S2898422462,
-IEEE International Test Conference (TC),-,,
+IEEE International Test Conference (TC),Q2,,
 Journal of Hospitality and Tourism Education,Q2,S4210230881,e93362b0-514c-4a3d-97ba-87dded982341
 Journal of King Saud University - Science,Q1,S163784168,
 Journal of Social Work,Q1,S202740514,86ee49eb-06bf-4b2a-8cee-03593f5b0b96
@@ -9388,7 +9388,7 @@ Lasers in Medical Science,Q2,S124030303,0e1326ae-fa43-4c88-86d1-fb24045a7d71
 Meditteranean Politics,Q1,,
 Mutation Research - Genetic Toxicology and Environmental Mutagenesis,Q2,S29775604,
 "Plant Cell, Tissue and Organ Culture",Q1,S32261165,
-Proceedings of the American Control Conference,-,S4210168941,
+Proceedings of the American Control Conference,Q1,S4210168941,
 Rural and Remote Health,Q1,S2477089890,0aa5f267-725f-4ab7-8785-0fdebe130baa
 Scientific African,Q1,S4210198261,87520327-ec36-4115-b86a-8d53d3ecff45
 Statistica Neerlandica,Q2,S152229401,
@@ -9721,7 +9721,7 @@ Arthropoda Selecta,Q2,,6faf090d-25f4-4e86-bfee-90533f471a84
 Autoimmune Diseases,Q2,S167142590,50f76321-c9a7-480a-bf1d-0c6b31809ef3
 CESifo Economic Studies,Q2,S30207186,e122a8b4-6c20-4ed5-8061-c7bb4c8248ec
 Discover Sustainability,Q2,S4210179043,9f5112ad-0de7-4e1d-93ea-dbc9f2961e74
-"International Conference on Application-Specific Systems, Architectures and Processors, Proceedings",-,,
+"International Conference on Application-Specific Systems, Architectures and Processors, Proceedings",Q2,,
 International Journal of Developmental Disabilities,Q3,S2764979803,3fbe00d9-d6ae-4abc-88e7-49d19e5b5a16
 International Journal of Doctoral Studies,Q2,S2738474347,8da83075-7b32-4162-905c-a8c6b652ecd1
 International Journal of Structural Integrity,Q2,S189853587,543000ee-93af-4009-a329-47a304e491f0
@@ -10707,7 +10707,7 @@ Australasian Psychiatry,Q3,S13240397,59416627-322a-464d-b8ea-87c19ac826d3
 Clinical Teacher,Q1,S2280673,
 Cogent Psychology,Q2,S2764824912,8a356cfa-5388-4e80-8d48-260556a83e66
 Flow Measurement and Instrumentation,Q2,S46058507,2b43aa84-c21e-4b5f-890c-19a110906dc5
-IEEE MTT-S International Microwave Symposium Digest,-,S4210185519,c304da79-5af7-4eb6-8484-08ca2cd2f2ae
+IEEE MTT-S International Microwave Symposium Digest,Q1,S4210185519,c304da79-5af7-4eb6-8484-08ca2cd2f2ae
 Information Development,Q2,S61286511,ad1d0602-07c4-4dc4-843f-06a260a14ecd
 International Journal for Research in Vocational Education and Training,Q2,S2736341217,169dac3c-e63f-4990-a1ab-70acc9295293
 International Journal of Cell Biology,Q4,S183320690,a7682b40-bc0d-49ae-bab1-b3aa328c5966
@@ -10790,7 +10790,7 @@ Ironmaking and Steelmaking,Q2,S179017329,
 Journal of Population Research,Q2,S12659337,6292d48a-d468-4467-a241-e48d763390bd
 Journal of Porous Materials,Q2,S19938693,b4960a84-3a81-4392-a740-5b6271196441
 Military Medicine,Q3,S207859457,c4d93587-fcb5-4ac5-945b-c9f2d8372753
-Proceedings of the International Joint Conference on Neural Networks,-,,
+Proceedings of the International Joint Conference on Neural Networks,Q1,,
 Steel Research International,Q2,S34395325,eb3c7d9d-afc5-466c-a230-6797fef690ca
 Topological Methods in Nonlinear Analysis,Q2,S16719124,177560a7-e3d8-45e6-9852-5c5d4e999129
 Trees - Structure and Function,Q1,,
@@ -11358,7 +11358,7 @@ Journal of Evidence-Based Social Work (United States),Q2,,
 Journal of Interdisciplinary Mathematics,Q2,S2764429975,e65f8f1a-35db-47b5-9590-cb5049a0d18e
 Journal of Toxicological Sciences,Q3,S148595626,3eae75d8-d51a-4eaf-b80d-8c302983e1b2
 Management of Biological Invasions,Q2,S2764453701,17df57b8-5f18-450b-87b9-0e1423b96e9c
-Materials Today: Proceedings,-,S2898407351,71ee9c97-3f00-4fe1-8fae-ccb2c584ca55
+Materials Today: Proceedings,Q3,S2898407351,71ee9c97-3f00-4fe1-8fae-ccb2c584ca55
 Pakistan Journal of Medical Sciences,Q3,S83180243,bb28e951-d445-482f-a892-f62ee52d3221
 Pakistan Journal of Statistics and Operation Research,Q2,S2764549733,6a08d998-b27a-4e75-8366-3717fbe23023
 Russian Language Studies,Q1,S4210209132,62947b4d-1ebe-4f34-8951-fa867f4f0bbe
@@ -11451,7 +11451,7 @@ Learning and Motivation,Q2,S54581057,6acab86d-a5b4-4b3d-a3a0-7ff0a3c2096d
 Nordic Journal of Music Therapy,Q1,S4210231474,efb2a24d-7245-45f0-8a1e-d79315d56c3e
 Operations Research for Health Care,Q2,S2764412446,22513a13-8e29-4162-8c11-61d6fbd2b6b6
 Portal Hypertension and Cirrhosis,Q3,,
-Proceedings of the International Conference on Supercomputing,-,,
+Proceedings of the International Conference on Supercomputing,Q1,,
 Social and Legal Studies,Q1,S206808405,af5e59b0-63bf-4d53-9ff2-be6ec32cb814
 South African Medical Journal,Q3,S147026946,c3affdf8-c6f4-44c8-aad1-f1318de9dbdc
 Advances in Social Work,Q2,S2764429169,89d80e9f-678c-4724-a6fd-5aceeebca3e1
@@ -11509,7 +11509,7 @@ Gender and Development,Q2,S110812003,
 Global Social Policy,Q2,S43812680,4036a889-34ab-4093-ab2f-7b778861a517
 Journal of Comparative Family Studies,Q1,S95454600,f9e2707e-2d7c-4e38-b92c-ce49844740cd
 Philosophy of the Social Sciences,Q1,S188481820,2e6ad8cc-e7ac-48d0-aa1f-b07da48ff285
-Proceedings - IEEE International Conference on Computer Design: VLSI in Computers and Processors,-,S4210174938,
+Proceedings - IEEE International Conference on Computer Design: VLSI in Computers and Processors,Q1,S4210174938,
 Teaching and Learning Inquiry,Q2,S2737405666,
 Toxicology and Industrial Health,Q3,S6336342,ed36816a-2f1c-4100-abd3-6dbf7cf51025
 Tumori,Q3,S4210189328,7cd44de9-a936-455d-9166-cbaf941977aa
@@ -11776,7 +11776,7 @@ Journal of Venomous Animals and Toxins Including Tropical Diseases,Q2,S39186690,
 Leadership in Health Services,Q2,S9566496,6397ca12-32c9-4eb9-ad35-99844146436c
 Lobachevskii Journal of Mathematics,Q2,S106263159,07490966-a331-4f30-81f7-54d4c0a4a8ca
 Neurochirurgie,Q2,S193119689,
-Proceedings of the ACM Symposium on Applied Computing,-,S4363608679,
+Proceedings of the ACM Symposium on Applied Computing,Q1,S4363608679,
 Production Engineering Archives,Q2,S4210176665,a1bc5e0b-242c-43d7-9102-e363f279bb41
 Research in Education,Q2,S17192686,
 Revista Electronica de LEEME,Q1,,
@@ -12465,7 +12465,7 @@ Advances in Accounting,Q3,S27001385,fa04efa6-b9a4-4076-844f-e2f26320b7f1
 Advances in Distributed Computing and Artificial Intelligence Journal,Q3,S4210211603,0242c19b-9fa5-405b-a089-81654f7e9f53
 Anthropology and Humanism,Q1,S4210238107,0cc9c1d8-e9fa-41ec-b27d-9bc8341712e8
 Apeiron,Q1,S195774317,
-Conference Record - IAS Annual Meeting (IEEE Industry Applications Society),-,S4210210408,
+Conference Record - IAS Annual Meeting (IEEE Industry Applications Society),Q1,S4210210408,
 Critical Criminology,Q1,S4671545,3df89e17-6574-42ef-a165-54ee0442826d
 Herpetozoa,Q2,S4210228833,ea93b9af-e327-4e18-be99-bcfdea5730a6
 Historical Materialism,Q1,S165431477,fac4f235-4467-47c6-ae72-3392f578a97e
@@ -13029,7 +13029,7 @@ Migraciones,Q1,S4210233898,be096c86-a97d-4d0d-9876-4a0c77e024ca
 Music Therapy Perspectives,Q1,S2734906896,dd99b879-7892-429f-bcf4-422374aeb787
 Nonlinear Functional Analysis and Applications,Q3,S2764636513,84e9f283-77ae-4bd3-8067-7338301952e7
 Nursing Science Quarterly,Q2,S95299427,2da2f122-b49b-4ce9-b1a3-42883b64850b
-Proceedings - International Symposium on Asynchronous Circuits and Systems,-,S4210190146,
+Proceedings - International Symposium on Asynchronous Circuits and Systems,Q2,S4210190146,
 Revista Espanola de Quimioterapia,Q3,,bb3d051d-7827-4c0e-8265-d610fc41e81c
 "Sport, Business and Management: An International Journal",Q3,S4210204299,cfc68ad1-7e14-4214-aebb-c9e43453cba7
 TESL-EJ,Q1,S4306531894,8d6c69e6-ed76-4e9f-a6a7-cf1ce426b992
@@ -13076,7 +13076,7 @@ Journal of Thermophysics and Heat Transfer,Q2,S185031775,20a375d8-955c-4a86-b07f
 Leiden Journal of International Law,Q1,S154337186,42a24372-3709-4db2-b42a-9006e3412398
 "Mining, Metallurgy and Exploration",Q2,S4306479896,
 Physics Teacher,Q2,S104921184,
-Proceedings of the International Conference on Parallel and Distributed Systems - ICPADS,-,,
+Proceedings of the International Conference on Parallel and Distributed Systems - ICPADS,Q2,,
 Science of Sintering,Q2,S3210172,1d24cc49-106f-45e9-ad3d-93eec39cfad4
 Ufa Mathematical Journal,Q2,,e0d24920-61c7-4064-af3b-a067df086915
 Arhiv za Higijenu Rada i Toksikologiju,Q3,,b09003d1-0d8f-41e9-91c0-213e2169494b
@@ -13136,7 +13136,7 @@ Journal of the Australian Mathematical Society,Q2,S199276155,06e68fc0-4d5c-4ca2-
 Microelectronics Reliability,Q2,S133646729,
 Nordic Psychology,Q3,S123447050,6a77bf30-e1af-4d20-9b93-5efdbc7ca612
 Place Branding and Public Diplomacy,Q3,S73311515,f4bac0dc-d99f-4a81-b34e-d4dd8a0492f0
-Proceedings of The International Symposium on Multiple-Valued Logic,-,S4210220027,
+Proceedings of The International Symposium on Multiple-Valued Logic,Q2,S4210220027,
 Psicologica,Q2,S1021851039,
 Rutgers Business Review,Q3,,
 South African Journal of Economics,Q3,S90392387,af040432-2d09-4543-ab05-59e1c37f2919
@@ -13409,7 +13409,7 @@ Detritus,Q3,S4210170762,070f71d3-0276-4fa8-8776-7ec50eb0e909
 European Physical Journal B,Q3,S9051360,
 Experimental Techniques,Q2,S194443205,
 Gifted Child Today,Q2,S12725922,68efb255-b843-4a39-bb48-c6633bd9fffc
-IEEE Aerospace Conference Proceedings,-,S4210171417,
+IEEE Aerospace Conference Proceedings,Q2,S4210171417,
 IEEE Spectrum,Q3,S66124381,25f60968-952b-484e-be36-50366f5e1d81
 International Journal for Multiscale Computational Engineering,Q2,S63368048,03257036-d409-4ae4-8075-a43015377dd3
 International Journal of Pest Management,Q2,S4210194758,df612cb2-a16b-4412-bbac-fda9615e7ba0
@@ -13426,7 +13426,7 @@ Museum and Society,Q1,S2764878774,7d7826a0-2265-414e-932a-d4dafeed1e4d
 Ochsner Journal,Q3,S2765063374,86978015-5721-4227-a031-04967106cca6
 Physics Today,Q2,S180907581,d4cef178-12d9-45f5-9d4c-4f34530b82a3
 Plant Ecology and Evolution,Q2,S6403244,fe9025c4-cf6d-44bf-aed9-a7b3494d7a24
-Proceedings - Electronic Components and Technology Conference,-,,
+Proceedings - Electronic Components and Technology Conference,Q2,,
 Protein Expression and Purification,Q3,S9184782,bb51c554-2d06-4fac-966e-9a2c4f0bbeca
 Public Administration Quarterly,Q3,S2764451528,871a3253-622c-4123-8172-6ed3d2b47e9c
 Retos,Q2,S2738013834,
@@ -13765,7 +13765,7 @@ Services Marketing Quarterly,Q3,S61474858,26ab59a2-c93f-4034-affd-3ce181253bac
 Advanced Composites Letters,Q2,S126156665,a36fcb4b-2a75-4bf0-b4a2-ea1493271fb5
 Anaesthesiology Intensive Therapy,Q2,S2739218046,b481bac1-d516-41b4-b947-5d7fc2569b35
 Baltic Journal of Economics,Q2,S71377650,ab8b6b4a-f291-4708-8394-7bc049b9333f
-"Electronic Proceedings in Theoretical Computer Science, EPTCS",-,,
+"Electronic Proceedings in Theoretical Computer Science, EPTCS",Q3,,
 Exploration Geophysics,Q3,S19171858,2f78f5d3-25db-4221-9a9a-a7457e629c88
 Geologia Croatica,Q2,S175615688,abedb3b5-7727-456b-89e2-85a0607d9ced
 HeartRhythm Case Reports,Q3,S2765045535,733e7b5b-2b3d-4cc5-bb46-5f5b3462cdec
@@ -14698,7 +14698,7 @@ C-Journal of Carbon Research,Q3,S4210233808,
 East European Politics and Societies,Q2,S37477851,0b808581-d928-4f50-82c7-4adf07c2fe06
 Heart and Mind,Q3,S4210199693,272c38d7-f9fc-4dca-92dc-8a112666765d
 i-com,Q2,S4210235838,
-IEEE National Radar Conference - Proceedings,-,S4210215198,
+IEEE National Radar Conference - Proceedings,Q2,S4210215198,
 International Journal of Developmental Sciences,Q3,S4210206709,
 International Journal of Evaluation and Research in Education,Q3,S2764488043,
 Journal of Education Culture and Society,Q1,S2764771993,94ce53a6-fc94-43a9-991a-3107ad2766d9
@@ -15083,7 +15083,7 @@ International Journal of Electrical and Computer Engineering,Q3,S2764532672,
 Journal of Chemical Sciences,Q3,S185986200,
 Journal of the Royal Asiatic Society,Q1,S194872021,1800ab95-267e-4a17-885a-b53003bfc70e
 Politologicky Casopis,Q2,,
-Proceedings of the IEEE International Conference on Micro Electro Mechanical Systems (MEMS),-,,
+Proceedings of the IEEE International Conference on Micro Electro Mechanical Systems (MEMS),Q1,,
 Quantum Beam Science,Q3,S4210238614,cb1be63a-9369-4c38-b47f-0e417d078569
 Revista Gaucha de Enfermagem,Q3,,
 Studies in Communication and Media,Q2,S4210181109,
@@ -15192,7 +15192,7 @@ Journal of Obstetrics and Gynecology of India,Q3,S28664163,3e7d989b-abfc-4e90-bd
 NeuroRegulation,Q3,S4210167603,275894c4-77f9-4b7e-8c24-9f18c664f833
 Novosti Sistematiki Nizshikh Rastenii,Q3,S4210228852,7688cc2c-65a9-44e5-bdf7-f63f04712602
 Pediatric Neurosurgery,Q3,S130320380,52801f0d-44f1-41f9-af3c-d4e198c0ce18
-Proceedings of the International Conference on New Interfaces for Musical Expression,-,,8a21245a-c6be-4e54-a9d2-d99f19f54de8
+Proceedings of the International Conference on New Interfaces for Musical Expression,Q3,,8a21245a-c6be-4e54-a9d2-d99f19f54de8
 Transplantation Proceedings,Q3,S146061289,592507fd-0739-4855-ae80-eb3dabbce52c
 Volksgeist: Jurnal Ilmu Hukum dan Konstitusi,Q2,S4210223057,
 Water Resources,Q3,S204847658,1869287b-04df-460d-b419-8c7cef385b22
@@ -15214,7 +15214,7 @@ Indian Journal of Physics,Q3,S195338471,428aeaae-d527-43e9-a98a-4e2c7f925ee7
 International Journal of Business Innovation and Research,Q3,S155657779,531fa875-02df-4735-b2d4-7a32dcde4c90
 International Journal of Knowledge and Systems Science,Q3,S200968236,d30920e9-8883-40c5-a696-056dac43b395
 Irish Journal of Sociology,Q2,S2764633781,bf639a4a-ef0b-46fc-b9f5-67091f25ad4c
-"ISPRS Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences",-,S2737735205,c18ca9ea-c394-46d2-b458-30dcf166dabb
+"ISPRS Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences",Q2,S2737735205,c18ca9ea-c394-46d2-b458-30dcf166dabb
 Journal of Balkan and Near Eastern Studies,Q1,S160301912,39a2bc00-b45f-4b91-b807-01d71bae457e
 Journal of Current Glaucoma Practice,Q3,S4210185804,
 Journal of Earthquake and Tsunami,Q3,S117663032,62608a62-6508-4c09-827b-69fd426efe14
@@ -15242,7 +15242,7 @@ Cellular Reprogramming,Q3,S180034465,d9740ad9-f61a-4fa1-98e4-36f8f0e25d1f
 French Politics,Q2,S40476008,14ee2db5-bbc8-4db9-ba74-e5405d720431
 Functions of Language,Q2,S55021466,788aa8e1-4b12-4cbc-9de2-e65184a2c71e
 History and Anthropology,Q1,S151470275,
-IEEE International Conference on Fuzzy Systems,-,S4210187232,ba675c4e-f2dc-454e-9e38-d195732ed2b6
+IEEE International Conference on Fuzzy Systems,Q1,S4210187232,ba675c4e-f2dc-454e-9e38-d195732ed2b6
 International Journal of Computational Science and Engineering,Q3,S65043351,
 "International Journal of Image, Graphics and Signal Processing",Q3,S2480669183,
 Issues and Studies,Q2,S4210203166,
@@ -15374,7 +15374,7 @@ Journal of Social Ontology,Q1,S2737566693,11351561-4c0d-41f7-9f31-c7005c5391f2
 Journal of Statistical Theory and Practice,Q3,S2764401795,2a14c262-7219-42ac-9b41-c5374539e96b
 Leprosy Review,Q3,S71994424,7254085c-7437-484e-92f8-7a68f7998d92
 Materials Research,Q3,S34814058,83f01814-e54d-476a-a1c9-3fd9a83c9689
-Proceedings of Meetings on Acoustics,-,S4306523472,2005dca2-e54b-4cf5-9689-090c402b0208
+Proceedings of Meetings on Acoustics,Q2,S4306523472,2005dca2-e54b-4cf5-9689-090c402b0208
 Proceedings of the National Academy of Sciences India Section B - Biological Sciences,Q2,S4210190533,
 Public Services Quarterly,Q2,S117782930,1e87f1d5-2d4e-42ff-be53-661dc0d01f7c
 Quarterly Journal of Austrian Economics,Q2,S64915403,
@@ -15387,7 +15387,7 @@ Scientia Iranica,Q2,S2498435459,
 Voprosy Ekonomiki,Q1,S2764780593,6e42b0bf-ffd1-4c3f-a769-f7936db2257b
 Westminster Papers in Communication and Culture,Q1,S4210181074,1dd422cb-cdba-40ef-bc64-55df60e308a7
 Xitong Gongcheng Lilun yu Shijian/System Engineering Theory and Practice,Q2,,
-AIAA/IEEE Digital Avionics Systems Conference - Proceedings,-,,
+AIAA/IEEE Digital Avionics Systems Conference - Proceedings,Q2,,
 Biochemical Systematics and Ecology,Q3,S93466130,f19e18f9-fa4d-4bd1-b4b3-48e10031f4e4
 Center for Educational Policy Studies Journal,Q3,S2764801524,8fddf200-7189-4d0a-9c7c-f6ae4d19f34e
 Cutis,Q3,S87393979,
@@ -15520,7 +15520,7 @@ MEDICC Review,Q3,S2496160347,7606e9e4-fbe1-4463-bc40-02193a462402
 "Nigerian postgraduate medical journal, The",Q3,,
 OIE Revue Scientifique et Technique,Q3,S2486125978,
 Pragmatics and Beyond New Series,Q2,S2764948187,
-Proceedings - IEEE International Symposium on Circuits and Systems,-,S4210192229,
+Proceedings - IEEE International Symposium on Circuits and Systems,Q2,S4210192229,
 Proceedings of the Institution of Civil Engineers: Ground Improvement,Q3,S4210208049,
 "Proceedings of the Institution of Mechanical Engineers, Part N: Journal of Nanomaterials, Nanoengineering and Nanosystems",Q3,S4210171665,
 REVESCO Revista de Estudios Cooperativos,Q2,S2737328910,
@@ -15847,7 +15847,7 @@ Psicologia Conductual,Q3,S1024513440,
 Sign Language Studies,Q2,S196980128,4072aaeb-3892-476b-b86d-e8a8e1845d50
 South African Journal of Plant and Soil,Q3,S2764755494,f9d355b9-de38-4e0c-b2f0-7406b7027918
 South African Journal of Sports Medicine,Q3,S2764876291,9298e3bb-269c-4a5c-9e77-2e1e9fc389e8
-Springer Proceedings in Advanced Robotics,-,S4210172544,
+Springer Proceedings in Advanced Robotics,Q2,S4210172544,
 Studies in Informatics and Control,Q3,S187412440,4080b3f6-c1d3-496f-ae83-6209a95ec6dd
 Waterbirds,Q3,S114498453,
 Acta Geographica Slovenica,Q1,S95537937,8ac584a8-29e2-4b58-94ce-622b96e14b3a
@@ -15906,7 +15906,7 @@ Canadian Foreign Policy Journal,Q2,S981835755,
 Canadian Modern Language Review,Q2,S129806727,1b93d56e-ffaa-4a36-9934-bc0988a7f0e9
 Cognitive Linguistic Studies,Q2,S4210169859,671d1ebb-edd0-4f6e-a708-20e72d412143
 Communications in Applied and Industrial Mathematics,Q3,S2737535254,2b2402c8-09c0-4931-8119-23c74010bd72
-Conference Record of the IEEE Photovoltaic Specialists Conference,-,S4210168774,
+Conference Record of the IEEE Photovoltaic Specialists Conference,Q2,S4210168774,
 Corpus Pragmatics,Q2,S4210206559,
 Cuadernos de Prehistoria y Arqueologia de la Universidad Autonoma de Madrid,Q1,,
 Functional Materials Letters,Q3,S67457907,ab8a6968-08c6-482d-8abc-9e91034b57d7
@@ -16000,7 +16000,7 @@ Neotropical Biology and Conservation,Q3,S4210214477,17756fa9-d04a-4c13-8b71-31ed
 Nota Lepidopterologica,Q3,S4210167524,3893d013-5bab-40c0-90db-0b0e3f6665c9
 Pediatric Annals,Q3,S95433592,fbdb945c-8128-4cee-987b-5049417136be
 Primary dental journal,Q3,S2764649697,f64e9327-a906-408a-82f1-68ffffd7ed9c
-Procedia Structural Integrity,-,S2764766352,7594b576-9e87-4838-ad7a-f8fed1799e62
+Procedia Structural Integrity,Q3,S2764766352,7594b576-9e87-4838-ad7a-f8fed1799e62
 Revista Espanola de Salud Publica,Q3,,
 Revista Signos,Q1,S20968549,a1997f47-75d0-4989-bae4-9fa4937cdb23
 SAE International Journal of Transportation Safety,Q3,S2764622389,63d9b729-ff18-4f11-95fe-1bd9f466b470
@@ -16312,7 +16312,7 @@ Modern History of Russia,Q1,S4210204246,90754a59-f5f7-4415-853b-5d7c81bd0b67
 Nankai Business Review International,Q3,S4210192138,972207a1-50ac-4b2f-a68e-2133e64440af
 Panminerva Medica,Q3,S202685627,
 Poverty &amp; Public Policy,Q1,,
-Proceedings of the International Association of Hydrological Sciences,-,S4210170531,0875bac4-91ca-4f3a-91a5-d71bd15d8723
+Proceedings of the International Association of Hydrological Sciences,Q1,S4210170531,0875bac4-91ca-4f3a-91a5-d71bd15d8723
 Revista Interuniversitaria de Formacion del Profesorado,Q1,,
 Stochastic Models,Q3,S4210225978,4706847e-bd6d-41b2-a689-2abd347a149c
 Undersea and Hyperbaric Medicine,Q3,S158938658,
@@ -19268,7 +19268,7 @@ Philosophical Inquiries,Q2,S2764512759,
 Plant Science Today,Q3,S4210213485,ee292454-2f7d-4b71-b783-f9838a49788d
 Polymer Science - Series D,Q3,S159297047,
 Problems of Atomic Science and Technology,Q3,S4210187001,73bdaf5c-3616-44c1-ab6d-a08f6186f491
-Proceedings of the International Conference on Education and Research in Computer Aided Architectural Design in Europe,-,S4363609004,
+Proceedings of the International Conference on Education and Research in Computer Aided Architectural Design in Europe,Q2,S4363609004,
 Rassegna Italiana di Criminologia,Q2,S4393917091,e5a83fcd-c908-4c57-ad53-0240459940f0
 Rivista Geografica Italiana,Q3,S4306528655,553a139c-da27-4c54-881b-dabb62684bdf
 Scientific Contributions Oil and Gas,Q3,S4210200610,a5311403-74df-4243-97b0-56d6567177a5
@@ -21675,7 +21675,7 @@ Health Education and Health Promotion,Q4,S2764854573,
 IJU Case Reports,Q4,S4210179180,d7981dfa-42fe-4dff-a627-db68972be4a6
 Indian Journal of Agricultural Economics,Q4,S2764626721,e0abe948-85f0-40d1-a743-b99014765904
 Indian Journal of Natural Products and Resources,Q4,S2764631801,2c8c6b4a-131d-4f66-930f-f6ca7db1a89c
-International Conference on Embedded Wireless Systems and Networks,-,S4306419424,
+International Conference on Embedded Wireless Systems and Networks,Q2,S4306419424,
 International Journal of Asian Christianity,Q2,S4210199301,e96ce03a-4640-4576-b22a-dc50e611fc52
 International Journal of Electrical and Electronics Research,Q4,S4210206676,816cf066-eed5-43b6-add7-8bf9d6b3cf05
 International Journal of Mechatronics and Applied Mechanics,Q4,S4210208599,e109a599-6487-41b3-a4fe-327d0c974ed0
@@ -22357,7 +22357,7 @@ Laryngo- Rhino- Otologie,Q4,S140305009,
 Lenguas Modernas,Q3,S2739125951,e8927ea5-5db1-46ed-b83d-183ac3d10279
 Material Religion,Q2,S144112324,d0b1609f-3ed3-45d4-b6ca-67b82ddaa770
 Materials China,Q4,S2764782236,8dd039f4-545d-4f04-85ff-1815fa1a07f3
-Materials Research Proceedings,-,S4210218293,
+Materials Research Proceedings,Q2,S4210218293,
 Milton Quarterly,Q1,S201910397,4221f489-2928-41b7-be99-dd3759abb6b4
 Mission Studies,Q2,S27308184,49330b98-c014-4265-b234-8ff4e5e0c341
 Muzikoloski Zbornik,Q2,,
@@ -27213,7 +27213,7 @@ Hong Kong journal of Social Sciences,Q4,S4387287060,
 Humans and Nature,Q4,,
 Iberoamericana. America Latina - Espana - Portugal,Q3,,
 Ideas y Valores,Q4,S93107635,ae2199e9-6c56-4580-93c8-8be3e035ffbc
-IEEE Conference Record of Annual Pulp and Paper Industry Technical Conference,-,S4210177915,
+IEEE Conference Record of Annual Pulp and Paper Industry Technical Conference,Q3,S4210177915,
 Iluminace,Q3,S4363605758,96390ae3-4b3d-4ef4-8c6a-ce14a609d6ec
 Innes Review,Q3,S86928415,
 Interdisciplinary Literary Studies,Q3,S2764614952,579afaf0-1425-409f-92ca-8fbd33f87981
