@@ -6,8 +6,8 @@ from main.classes.research_paper import ResearchPaper
 class Answer(BaseModel):
     reference_ids: List[str] = Field(
         description="""List of reference_ids used in the answer""")
-    answer: str = Field(description="""Answer to the user question with inline citations like [W3155739706_32], 
-    [W3155739706_31] etc.""")
+    answer: str = Field(description="""Answer to the user question with inline citations like [271710510], 
+    [266268949] etc.""")
 
 
 class AnswerReference(BaseModel):

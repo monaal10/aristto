@@ -100,7 +100,7 @@ def create_http_url_for_open_alex(query, start_year, end_year, citation_count, p
 
 def create_hhtp_url_for_ss(query, start_year, end_year, citation_count, published_in):
     try:
-        initial_string = f"https://api.semanticscholar.org/graph/v1/paper/search?query={query}&fields=title,openAccessPdf,abstract,authors,publicationVenue,citationCount,year"
+        initial_string = f"https://api.semanticscholar.org/graph/v1/paper/search?query={query}&fields=title,corpusId,abstract,authors,publicationVenue,citationCount,year"
         if start_year or end_year:
             if not start_year:
                 start_year = ""
@@ -113,7 +113,7 @@ def create_hhtp_url_for_ss(query, start_year, end_year, citation_count, publishe
             initial_string += f"&venue={published_in}"
         return initial_string + "&limit=100"
     except Exception as e:
-     raise f"Could not form semantic scholar hhtp url from given parameters: {e}"
+     raise f"Could not form semantic scholar http url from given parameters: {e}"
 
 
 

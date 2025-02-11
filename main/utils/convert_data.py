@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 def convert_ss_response_to_research_paper(ss_response):
     try:
         user_id = fetch_user_id()
-        open_alex_id = ss_response.get('paperId')
+        open_alex_id = str(ss_response.get('corpusId'))
         title = ss_response.get('title')
         abstract = ss_response.get('abstract')
         publication_year = ss_response.get('year')
