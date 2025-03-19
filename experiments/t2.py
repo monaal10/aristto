@@ -1,51 +1,52 @@
-import json
-import pandas as pd
-import requests
-from tqdm import tqdm
+from azure.storage.blob import BlobServiceClient
+import os
 
-headers = {
-    "x-api-key": "vd5G9VoPYk3hfCYyPjZR334dvZCumbEF2tkdeQhK",
-}
-response = requests.get("https://api.semanticscholar.org/datasets/v1/release/latest/dataset/embeddings-specter_v2", headers=headers)
-files = response.json().get("files")
+# Connection string for your storage account
+connection_string = "DefaultEndpointsProtocol=https;AccountName=openalex;AccountKey=SF4/pZ3WmsOUZst9geosCPq8rGwiFfvJndbNYkj0Mu4ga/P6uYN4vmyYPFsoyOOWi01lYhUN1lZh+AStAuKa8g==;EndpointSuffix=core.windows.net"
+source_container = "paper-metadata"
+source_prefix = "works/"
+target_containers = [f"openalex-works-{i}" for i in range(1, 13)]
 
-with open("files.txt", "w") as f:
-    for file in files:
-        f.write(f"{file}\n")
+# Create a blob service client
+blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 
-"""import pandas as pd
-import numpy as np
-from tqdm import tqdm
+# Get source container client
+source_container_client = blob_service_client.get_container_client(source_container)
 
-# Load the data
-df = pd.read_json("publication.json", lines=True)
-df1 = pd.read_csv("journal_quartile_rank.csv")
+# List all blobs in the works folder with their sizes
+all_blobs = list(source_container_client.list_blobs(name_starts_with=source_prefix))
+print(f"Found {len(all_blobs)} blobs to distribute")
 
-# Preprocess the data
-df['name_lower'] = df['name'].str.lower()
-df['alternate_names_lower'] = df['alternate_names'].str.lower()
+# Extract blob sizes and sort blobs from largest to smallest
+blob_data = [(blob.name, blob.size) for blob in all_blobs]
+blob_data.sort(key=lambda x: x[1], reverse=True)  # Sort descending by size
 
-# Create a dictionary for faster lookup
-name_to_id = {}
-for _, row in df.iterrows():
-    if isinstance(row['name'], str):
-        name_to_id[row['name_lower']] = row['id']
-    if isinstance(row['alternate_names'], str):
-        for alt_name in row['alternate_names_lower'].split(','):
-            name_to_id[alt_name.strip()] = row['id']
+# Initialize container size tracking
+container_assignments = {container: [] for container in target_containers}
+container_sizes = {container: 0 for container in target_containers}
 
-# Function to find matching ID
-def find_matching_id(name):
-    if isinstance(name, str) and len(name) > 0:
-        name_lower = name.lower()
-        return name_to_id.get(name_lower)
-    return None
+# Distribute blobs using a greedy algorithm (assign to container with least total size)
+for blob_name, blob_size in blob_data:
+    target_container = min(container_sizes, key=container_sizes.get)  # Pick the least loaded container
+    container_assignments[target_container].append(blob_name)
+    container_sizes[target_container] += blob_size  # Update total size of this container
 
-# Apply the function to the DataFrame
-tqdm.pandas()
-df1['ss_id'] = df1['title'].progress_apply(find_matching_id)
+# Now copy the blobs to their assigned containers
+for container, blobs in container_assignments.items():
+    target_container_client = blob_service_client.get_container_client(container)
+    print(f"Copying {len(blobs)} blobs ({container_sizes[container]} bytes) to {container}")
 
-# Save the result
-df1.to_csv("jqr.csv", index=False)"""
+    for blob_name in blobs:
+        source_blob = source_container_client.get_blob_client(blob_name)
 
+        # Remove the "works/" prefix for the destination blob
+        dest_name = blob_name[len(source_prefix):] if blob_name.startswith(source_prefix) else blob_name
 
+        # Get a blob client for the destination
+        target_blob = target_container_client.get_blob_client(dest_name)
+
+        # Start copy operation
+        target_blob.start_copy_from_url(source_blob.url)
+        print(f"Started copy: {blob_name} -> {container}/{dest_name}")
+
+print("Copy operations initiated. Check the Azure portal for progress.")

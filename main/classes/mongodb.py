@@ -1,3 +1,4 @@
+import pymongo
 from pymongo import MongoClient, InsertOne, UpdateOne
 from pymongo.errors import BulkWriteError, DuplicateKeyError
 from pymongo.server_api import ServerApi
@@ -13,13 +14,17 @@ client = MongoClient(ATLAS_URI, server_api=ServerApi('1'), uuidRepresentation="s
 database = client['aristto']
 
 def encode_unicode(obj):
-    if isinstance(obj, dict):
-        return {k: encode_unicode(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [encode_unicode(item) for item in obj]
-    elif isinstance(obj, str):
-        return obj.encode('utf-8', errors='ignore').decode('utf-8')
-    return obj
+    try:
+        if isinstance(obj, dict):
+            return {k: encode_unicode(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [encode_unicode(item) for item in obj]
+        elif isinstance(obj, str):
+            return obj.encode('utf-8', errors='ignore').decode('utf-8')
+        return obj
+    except Exception as e:
+        raise e
+
 
 def insert_data(data, database_name):
     collection = database[database_name]
@@ -53,7 +58,8 @@ def update_data(data, database_name, filter, operation):
         collection = database[database_name]
         collection.update_one(
             filter,
-            update_data
+            update_data,
+            upsert=True
         )
     except Exception as e:
         raise Exception("Could not update data in MongoDB :", e)

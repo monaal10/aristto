@@ -4,10 +4,11 @@ import logging
 import datetime
 import uuid
 
-from main.modules.answer_a_question_module import answer_a_question, generate_searchable_query
+
+from main.modules.answer_a_question_module import generate_searchable_query, invoke_agent
 from main.modules.chat_with_paper_module import chat
 from main.modules.extract_paper_info_module import extract_paper_information
-from main.modules.literature_review_agent_module import execute_literature_review
+from main.modules.literature_review_agent_module import invoke_deep_research_agent
 from main.utils import string_utils
 from main.utils.chunk_operations import parallel_download_and_chunk_papers, get_relevant_chunks
 from main.modules.relevant_papers_module import get_relevant_papers
@@ -15,7 +16,7 @@ from flask_cors import CORS
 from main.classes.mongodb import insert_data, fetch_data, update_data
 from main.utils.constants import RESEARCH_PAPER_DATABASE, LITERATURE_REVIEW_DATABASE, RELEVANT_CHUNKS_TO_RETRIEVE, \
     MONGODB_SET_OPERATION, APPLICATION_SECRET_KEY, SAVED_PAPERS_DATABASE, STRIPE_API_KEY, CLIENT_URL, USERS_DATABASE, \
-    STRIPE_WEBHOOKS_SECRET_KEY
+    STRIPE_WEBHOOKS_SECRET_KEY, CONVERSATION_HISTORY_DATABASE, SAVED_SEARCHES_DATABASE
 from main.utils.convert_data import convert_oa_response_to_research_paper, convert_mongodb_to_research_paper
 from main.utils.json_encoder import JSONEncoder
 from main.utils.string_utils import JsonResp
@@ -51,8 +52,10 @@ ALLOWED_ORIGINS = [
     "http://[::1]:5173",
     "http://[::1]:8080",
     "https://aristto.com",
-    "https://www.aristto.com"
-
+    "https://www.aristto.com",
+    "https://www.app.aristto.com",
+    "https://app.aristto.com",
+    "http://aristto-main-env-2.eba-hkk89wy5.us-east-1.elasticbeanstalk.com/"
 ]
 
 user_blueprint = Blueprint("user", __name__)
@@ -142,6 +145,8 @@ application.register_blueprint(user_blueprint, url_prefix="/user")
 @application.route('/reset-password/<token>')
 def reset_password_route(token):
     return send_from_directory(application.static_folder, 'index.html')
+
+
 @application.route('/chatWithPapers', methods=['POST', 'OPTIONS'])
 def chat_with_papers():
     if request.method == 'OPTIONS':
@@ -158,13 +163,17 @@ def chat_with_papers():
         for paper_id in paper_ids_dict:
             papers.extend(fetch_data(paper_id, RESEARCH_PAPER_DATABASE))
         final_papers = [convert_mongodb_to_research_paper(paper) for paper in papers]
-        relevant_chunks = []
+        final_papers_with_pdf = []
         if len(final_papers) > 1:
             for paper in final_papers:
                 if not paper.pdf_content:
-                    paper = parallel_download_and_chunk_papers([paper])[0]
-                    insert_data(paper.dict(), RESEARCH_PAPER_DATABASE)
-                relevant_chunks.extend(get_relevant_chunks(query, [paper])[:5])
+                    new_paper = parallel_download_and_chunk_papers([paper])[0]
+                    insert_data([new_paper.dict()], RESEARCH_PAPER_DATABASE)
+
+                else:
+                    new_paper = paper
+                final_papers_with_pdf.append(new_paper)
+            relevant_chunks = get_relevant_chunks(query, final_papers_with_pdf)[:5]
         else:
             relevant_chunks = [{"title": final_papers[0].title, "chunk_text": final_papers[0].pdf_content}]
         result = chat(query, relevant_chunks, conversation_history[:-5])
@@ -189,61 +198,46 @@ def ask_question():
         start_year = data.get('start_year', None)
         end_year = data.get('end_year', None)
         citation_count = data.get('citation_count', None)
-        authors = data.get('authors', None)
         published_in = data.get('published_in', None)
-        searchable_query = generate_searchable_query(query)
-        relevant_papers = get_relevant_papers(searchable_query, start_year, end_year, citation_count, published_in, authors)
-        if len(relevant_papers) == 0:
-            return jsonify({"message": "No relevant papers found, please update your search query and/or filters."}), 200
-        papers_with_chunks = parallel_download_and_chunk_papers(relevant_papers[:10])
-        if len(papers_with_chunks) == 0:
-            return jsonify({"message": "No relevant open source papers found, please update your search query and/or filters."}), 200
-        relevant_chunks = get_relevant_chunks(query, papers_with_chunks)[:RELEVANT_CHUNKS_TO_RETRIEVE]
-        result = answer_a_question(query, relevant_chunks, papers_with_chunks)
-        papers_json = [paper.dict() for paper in papers_with_chunks]
-        insert_data(papers_json, RESEARCH_PAPER_DATABASE)
-        return jsonify(result.dict())
-    except Exception as e:
-        raise e
-
-
-@application.route('/getLiteratureReview', methods=['POST', 'OPTIONS'])
-def get_literature_review():
-    if request.method == 'OPTIONS':
-        return jsonify({'status': 'ok'}), 200
-    try:
-        start_time = datetime.datetime.now()
-        logger.info(f"Request received at: {start_time}")
-        data = request.json
+        authors = data.get('authors', None)
+        thread_id = data.get('thread_id', None)
         user_id = data.get('user_id', None)
-        query = data.get('query', None)
-        if not query:
-            return string_utils.JsonResp({"message": "No query provided"}, 400)
-        start_year = data.get('start_year', None)
-        end_year = data.get('end_year', None)
-        citation_count = data.get('citation_count', None)
-        authors = data.get('authors', None)
-        published_in = data.get('published_in', None)
-        literature_review = execute_literature_review(query, start_year, end_year, citation_count, published_in, authors)
-        if len(literature_review.references) == 0:
-            return jsonify({"message": "No relevant open source papers found, please update your search query and/or filters."}), 200
-        literature_review_dict = literature_review.dict()
-        papers = [reference.reference_metadata.dict() for reference in literature_review.references]
-        literature_review_id = uuid.uuid4()
-        response = {
-            "literatureReviewName": query,
-            "user_id": user_id,
-            "literatureReviewId": str(literature_review_id),
-            "literatureReview": literature_review_dict
-        }
-        insert_data(response, LITERATURE_REVIEW_DATABASE)
-        insert_data(papers, RESEARCH_PAPER_DATABASE)
-        if response.get("_id"):
-            response["_id"] = str(response.get("_id"))
-        return jsonify(response)
+        sjr = data.get('sjr', None)
+        isDeepResearch = data.get('is_deep_research')
+        context = fetch_data({"thread_id": thread_id}, CONVERSATION_HISTORY_DATABASE)
+        for turn in context:
+            del turn['_id']
+        if isDeepResearch:
+            response, conversation_history, title = invoke_deep_research_agent(query, start_year, end_year, citation_count,
+                                                                 published_in, authors, sjr, context)
+        else:
+            response, conversation_history, title = invoke_agent(query, start_year, end_year, citation_count,
+                                                                        published_in, authors, sjr,  context)
+
+        conversation_history_update = {"thread_id": thread_id, "conversation_history": conversation_history}
+        update_filter = {"thread_id": thread_id}
+        update_data(conversation_history_update, CONVERSATION_HISTORY_DATABASE, update_filter, MONGODB_SET_OPERATION)
+        answer_dict = response.dict()
+        answer_dict["user_id"] = user_id
+        answer_dict["query"] = query
+        saved_search = fetch_data({"thread_id": thread_id}, SAVED_SEARCHES_DATABASE)
+        if saved_search and len(saved_search) > 0:
+            for turn in saved_search:
+                turn.pop('_id', None)
+            updated_saved_search = saved_search[0].get("saved_search") + [answer_dict]
+        else:
+            updated_saved_search = [answer_dict]
+        saved_search_update = {"thread_id": thread_id, "user_id": user_id, "saved_search": updated_saved_search,
+                               "title": title}
+        update_data(saved_search_update, SAVED_SEARCHES_DATABASE, update_filter, MONGODB_SET_OPERATION)
+        references_dict = [reference.paper.dict() for reference in response.references]
+        papers_dict = [paper.dict() for paper in response.relevant_papers]
+        insert_data(references_dict + papers_dict, RESEARCH_PAPER_DATABASE)
+        return jsonify(answer_dict)
     except Exception as e:
         raise e
-    #return jsonify(MOCK_RESPONSE_JSON)
+
+
 
 @application.route('/getRelevantPapers', methods=['POST', 'OPTIONS'])
 def get_papers():
@@ -292,21 +286,6 @@ def get_paper_info():
     except Exception as e:
         raise e
 
-@application.route('/getSavedLiteratureReviews', methods=['POST', 'OPTIONS'])
-def get_saved_literature_reviews():
-    if request.method == 'OPTIONS':
-        return jsonify({'status': 'ok'}), 200
-    try:
-        start_time = datetime.datetime.now()
-        logger.info(f"Request received at: {start_time}")
-        data = request.json
-        user_id = data.get('user_id', None)
-        if not user_id:
-            return string_utils.JsonResp({"message": "User not logged in"}, 400)
-        response = fetch_data({"user_id": user_id}, LITERATURE_REVIEW_DATABASE)
-        return json.dumps(response, cls=JSONEncoder), 200, {'Content-Type': 'application/json'}
-    except Exception as e:
-        raise e
 
 
 @application.route('/getSavedPapers', methods=['POST', 'OPTIONS'])
@@ -331,6 +310,21 @@ def get_saved_papers():
     except Exception as e:
         raise e
 
+@application.route('/getSavedSearches', methods=['POST', 'OPTIONS'])
+def get_saved_searches():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'}), 200
+    try:
+        start_time = datetime.datetime.now()
+        logger.info(f"Request received at: {start_time}")
+        data = request.json
+        user_id = data.get('user_id', None)
+        if not user_id:
+            return string_utils.JsonResp({"message": "User not logged in"}, 400)
+        response = fetch_data({"user_id": user_id}, SAVED_SEARCHES_DATABASE)
+        return json.dumps(response, cls=JSONEncoder), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        raise e
 
 @application.route('/savePapers', methods=['POST', 'OPTIONS'])
 def save_papers():
@@ -491,9 +485,6 @@ def static_files():
 @application.route('/', defaults={'path': ''})
 @application.route('/<path:path>')
 def catch_all(path):
-    # Don't interfere with API routes
-    if path.startswith('api/'):
-        return jsonify({'error': 'Not found'}), 404
 
     try:
         # First try to serve the exact file

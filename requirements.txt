@@ -18,8 +18,7 @@ pyjwt
 langchain_anthropic
 langchain_openai
 langchain_text_splitters
-bson
-PyPDF2
+pypdf
 pytz
 pydantic
 pymongo
@@ -30,3 +29,9 @@ pyalex
 passlib
 stripe
 rapidfuzz
+azure-storage-blob
+azure-search-documents
+transformers
+torch
+langchain_google_vertexai
+vertexai

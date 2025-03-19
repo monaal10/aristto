@@ -98,9 +98,9 @@ def create_http_url_for_open_alex(query, start_year, end_year, citation_count, p
 
 
 
-def create_hhtp_url_for_ss(query, start_year, end_year, citation_count, published_in):
+def create_hhtp_url_for_ss(query, start_year, end_year, citation_count, published_in, authors):
     try:
-        initial_string = f"https://api.semanticscholar.org/graph/v1/paper/search?query={query}&fields=title,corpusId,abstract,authors,publicationVenue,citationCount,year"
+        initial_string = f"https://api.semanticscholar.org/graph/v1/paper/search?query={query}&fields=title,openAccessPdf,corpusId,abstract,authors,publicationVenue,citationCount,year"
         if start_year or end_year:
             if not start_year:
                 start_year = ""
@@ -152,30 +152,29 @@ def get_sjr_rank_fuzzy_search(journal_names, threshold=80):
 
 def get_relevant_papers(query, start_year, end_year, citation_count, published_in, authors):
     try:
-        #http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in,authors)
-        http_url = create_hhtp_url_for_ss(query, start_year, end_year, citation_count, published_in)
+        http_url = create_http_url_for_open_alex(query, start_year, end_year, citation_count, published_in,authors)
+        #http_url = create_hhtp_url_for_ss(query, start_year, end_year, citation_count, published_in, authors)
         if len(http_url) == 0:
             return []
         response = requests.get(http_url)
-        #data = response.json()
-        #papers = [convert_oa_response_to_research_paper(work) for work in data['results']]
-
-        data = response.json().get("data")
+        data = response.json()
+        #data = response.json().get("data")
         if data:
-            papers = [convert_ss_response_to_research_paper(work) for work in data]
+            papers = [convert_oa_response_to_research_paper(work) for work in data['results']]
+            #papers = [convert_ss_response_to_research_paper(work) for work in data]
             unique_papers = list({paper.open_alex_id: paper for paper in papers}.values())
             filtered_papers = []
-            for paper in unique_papers:
+            """for paper in unique_papers:
                 if paper.publication:
                     publication_names = paper.publication_alternate_names + [paper.publication]
                     sjr = get_sjr_rank_fuzzy_search(publication_names)
                     if sjr == "Q1":
-                        filtered_papers.append(paper)
+                        filtered_papers.append(paper)"""
 
             #relevant_papers = rank_documents(query, unique_papers)
             if len(unique_papers) == 0:
                 logger.info(f"No relevant papers found")
-            return filtered_papers
+            return unique_papers
         return []
     except JSONDecodeError:
         return []
@@ -197,7 +196,4 @@ def get_filtered_by_sjr_papers(published_in, papers):
                 return filtered_papers
         except Exception as e:
             raise (f"Error processing paper: {e}")
-
-
-
 

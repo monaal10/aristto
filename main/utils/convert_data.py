@@ -8,6 +8,30 @@ from main.classes.research_paper import ResearchPaper
 
 logger = logging.getLogger(__name__)
 
+def convert_index_response_to_research_paper(index_response):
+      try:
+        user_id = fetch_user_id()
+        open_alex_id = fetch_id(index_response.get('work_id'))
+        title = index_response.get('title')
+        abstract = index_response.get('abstract')
+        publication_year = index_response.get('publication_year')
+        cited_by_count = index_response.get('cited_by_count')
+        authors = fetch_authors(index_response)
+        publication = fetch_publication_name(index_response)
+        oa_url = fetch_pdf_url_from_index(index_response)
+        doi = fetch_doi_from_index(index_response)
+        landing_page_url = fetch_pdf_url_from_index(index_response)
+        referenced_works_ids = index_response['referenced_works']
+
+        return ResearchPaper(user_id=user_id, open_alex_id=open_alex_id, title=title,
+                             authors=authors, abstract=abstract, publication_year=publication_year,
+                             referenced_works_ids=referenced_works_ids, oa_url=oa_url,
+                             cited_by_count=cited_by_count, publication=publication, doi=doi,
+                             landing_page_url=landing_page_url)
+      except Exception as e:
+        raise f"Could not convert index response to research paper: {e}"
+
+
 def convert_ss_response_to_research_paper(ss_response):
     try:
         user_id = fetch_user_id()
@@ -54,15 +78,14 @@ def convert_oa_response_to_research_paper(work):
         primary_topic = fetch_primary_topic(work)
         publication = fetch_publication_name(work)
         publication_id = fetch_publication_id(work)
-        # summary = get_summary_reference(extract_doi(work['doi'])) if work['doi'] else ""
+        doi = extract_doi(work['doi']) if work['doi'] else ""
         return ResearchPaper(user_id=user_id, open_alex_id=open_alex_id, title=title,
                              authors=authors, abstract=abstract, publication_year=publication_year,
                              publication_date=publication_date, referenced_works_ids=referenced_works_ids,
                              referenced_works_count=referenced_works_count, oa_url=oa_url, concepts=concepts,
                              cited_by_count=cited_by_count, cited_by_url=cited_by_url, biblio=biblio,
                              institutions=institutions, key_words=key_words, primary_topic=primary_topic,
-                             publication=publication, publication_id=publication_id
-                             )
+                             publication=publication, publication_id=publication_id, doi=doi)
     except Exception as e:
         raise f"Could not convert open_alex response to research paper: {e}"
 
@@ -101,7 +124,7 @@ def fetch_id_for_referenced_works(work):
     referenced_paper_ids = work['referenced_works']
     stripped_ids = []
     for referenced_paper_id in referenced_paper_ids:
-        stripped_ids.append(fetch_id(referenced_paper_id))
+        stripped_ids.append((referenced_paper_id))
     return stripped_ids
 
 
@@ -159,8 +182,19 @@ def fetch_primary_topic(work):
 
 def fetch_oa_url(work):
     return "" if work['best_oa_location'] is None or work['best_oa_location']['pdf_url'] is None else \
-        work['best_oa_location'][
-            'pdf_url']
+        work['best_oa_location']['pdf_url']
+
+def fetch_pdf_url_from_index(response):
+    return "" if response['primary_location'] is None or response['primary_location']['pdf_url'] is None else \
+        response['primary_location']['pdf_url']
+
+def fetch_landing_page_url_from_index(response):
+    return "" if response['primary_location'] is None or response['primary_location']['landing_page_url'] is None else \
+        response['primary_location']['landing_page_url']
+
+def fetch_doi_from_index(response):
+    return "" if response['primary_location'] is None or response['primary_location']['doi'] is None else \
+        response['primary_location']['doi']
 
 
 def get_summary_reference(doi):

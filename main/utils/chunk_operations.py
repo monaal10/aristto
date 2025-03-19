@@ -35,19 +35,25 @@ def chunk_text(paper):
 
 
 def parallel_chunk_text(papers):
-    final_papers = []
-    with ProcessPoolExecutor(max_workers=8) as executor:  # Adjust number of workers based on CPU capacity
-        futures = {executor.submit(chunk_text, paper): paper for paper in papers}
-        for future in as_completed(futures):
-            paper = future.result()
-            final_papers.append(paper)
-    return final_papers
+    try:
+        final_papers = []
+        with ProcessPoolExecutor(max_workers=8) as executor:  # Adjust number of workers based on CPU capacity
+            futures = {executor.submit(chunk_text, paper): paper for paper in papers}
+            for future in as_completed(futures):
+                paper = future.result()
+                final_papers.append(paper)
+        return final_papers
+    except Exception as e:
+        raise f"Could not chunk text: {e}"
 
 
 def parallel_download_and_chunk_papers(papers):
-    papers_with_pdf_content = download_pdfs_parallel(papers)
-    final_papers = parallel_chunk_text(papers_with_pdf_content)
-    return final_papers
+    try:
+        papers_with_pdf_content = download_pdfs_parallel(papers)
+        final_papers = parallel_chunk_text(papers_with_pdf_content)
+        return final_papers
+    except Exception as e:
+        raise f"Could not download and chunk text: {e}"
 
 
 def preprocess_text(text: str) -> List[str]:

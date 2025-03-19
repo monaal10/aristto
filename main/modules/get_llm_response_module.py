@@ -35,4 +35,3 @@ def get_model_response(llm, prompt: str, state: Dict):
             else:
                 raise Exception(f"Error in API call: {e}")
 
-    raise Exception("Failed to fit message within context window after maximum retries")

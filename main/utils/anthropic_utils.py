@@ -12,3 +12,4 @@ def get_claude_haiku():
                          timeout=None)
     except Exception as e:
         raise f"Failed to get claude haiku model: {e}"
+

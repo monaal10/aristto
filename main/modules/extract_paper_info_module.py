@@ -1,7 +1,7 @@
 from langchain_core.prompts import PromptTemplate
 from main.classes.extract_paper_info_classes import ExtractedPaperInformation
 from main.prompts.extract_paper_info_prompts import EXTRACT_PAPER_INFO_PROMPT
-from main.utils.azure_openai_utils import get_openai_4o_mini
+from main.utils.llm_utils import get_openai_4o_mini
 
 
 def extract_paper_information(pdf_content):

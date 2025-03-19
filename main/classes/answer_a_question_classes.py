@@ -17,9 +17,15 @@ class AnswerReference(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+
 class AskQuestionOutput(BaseModel):
     references: List[AnswerReference] = Field(default_factory=List)
     answer: str = Field(default_factory=str)
+    relevant_papers: List[ResearchPaper] = Field(default_factory=List)
 
     class Config:
         arbitrary_types_allowed = True
+
+class SearchableQueryAndTitle(BaseModel):
+    title: str = Field(default_factory=str, description= "the title of the conversation with user")
+    searchable_query: str = Field(default_factory=str, description= "The searchable query for hybrid search")

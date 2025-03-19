@@ -23,7 +23,8 @@ class ResearchPaper(BaseModel):
     publication: Optional[str] = Field(default=None)
     extracted_figures: Optional[List[str]] = Field(default=None)
     referenced_papers: Optional[List[str]] = Field(default=None)
-    embeddings: Optional[List] = Field(default=None)
+    embeddings: Optional[List[float]] = Field(default=None)
+    publication_alternate_names: Optional[List[str]] = Field(default=None)
     publication_id: Optional[str] = Field(default=None)
     publication_quartile: Optional[str] = Field(default=None)
     summary: Optional[str] = Field(default=None)
@@ -35,7 +36,9 @@ class ResearchPaper(BaseModel):
     contributions: Optional[Dict] = Field(default=None)
     results: Optional[Dict] = Field(default=None)
     limitations: Optional[Dict] = Field(default=None)
-    publication_alternate_names: Optional[List] = Field(default=None)
+    doi: Optional[str] = Field(default=None)
+    theme: Optional[str] = Field(default=None)
+    landing_page_url: Optional[str] = Field(default=None)
 
     class Config:
         arbitrary_types_allowed = True

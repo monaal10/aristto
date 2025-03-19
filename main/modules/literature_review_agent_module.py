@@ -1,213 +1,255 @@
 import json
 from concurrent.futures import as_completed, ThreadPoolExecutor
+import re
 
-from langchain_community.cache import InMemoryCache
-
-from main.modules.embeddings_module import rank_documents
+from main.modules.open_alex_index_module import get_relevant_papers_from_open_alex, get_referenced_papers
+from main.classes.answer_a_question_classes import AnswerReference, AskQuestionOutput, Answer
 from main.modules.get_llm_response_module import get_model_response
-from main.utils.constants import THEME_NUMBER_LIMIT
-from main.utils.azure_openai_utils import get_openai_4o_mini, get_openai_4o
+from main.utils.constants import SEARCH_QUERY_NUMBER_LIMIT
+from main.utils.llm_utils import get_openai_4o_mini, get_claude, get_o3_mini_medium, get_o3_mini, get_o3_mini_high
 from main.utils.pdf_operations import download_pdf
-from main.modules.relevant_papers_module import get_relevant_papers
-from main.classes.lit_review_agent_classes import AgentState, LiteratureReview, \
-    ReferenceWithMetadata, Themes, PaperValidation, InsightGeneration
-from main.prompts.literature_review_prompts import THEME_IDENTIFICATION_PROMPT, PAPER_VALIDATION_PROMPT, \
-    INFORMATION_EXTRACTION_RESPONSE_PROMPT, CREATE_LITERATURE_REVIEW_PROMPT, \
-    EXTRACT_PAPER_INFO_PROMPT
-from json.decoder import JSONDecodeError
-from time import sleep
+from main.classes.lit_review_agent_classes import SearchQueriesAndTitle
+from main.prompts.literature_review_prompts import THEME_IDENTIFICATION_PROMPT, GENERATE_DEEP_RESEARCH_REPORT_PROMPT, VALIDATE_AND_EXTRACT_RELEVANT_CONTEXT_PROMPT
 import logging
-
+from main.utils.mocks import PROCESSED_RESULTS
+from main.modules.answer_a_question_module import generate_searchable_query
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 llm = get_openai_4o_mini()
-# Cache setup
-langchain_cache = InMemoryCache()
+#gemini = get_gemini_flash_2()
+o3_low = get_o3_mini()
+o3 = get_o3_mini_high()
+claude = get_claude()
 
-def identify_themes(query, retry_number=1):
+
+def generate_search_queries(query, previous_search_queries, conversation_history, queries_to_generate, retry_number=1):
     try:
-        llm_with_output = llm.with_structured_output(Themes)
-        themes = get_model_response(llm_with_output, THEME_IDENTIFICATION_PROMPT, {"query": query})
-        return themes.themes[:THEME_NUMBER_LIMIT]
+        llm_with_output = o3_low.with_structured_output(SearchQueriesAndTitle)
+        search_queries_with_title = get_model_response(llm_with_output, THEME_IDENTIFICATION_PROMPT, {"query": query,
+                                                                                   "previous_search_queries":
+                                                                                       previous_search_queries,
+                                                                                           "conversation_history": conversation_history,
+                                                                                                      "queries_to_generate": queries_to_generate})
+        return search_queries_with_title
     except Exception as e:
         if isinstance(e, AttributeError):
-            if retry_number<3:
-                identify_themes(query, retry_number+1)
+            if retry_number < 3:
+                generate_search_queries(query, previous_search_queries, conversation_history, queries_to_generate, retry_number + 1)
         raise Exception(f"Error in theme identification: {e}")
 
 
-def validate_and_download_paper(paper, theme):
-    try:
-        llm_with_output = llm.with_structured_output(PaperValidation)
-        downloaded_paper = paper
-        response = get_model_response(llm_with_output,
-                                      PAPER_VALIDATION_PROMPT,
-                                      {"theme": theme,
-                                       "paper": f""" paper_title : {paper.title} , paper_abstract : {paper.abstract}"""})
-        if response.answer == True:
-            downloaded_paper = download_pdf(paper)
-        return downloaded_paper
-    except Exception as e:
-        raise Exception(f"Error in paper validation and downloading: {e}")
-
-
-def find_papers(state: AgentState):
-    try:
-        final_papers = []
-        state.themes_with_papers = {}
-        papers_to_download = 5
-        for theme in state.themes:
-            papers_found = 0
-            papers = get_relevant_papers(theme, state.start_year, state.end_year, state.citation_count,
-                                         state.published_in, state.authors)[:20]
-            for i in range(0, len(papers), papers_to_download):
-                if not (papers_to_download - papers_found > 0):
-                    break
-                for paper in papers:
-                    #validated_paper = validate_and_download_paper(paper, theme)
-                    validated_paper = download_pdf(paper)
-                    if validated_paper.pdf_content is not None:
-                        final_papers.append(validated_paper)
-                        papers_found += 1
-                    if not (papers_to_download - papers_found > 0):
-                        break
-            state.themes_with_papers[theme] = final_papers
-        return final_papers
-    except Exception as e:
-        raise Exception(f"Error in paper finding: {e}")
-
-
-def extract_information(papers, max_retries=3, retry_delay=1):
+def validate_and_extract_context(papers, query, theme):
     """
-    Extract information from papers with retry mechanism for JSONDecodeError.
-
-    Args:
-        papers: List of paper objects to process
-        max_retries: Maximum number of retry attempts per paper
-        retry_delay: Delay in seconds between retries
+    Combined function that validates papers and extracts relevant context in one step.
+    Only processes papers published before 2024 with citation count > 10.
+    Makes a single LLM call that both validates and extracts context.
     """
-
-    def process_single_paper(paper, attempt=1):
-        try:
-            json_llm = llm.bind(response_format={"type": "json_object"})
-            message = get_model_response(
-                json_llm,
-                EXTRACT_PAPER_INFO_PROMPT,
-                {"pdf_content": paper.pdf_content, "response_format": INFORMATION_EXTRACTION_RESPONSE_PROMPT}
-            )
-
-            json_message = json.loads(message.content)
-            for key in json_message.keys():
-                section = json_message.get(key)
-                for i in range(len(section.keys())):
-                    section[paper.open_alex_id + "_" + key + "_" + str(i + 1)] = section.get(str(i + 1))
-                    del section[str(i + 1)]
-                setattr(paper, key, json_message.get(key))
-            return paper
-
-        except (JSONDecodeError, AttributeError) as e:
-            if attempt < max_retries:
-                return process_single_paper(paper, attempt + 1)
-            else:
-                print(f"All attempts failed for paper {paper.open_alex_id}: {str(e)}. Skipping paper.")
-                return paper
-
-        except Exception as e:
-            raise Exception(f"Error in information extraction: {str(e)}")
-
-    updated_papers = []
-    for paper in papers:
-        try:
-            processed_paper = process_single_paper(paper)
-            if processed_paper.methodology is not None:
-                updated_papers.append(processed_paper)
-        except Exception:
-            continue
-    return updated_papers
-
-
-def generate_insights(papers, query):
     try:
-        section_list = ["methodology", "datasets", "results", "contributions", "limitations"]
-        references = {}
-        papers_with_section_info = []
+        # Filter papers based on year and citation count
+        filtered_papers = []
         for paper in papers:
-            if paper:
-                selected_paper_info = {'id': paper.open_alex_id, 'title': paper.title,
-                                       'publication_year': paper.publication_year,
-                                       'methodology': paper.methodology,
-                                       'datasets': paper.datasets, 'contributions': paper.contributions,
-                                       'results': paper.results, 'limitations': paper.limitations}
-                papers_with_section_info.append(selected_paper_info)
-                for section in section_list:
-                    dic = selected_paper_info[section]
-                    if dic is not None:
-                        for key, value in dic.items():
-                            references[key] = value
-        response = get_model_response(llm,
-                                      CREATE_LITERATURE_REVIEW_PROMPT,
-                                      {"papers": json.dumps(papers_with_section_info), "query": query}
-                                      )
-        return format_response(response.content, references, papers)
+            if (hasattr(paper, 'publication_year') and paper.publication_year < 2024 and
+                    hasattr(paper, 'cited_by_count') and paper.cited_by_count > 10):
+                filtered_papers.append(paper)
+
+        if not filtered_papers:
+            return []
+
+        final_results = []
+
+        # Process each paper
+        for paper in filtered_papers:
+            downloaded_paper = download_pdf(paper)
+
+            if downloaded_paper is not None:
+                # Set PDF content if missing
+                if downloaded_paper.pdf_content is None:
+                    if downloaded_paper.abstract:
+                        downloaded_paper.pdf_content = downloaded_paper.abstract
+                    else:
+                        continue
+                try:
+                    # Make a single LLM call for both validation and extraction
+                    context_response = get_model_response(
+                        o3_low,
+                        VALIDATE_AND_EXTRACT_RELEVANT_CONTEXT_PROMPT,
+                        {
+                            "user_query": query,
+                            "paper_text": downloaded_paper.pdf_content,
+                            "search_query": theme
+                        }
+                    )
+
+                    if context_response and context_response.content:
+                        context = context_response.content
+                        # Skip if the response indicates the paper is not relevant
+                        if context.strip() != "NOT_RELEVANT" and len(context.strip()) > 0:
+                            final_results.append({
+                                "paper_id": downloaded_paper.open_alex_id,
+                                "context": context,
+                                "paper": downloaded_paper
+                            })
+                except Exception as e:
+                    logger.error(f"Error processing paper {downloaded_paper.open_alex_id}: {e}")
+
+        return final_results
     except Exception as e:
-        raise Exception(f"Error in insight generation: {e}")
+        raise Exception(f"Error in paper validation and context extraction: {e}")
 
 
-def format_response(response, references, papers):
+def find_papers(query, theme, start_year, end_year, citation_count, published_in, authors, sjr):
     try:
-        reference_with_metadata_list = []
-        filtered_references = {}
-        for reference in references.keys():
-            if reference in response:
-                filtered_references[reference] = references[reference]
-        for key, value in filtered_references.items():
-            split_reference = key.split("_")
-            paper_id = split_reference[0]
-            for paper in papers:
-                if paper and paper.open_alex_id == paper_id:
-                    reference_with_metadata_list.append(
-                        ReferenceWithMetadata(reference_id=key, paper_id=paper_id, reference_metadata=paper,
-                                              reference_text=value))
-        dict_response = extract_sections(response)
-        summary = LiteratureReview(references=reference_with_metadata_list, insights=dict_response)
-        return summary
+        batch = 5
+        final_results = []
+
+        # Get Lit reviews
+        lit_review_reference_documents, lit_review_relevant_documents = get_relevant_papers_from_open_alex(
+            theme, start_year, end_year, citation_count, authors, published_in, sjr, [], True)
+
+        # Get normal papers
+        normal_reference_documents, relevant_documents = get_relevant_papers_from_open_alex(
+            query, start_year, end_year, citation_count, authors, published_in, sjr, [], False)
+
+        # Merge results
+        reference_documents = lit_review_reference_documents[:8] + normal_reference_documents[:10]
+
+        for document in reference_documents:
+            paper = document["paper_metadata"]
+            referenced_paper_docs = get_referenced_papers(paper.referenced_works_ids, theme)
+            referenced_papers = [doc["paper_metadata"] for doc in referenced_paper_docs]
+            papers = [paper] + referenced_papers
+
+            for i in range(0, len(papers), batch):
+                batch_results = validate_and_extract_context(papers[i:i + batch], query, theme)
+                final_results.extend(batch_results)
+
+        return final_results
+    except Exception as e:
+        raise Exception(f"Error in paper finding and processing: {e}")
+
+def get_relevant_context(query, themes, start_year, end_year, citation_count, published_in, authors, jqr):
+    try:
+        all_results = []
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = {
+                executor.submit(
+                    find_papers, query, theme, start_year, end_year, citation_count, published_in, authors, jqr
+                ): theme for theme in themes
+            }
+
+            for future in as_completed(futures):
+                results = future.result()
+                all_results.extend(results)
+
+            # Remove duplicates by paper_id
+        unique_results = {}
+        for result in all_results:
+            if result["paper_id"] not in unique_results:
+                unique_results[result["paper_id"]] = result
+
+        processed_results = list(unique_results.values())
+        return processed_results
+    except Exception as e:
+        raise Exception(f"Error in paper finding and processing: {e}")
+
+
+def generate_final_report(query, all_contexts, model):
+    """
+    Generate the final comprehensive report using all gathered contexts.
+    """
+    try:
+        # Extract just the context data for the report generation
+        context_only = [{"paper_id": item["paper_id"], "context": item["context"]} for item in all_contexts]
+
+        response = get_model_response(model, GENERATE_DEEP_RESEARCH_REPORT_PROMPT,
+                                      {"papers": json.dumps(context_only), "query": query})
+        return response.content
+    except Exception as e:
+        raise Exception(f"Error in final report generation: {str(e)}")
+
+
+def format_response(response, references):
+    try:
+        final_references = []
+        reference_ids = re.findall(r'\[(.*?)\]', response)
+        used_ids = set()
+        for reference_id in reference_ids:
+            for reference in references:
+                if reference_id == reference.get("paper_id") and reference_id not in used_ids:
+                    final_references.append(
+                        AnswerReference(
+                            reference_text=reference.get("context"),
+                            reference_id=reference_id,
+                            paper=reference.get("paper")
+                        )
+                    )
+                    used_ids.add(reference_id)
+        relevant_papers = []
+        for reference in references:
+            if reference.get("paper_id") not in used_ids:
+                relevant_papers.append(reference.get("paper"))
+        return AskQuestionOutput(references=final_references, answer=response, relevant_papers=relevant_papers)
     except Exception as e:
         raise Exception(f"Error in formatting response: {e}")
 
 
-def extract_sections(literature_review):
-    try:
-        dict_response = {}
-        section_headers_split = literature_review.split("###")
-        section_headers = [i.split("\n", 1) for i in section_headers_split[1:]]
-        for i in section_headers:
-            dict_response[i[0]] = i[1]
-        return dict_response
-    except Exception as e:
-        raise Exception(f"Error in extracting sections: {e}")
 
-
-def execute_literature_review(query, start_year, end_year, citation_count, published_in, authors):
+def invoke_deep_research_agent(query, start_year, end_year, citation_count, published_in, authors, jqr,
+                               conversation_history):
     try:
-        states = []
-        themes = identify_themes(query)
-        papers = []
-        for theme in themes:
-            initial_state = AgentState(query=theme, start_year=start_year, end_year=end_year,
-                                       citation_count=citation_count, published_in=published_in, authors=authors,
-                                       themes=[theme])
-            states.append(initial_state)
-        with ThreadPoolExecutor(max_workers=8) as executor:  # Adjust number of workers based on CPU capacity
-            futures = {executor.submit(find_papers, state): state for state in states}
-            for future in as_completed(futures):
-                paper = future.result()
-                papers.extend(paper)
-        unique_papers = list({paper.open_alex_id: paper for paper in papers}.values())
-        ranked_papers = rank_documents(query, unique_papers)[:20]
-        papers_with_info = extract_information(ranked_papers)
-        answer = generate_insights(papers_with_info, query)
-        return answer
+        search_queries_with_title = generate_search_queries(query, [], conversation_history, 5)
+        search_queries = search_queries_with_title.search_queries
+        title = search_queries_with_title.title
+        processed_results = get_relevant_context(query, search_queries, start_year, end_year, citation_count, published_in,
+                                                 authors, jqr)
+        if len(processed_results) < 100:
+            if len(processed_results) <= 50:
+                new_queries_to_generate = 5
+            elif 50 < len(processed_results) < 75:
+                new_queries_to_generate = 3
+            else:
+                new_queries_to_generate = 2
+            response = generate_search_queries(query, [search_queries], conversation_history,
+                                               new_queries_to_generate)
+            new_search_queries = response.search_queries
+            new_processed_results = get_relevant_context(query, new_search_queries, start_year, end_year, citation_count,
+                                                     published_in,
+                                                     authors, jqr)
+            processed_results.extend(new_processed_results)
+        if len(processed_results) == 0:
+            no_papers_found_answer = "No relevent papers found, please update your search query/filters"
+            conversation_history.append(("human", query))
+            conversation_history.append(("assistant", no_papers_found_answer))
+            return AskQuestionOutput(
+                references=[], answer=no_papers_found_answer, relevant_papers=[]), conversation_history, title
+        context_for_llm = [{"paper_id": result["paper_id"], "context": result["context"]} for
+                           result in processed_results]
+        # Generate the final report using all contexts
+        answer = generate_final_report(query, context_for_llm, o3)
+
+        # Format the response
+        formatted_answer = format_response(answer, processed_results)
+
+        # Update conversation history
+        conversation_history.append(("human", query))
+        conversation_history.append(("assistant", answer))
+
+        return formatted_answer, conversation_history, title
     except Exception as e:
         raise Exception(f"Error in getting literature review: {e}")
+
+
+
+
+"""query = ("Give me a comprehensive lit review on the topic undulatory ﬁn motions in ﬁsh-like robots. Give me field "
+         "progression, methodologies and comparisons, some research gaps and any other section you feel is important to "
+         "know for a researcher.")
+answer = invoke_deep_research_agent(query, None, None, None, [], [], [], [])
+print()
+#ans = generate_final_report(query, PROCESSED_RESULTS, o3)
+ans = generate_final_report(query, PROCESSED_RESULTS, o3)
+fin = format_response(ans, PROCESSED_RESULTS)
+print()
+"""

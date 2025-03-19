@@ -88,30 +88,14 @@ class LiteratureReview(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-class Themes(BaseModel):
-    themes: List[str] = Field(description= "A list of phrases that can be directly used to search for papers on google "
+class SearchQueriesAndTitle(BaseModel):
+    search_queries: List[str] = Field(description="A list of phrases that can be directly used to search for papers on google "
                                            "scholar that are going to be relevant to the original query")
+    title: str = Field(description="Title of the conversation based on the query and conversation history")
     class Config:
         arbitrary_types_allowed = True
 class PaperValidation(BaseModel):
-    answer: bool = Field(description="Answer in either true or false only. This is supposed to be used as a boolean")
+    answer: List[bool] = Field(description="Answer in either true or false only. This is supposed to be used as a  list of booleans")
     class Config:
         arbitrary_types_allowed = True
 
-class AgentState(BaseModel):
-    query: str
-    start_year: Optional[str]
-    end_year: Optional[str]
-    citation_count: Optional[str]
-    published_in: Optional[str]
-    authors: Optional[List[str]]
-    themes: List[str] = Field(default_factory=list)
-    papers: Dict[str, List[str]] = Field(default_factory=dict)
-    extracted_info: Dict[str, Dict] = Field(default_factory=dict)
-    graph_data: List[Dict] = Field(default_factory=list)
-    literature_review: LiteratureReview = Field(default_factory=list)
-    memory: Dict = Field(default_factory=dict)
-    themes_with_papers: Dict[str, List[ResearchPaper]] = Field(default_factory=dict)
-
-    class Config:
-        arbitrary_types_allowed = True

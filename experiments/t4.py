@@ -33,7 +33,7 @@ def upload_file_to_s3(file_name, bucket, object_name=None):
         return False
 
 # Specify your file and bucket name
-file_name = 'files.txt'
+file_name = 'temp.py'
 bucket_name = 'aristto-embeddings'
 
 # Call the function to upload
@@ -60,3 +60,6 @@ first_chunk = next(csv_reader)
 
 # Print the first 5 rows
 print(first_chunk)"""
+
+#azcopy copy "/home/azureuser/data2" "https://openalex.blob.core.windows.net/abstracts?sp=racwdl&st=2025-03-07T02:26:15Z&se=2025-03-07T10:26:15Z&spr=https&sv=2022-11-02&sr=c&sig=ED574hrB5miQ4ReBZ8jpK8lzKRjF7f7eUNZZm%2BoBMXg%3D" --recursive=true
+

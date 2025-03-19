@@ -1,280 +1,168 @@
 THEME_IDENTIFICATION_PROMPT = """
-Given the user query: {query}
-Identify the main themes and related concepts that need to be explored to fully understand this topic.
-Each theme should be clearly defined and justified. In your response only give a list of phrases such that they can be 
-directly used to search for research papers on google scholar. 
-Refactor the original query to a phrase that can be searched on google scholar if it's not already in that format. 
-The first element in the list should be the original query given to you by the user Then add the other phrases to the list.
-Order the list of themes after the first query in descending order or relevance to the query.
+You are an expert research assistant. Given the user's query, and the conversation history generate
+        precise search queries that would help gather comprehensive information on the topic. 
+        The number of search queries to generate will be provided by the user, generate exactly that many.
+        There can be previous queries that were used already. If there are come up with new ones that haven't been used 
+        and will fetch me different but still relevant results. Also, Give me the name of the topic that I can use 
+        as the title for the name of this conversation.
+        Return only a Python list of strings, for example: ['query1', 'query2', 'query3'].
+        User Query :{query}
+        Queries Used : {previous_search_queries}
+        Conversation History : {conversation_history}
+        Queries to generate : {queries_to_generate}
 """
 
 PAPER_FINDING_PROMPT = """
-For the theme: {theme}
-And the original query: {query}
 What would be the most relevant papers to explore? 
 Consider both seminal works and recent developments.
+For the theme: {theme}
+And the original query: {query}
 """
 
 PAPER_VALIDATION_PROMPT = """
-theme: {theme}
-paper: {paper}
-Check if the given research paper(it has a title and the abstract) is relevant to the given theme. Give your response
-in just one word. "True" if the paper is relevant to the theme and "False" if it isn't.
-Consider: relevance to theme, methodology, and scientific rigor."""
-
-INFORMATION_EXTRACTION_RESPONSE_PROMPT = """{"methodology": {
-"1" : "The contribution of this work is summarized as follows: First, we propose a method detecting deepfake video without a convolutional neural network. Usually, CNN learns a representation by embedding a vector in a hypersphere from an image. Then, it is used as the classifier’s input.", 
-"2" : "Other methodology info"} ,
-"contributions":{ "1" : "The contribution of this work is summarized as follows: First, we propose a method detecting deepfake video without a convolutional neural network. Usually, CNN learns a representation by embedding a vector in a hypersphere from an image. Then, it is used as the classifier’s input.", 
-"2" : "Other contribution info"} ,
-"datasets": {"1" : "The contribution of this work is summarized as follows: First, we propose a method detecting deepfake video without a convolutional neural network. Usually, CNN learns a representation by embedding a vector in a hypersphere from an image. Then, it is used as the classifier’s input.", 
-"2" : "Other dataset info"} , 
-"limitations": "1" : "The contribution of this work is summarized as follows: First, we propose a method detecting deepfake video without a convolutional neural network. Usually, CNN learns a representation by embedding a vector in a hypersphere from an image. Then, it is used as the classifier’s input.", 
-"2" : "Other limitations info"} ,
- "results": {"1" : "The contribution of this work is summarized as follows: First, we propose a method detecting deepfake video without a convolutional neural network. Usually, CNN learns a representation by embedding a vector in a hypersphere from an image. Then, it is used as the classifier’s input.", 
-"2" : "Other methodology info"} }"""
-
-EXTRACT_PAPER_INFO_PROMPT = """
-You are an expert scientific research assistant. Your audience is highly technical, phds, researchers 
-                           and professors that have deep expertise in the domain. Extract the relevant pieces of text 
-                           from the research paper given below that provide information about the sections that the user is interested in. 
-                           Each of these extracted references should be AT LEAST 50 words and 
-                           have context enough context about what the authors are trying to convey in those lines.
-                           Give the references VERBATIM from the paper. DO NOT add any extra words of your own. 
-                           If you cannot extract information about a particular section, return an empty string like "". 
-                           Format your response in a dictionary such that the key is a number starting from 1 and 
-                           the value is the actual text that you have extracted from the paper. ONLY use the EXACT words from the paper VERBATIM as references. Make sure to add multiple references for each section.
-                            Here are the sections that the user needs information about : 
-                            1. "methodology": Methodology/Processes/Algorithms used to conduct the research.,
-                            2. "contributions": Major Findings/New Contributions of the paper.,
-                            3. "datasets": Datasets used,
-                            4. "limitations": Drawbacks/Limitations,
-                            5. "results": Results of the experiments in the paper   
-Your response should be in the following JSON object : {response_format}
-Here is the research paper : {pdf_content}
+Check if the given  list of research papers(it has a title and the abstract) could be relevant to answer the user's question. 
+Give your response in just one word. "True" if the paper is relevant to the theme and "False" if it isn't.
+Make sure that the length of the output list is exactly equal to the length of the input list.
+Return a list of "True" and "False" in the order of the input papers given. For example if first paper is relevant and second isn't,
+return ["True", "False"].
+Consider: relevance to query, methodology, and scientific rigor.
+papers : {papers}
 """
 
-CREATE_LITERATURE_REVIEW_PROMPT = """
-You are a research assistant tasked with generating a detailed literature review based on a set of academic papers. Your review should be highly technical, use a wide range of papers, and include precise in-line citations.
 
-**Objective:** Produce a comprehensive, in-depth literature review that addresses the sections below. Each section should be fully self-contained with in-line citations only, without a separate reference list at the end.
+GENERATE_DEEP_RESEARCH_REPORT_PROMPT = """
+Comprehensive Literature Review Generator
+You are a research assistant tasked with generating a comprehensive literature review based on academic papers. Your review must draw extensively from ALL available sources in the provided dataset, ensuring maximum breadth and depth of coverage while maintaining meaningful citations.
+Primary Objective
+Produce an expansive, in-depth literature review that incorporates insights from the COMPLETE RANGE of provided papers. Each section must synthesize information from as many relevant sources as possible, leaving no paper unexamined or unused unless completely irrelevant.
+Input Data
 
-**Input Data:**
-- A list of research papers, each containing:
-    - Id
-    - Title
-    - Abstract
-    - Publication year
-    - Structured content in the following categories: Methodology, Major Findings, Datasets, Limitations, Results.
+A list of research papers, each containing:
 
-Each section contains a dictionary where each entry has a unique `reference_id` (e.g., 70c3ef5767a7ec93252e0f1f3230b9f304bd43d0_methodology_1) and an excerpt relevant to that section.
-
-**Literature Review Sections:**
-
-**1. Research Evolution**
-   - Describe how the field has evolved, noting significant shifts and key studies that represent turning points.
-   - **In-line citations**: Use each `reference_id` directly in the text after each claim ([uyh4ghf63jf4h674hf7_methodology_2]), and ensure the section is self-contained without requiring additional references.
-
-**2. Methodology Analysis**
-   - Compare and contrast the main methodological approaches in detail, addressing strengths and weaknesses. Make this section very specific,technical and long, minimum 100 words.
-   - **In-line citations**: Support each technical point with `reference_ids` directly in the text ([8543852893652430f1f3230b9f304bd43d0_results_3]).
-
-**3. Key Findings and Contradictions**
-   - Summarize major findings and any conflicting results, analyzing why these contradictions may exist. Make this section very specific,technical and long, minimum 100 words.
-   - **In-line citations**: Include multiple `reference_ids` as needed for each point ([327684ewyfveeuytf43hjvf74hf7rf4_limitations_1], [3478526439856934265hvdfvgdsyd7643_datasets_3]).
-
-**4. Research Gaps**
-   - Identify consistent research gaps, underexplored areas, and missing methodologies. Make this section very specific,technical and long, minimum 100 words.
-   - **In-line citations**: Use `reference_ids` from a variety of papers to substantiate each identified gap ([yer4ufbde87t43ubfg8734therb_methodology_4]).
-
-**5. Future Directions**
-   - Propose promising directions for future research based on current limitations and gaps.
-   - **In-line citations**: Reference specific `reference_ids` relevant to each future direction.
-
-**Guidelines for In-line Citations and Content Breadth:**
-
-1. **Broad Paper Coverage**:
-   - **Requirement**: Reference as many different papers as possible across each section. Draw from a broad range to ensure comprehensive analysis.
-
-2. **In-line Citations Only**:
-   - **Requirement**: Use exact `reference_ids` in square brackets (e.g., [feusrogierouwg87werjbfsd_methodology_1]) for all citations and do not include a separate reference list.
-   - Every statement or claim should end with one or more precise in-line citations that directly match the data input.
-   - **Multiple citations** can be included for statements requiring support from multiple sources ([grfdegsuioghsiuhgs_methodology_1], [dfgsswuergerjbger78435_contributions_2]).
-
-3. **Comprehensive Depth and Technicality**:
-   - **Length**: Each section should be at least **300-500 words** for an in-depth review.
-   - **Audience**: Write for a technically advanced audience of researchers and professors. Avoid generalizations; provide detailed, topic-specific analysis.
-
-4. **Scope and Accuracy**:
-   - Reference as many unique papers as feasible in each section.
-   - Use only the provided data, and if data for a specific question is unavailable, state “No relevant information available.”
-
-**User Query for Literature Review:** {query}
-
-**List of Papers:** {papers}
-
-"""
-
-#Unused Prompts
-
-INFORMATION_EXTRACTION_PROMPT = """
-You are an expert scientific research assistant. Your audience is highly technical, phds, researchers 
-                           and professors that have deep expertise in the domain. Extract the relevant pieces of text 
-                           from the research paper given below that provide information about the sections that the user is interested in. 
-                           Each of these extracted references should be AT LEAST 50 words and 
-                           have context enough context about what the authors are trying to convey in those lines.
-                           Give the references VERBATIM from the paper. DO NOT add any extra words of your own. 
-                           If you cannot extract information about a particular section, return an empty string like "". 
-                           Format your response in a dictionary such that the key is a number starting from 1 and 
-                           the value is the actual text that you have extracted from the paper.
-                            Here are the sections that the user needs information about : 
-                            1. "methodology": Methodology/Processes/Algorithms used to conduct the research.,
-                            2. "contributions": Major Findings/New Contributions of the paper.,
-                            3. "datasets": Datasets used,
-                            4. "limitations": Drawbacks/Limitations,
-                            5. "results": Results of the experiments in the paper   
-                             \n \n Here is the research paper :{pdf_content}. \n \n \n
-                                           
- """
-
-GRAPH_BUILDING_PROMPT = """
-You are a research analysis assistant helping to static a knowledge graph from academic papers. For each paper provided, 
-analyze its relationship with other papers and identify key connections.
-Here are the papers for that you need to create a graph for : {papers}
-
-Input Format:
-For each paper, you have:
-- Id
-- Title
-- Abstract
-- Publication year
-Each of the sections below are as a dictionary where the key is a reference number and the value is a piece of text 
-extracted from the paper that is relevant to the section.
-- Methodology/Processes/Algorithms used to conduct the research 
-- Major Findings/New Contributions of the paper 
-- Datasets used 
-- Drawbacks/Limitations 
-- Results of the experiments in the paper
-
-Task:
-1. Generate a JSON structure representing a graph with the following format:
-{
-  "nodes": [
-    {
-      "id": "paper_1",
-      "properties": {
-        "title": "",
-        "key_methods": [],
-        "key_findings": [],
-        "dataset": ""
-      }
-    },
-    // Additional nodes for methods, datasets, concepts
-    {
-      "id": "method_1",
-      "type": "method",
-      "properties": {
-        "name": ""
-      }
-    }
-  ],
-  "edges": [
-    {
-      "source": "paper_1",
-      "target": "paper_2",
-      "relationship": "builds_upon|contradicts|validates|uses_similar_method",
-      "weight": 0.8,  // confidence score
-      "properties": {
-        "description": "Brief description of the relationship"
-      }
-    }
-  ]
-}
-
-2. For each relationship identified:
-- Explain the basis for the connection
-- Assign a confidence score (0-1)
-- Provide a brief description of how the papers relate
-
-Guidelines:
-- Focus on substantive relationships (methodology similarities, result comparisons, dataset usage)
-- Identify contradictions or conflicting results
-- Note when papers static upon each other's work
-- Highlight shared or contrasting limitations
-- Consider temporal relationships (which paper came first)
-
-Example Response:
-{
-  "analysis": "Based on the papers provided, Paper A and Paper B share methodology X but reached different conclusions. Paper C builds upon Paper A's findings by addressing its limitations...",
-  "graph": {
-    // JSON structure as defined above
-  }
-}
-"""
-
-INSIGHT_GENERATION_PROMPT = """
-You are a research insight generator analyzing academic papers and their relationships. Draft a comprehensive literature review about the categories asked. The papers are from a sub-theme.
-
-Input Format:
- - A list of papers.
-For each paper, you have:
-- Id
-- Title
-- Abstract
-- Publication year
-Each of the sections below are as a dictionary where the key is a reference number and the value is a piece of text 
-extracted from the paper that is relevant to the section.
-- Methodology/Processes/Algorithms used to conduct the research 
-- Major Findings/New Contributions of the paper 
-- Datasets used 
-- Drawbacks/Limitations 
-- Results of the experiments in the paper
-Guidance for format of answers : 
-Only use these texts provided to formulate your answer. First, find the pieces of text from the document that are most 
-relevant to answering each section of the question, and store them as numbered quotes.
-Then, when writing your answers, reference these quotes using INLINE CITATIONS IN SQUARE BRACKETS[1], [2], etc. Each 
-statement in your answers should end with the RELEVANT CITATION(S). MULTIPLE CITATIONS can be used if needed [1,2].
-\n \nIf there is no relevant text, write "No relevant Info" instead. \n \n Do not include or reference 
-quoted content verbatim in the answer. Make sure each statement in your answers includes at least one citation to the 
-relevant quote number. Don\'t say "According to Quote [1]" when answering.
-If the question cannot be answered by the document, say so. Make each of the sections VERBOSE and explain.
-Generate insights in the following categories:
-
-1. Research Evolution
-- How has the field progressed over time?
-- What are the major methodological shifts?
-- Which papers represent crucial turning points?
-
-2. Methodology Analysis
-- What are the dominant methodological approaches?
-- How do different methodologies compare in effectiveness?
-- What are common limitations across methods?
-
-3. Contradictions and Debates
-- What are the major points of disagreement?
-- Where do papers present conflicting results?
-- How might these contradictions be resolved?
-
-4. Research Gaps
-- What areas remain underexplored?
-- What limitations are consistently mentioned?
-- What datasets or methodologies are missing?
-
-5. Future Directions
-- What promising directions emerge from current limitations?
-- Which methodological combinations might be worth exploring?
-- What new research questions arise?
+Id
+Context - relevant context from that paper
 
 
-Here is the user query that the user wants to conduct literature review on : {query} \n \n 
-Here is the list of papers : {papers}
-These papers are based on one of the sub themes of the original literature review topic. Keep this query in context while formulating your answer,
-specifically highlighting information that is relevant to this query. 
-"""
 
-PROMPT_FOR_CITATIONS = """Make references to quotes relevant to each section of the answer solely by adding their "
-                                         "bracketed numbers at the end of relevant sentences. "
-                                         "\n \nThus, the format of your overall response for each of the section "
-                                         "should look like what\'s shown between the <example></example> "
-                                         "tags : <example>Almost 90% of revenue came from widget sales, with gadget sales making up the remaining 10%."
-                                         "Company X earned \$12 million.[1] Almost 90% of it was from widget sales. [2]</example>")"""
+Guidelines for Maximizing Source Utilization
+1. Comprehensive Paper Coverage (HIGHEST PRIORITY)
+
+STRICT REQUIREMENT: Utilize AT LEAST 95% of the provided papers in your review
+Methodically examine each paper in the dataset before drafting any content
+Create a detailed mapping of how each paper contributes to different aspects of the topic
+Develop a structured citation plan ensuring representation of ALL papers
+For papers that seem less central, identify creative ways to incorporate their peripheral findings or methodological approaches
+
+2. Paper Utilization Tracking System
+
+Before writing, create a mental checklist of all paper IDs
+As you write, track which papers have been cited and which remain unused
+Periodically review your citation distribution to ensure balanced coverage
+Deliberately incorporate underutilized papers into appropriate sections
+Before finalizing, conduct a thorough audit to verify that at least 95% of papers are meaningfully cited
+
+3. Multi-dimensional Analysis Structure
+
+Design a comprehensive framework that accommodates perspectives from ALL papers
+Create primary sections covering major dimensions and secondary sections for specialized topics
+For each section and subsection, incorporate insights from multiple papers
+Include dedicated sections for outlier perspectives, emerging approaches, and contrasting methodologies
+Balance theoretical foundations, empirical findings, methodological innovations, and practical applications
+
+4. Strategic Citation Distribution
+
+STRICT REQUIREMENT: Distribute citations EVENLY throughout the entire document
+CRITICAL PROHIBITION: NEVER include "citation dumps" where multiple papers are cited together without specific contributions (e.g., "Several studies support this [id1, id2, id3, id4, id5, ...]")
+Limit each citation group to a MAXIMUM of 3-4 papers, and only when they make similar specific points
+Each paragraph should reference 2-3 different papers with clear explanations of their contributions
+Avoid over-reliance on any single paper or small group of papers
+When multiple papers make similar points, select the most representative 2-3 papers rather than citing all of them
+
+5. Citation Quality Control (HIGHEST PRIORITY)
+
+ABSOLUTE PROHIBITION: DO NOT include concluding paragraphs or sentences that dump large numbers of citations
+ABSOLUTE PROHIBITION: DO NOT include statements like "This comprehensive synthesis integrates findings from a broad spectrum of studies [id1, id2, id3, ... id40]"
+ABSOLUTE PROHIBITION: DO NOT list more than 4 citations in a row anywhere in the document
+Every citation must be tied to a specific finding, method, theory, or perspective
+Citations must be integrated into the text with clear explanations of what each cited paper contributes
+Review your final document and remove any section that contains excessive citation lists
+
+6. Advanced Citation Integration Techniques
+
+Use comparative citations: "While [id1] found X, [id2] demonstrated Y"
+Employ synthesizing citations: "Integrating findings from [id1] and [id2] suggests..."
+Utilize confirmatory citations: "This pattern has been observed in two major studies [id1][id2]"
+Implement contextual citations: "When viewed through the framework established by [id1], the approach in [id2] reveals..."
+Apply evolutionary citations: "This concept evolved from [id1]'s foundational work through refinements in [id2]"
+
+7. Underutilized Paper Integration Strategies
+
+Identify papers with lower citation potential and deliberately prioritize their inclusion
+Create specialized subsections to highlight unique contributions from less frequently cited papers
+Frame niche findings as valuable complementary perspectives to mainstream views
+Incorporate methodological details, limitations, or future directions from less central papers
+Use contrast and comparison to integrate papers with outlier findings or approaches
+
+8. Web-Friendly Formatting Requirements
+
+Respond with a comprehensive literature review formatted in clean, web-compatible Markdown
+Use appropriate headings (##, ###), bullet points, and numbered lists for clear visual hierarchy
+Ensure all Markdown syntax is properly closed and nested
+Format citations consistently as [id#] throughout the document
+Use short paragraphs (3-6 sentences) for better readability on web interfaces
+Include appropriate spacing between sections for visual clarity
+Avoid overly complex formatting that might break in web rendering
+
+9. Final Quality Assurance Checklist
+
+VERIFY: Each paper in the dataset has been meaningfully incorporated
+COUNT: Calculate the percentage of unique papers cited (must be ≥95%)
+AUDIT: Ensure no section relies excessively on a small subset of papers
+BALANCE: Confirm citations are distributed evenly throughout the review
+CLEAN: Remove any instances of citation dumping or excessive citation lists
+PURPOSE: Verify each citation serves a meaningful analytical purpose
+ACCURACY: Confirm all citation IDs match papers provided in the input
+FORMAT: Ensure the document will render correctly in a web interface
+PROHIBITION: DO NOT add a references section at the end
+
+Strict Prohibitions
+
+DO NOT add commentary before or after the requested literature review
+DO NOT fabricate citation IDs not present in the input dataset
+DO NOT add a references or bibliography section
+DO NOT include any paragraph or sentence that lists more than 4 citation IDs together
+DO NOT conclude sections or the document with citation dumps
+DO NOT rely on a small subset of papers for the majority of your analysis
+
+User Query for Literature Review: {query}
+List of Papers: {papers}
+    """
+
+
+VALIDATE_AND_EXTRACT_RELEVANT_CONTEXT_PROMPT = """
+                You are analyzing a research paper to determine:
+                1. Whether it is relevant to the given query
+                2. If relevant, what specific information from the paper helps answer the query
+
+                ### User Query
+                {user_query}
+
+                ### Paper Content
+                {paper_text}
+                
+                ### Search Query
+                {search_query}
+
+                ### Instructions
+                Given the user's query, the search query that led to this paper,
+                and the paper content,
+                First, determine if this paper is relevant to the query.
+                If the paper is NOT relevant, respond with "NOT_RELEVANT".
+                If it IS relevant, extract all pieces of information that are relevant to answering the user's query. 
+                Return only the relevant context as plain text without commentary. Extract this text as is. 
+                DO NOT ADD any extra word except for those that are part of the paper.
+                This text would ideally be in methodology, results or abstract sections. 
+                If you don't find any relevant context, just return `NOT_RELEVANT`. 
+                """
+
+
