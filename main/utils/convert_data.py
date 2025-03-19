@@ -18,16 +18,15 @@ def convert_index_response_to_research_paper(index_response):
         cited_by_count = index_response.get('cited_by_count')
         authors = fetch_authors(index_response)
         publication = fetch_publication_name(index_response)
-        oa_url = fetch_pdf_url_from_index(index_response)
+        oa_url, isPdfUrl = fetch_pdf_url(index_response)
         doi = fetch_doi_from_index(index_response)
-        landing_page_url = fetch_pdf_url_from_index(index_response)
         referenced_works_ids = index_response['referenced_works']
 
         return ResearchPaper(user_id=user_id, open_alex_id=open_alex_id, title=title,
                              authors=authors, abstract=abstract, publication_year=publication_year,
                              referenced_works_ids=referenced_works_ids, oa_url=oa_url,
-                             cited_by_count=cited_by_count, publication=publication, doi=doi,
-                             landing_page_url=landing_page_url)
+                             cited_by_count=cited_by_count, publication=publication, doi=doi, isPdfUrl=isPdfUrl
+                             )
       except Exception as e:
         raise f"Could not convert index response to research paper: {e}"
 
@@ -68,7 +67,7 @@ def convert_oa_response_to_research_paper(work):
         publication_date = work['publication_date']
         referenced_works_ids = fetch_id_for_referenced_works(work)
         referenced_works_count = work['referenced_works_count']
-        oa_url = fetch_oa_url(work)
+        oa_url, isPdfUrl = fetch_pdf_url(work)
         concepts = fetch_concepts(work)
         cited_by_count = work['cited_by_count']
         cited_by_url = work['cited_by_api_url']
@@ -85,7 +84,8 @@ def convert_oa_response_to_research_paper(work):
                              referenced_works_count=referenced_works_count, oa_url=oa_url, concepts=concepts,
                              cited_by_count=cited_by_count, cited_by_url=cited_by_url, biblio=biblio,
                              institutions=institutions, key_words=key_words, primary_topic=primary_topic,
-                             publication=publication, publication_id=publication_id, doi=doi)
+                             publication=publication, publication_id=publication_id, doi=doi, isPdfUrl=isPdfUrl
+                             )
     except Exception as e:
         raise f"Could not convert open_alex response to research paper: {e}"
 
@@ -184,11 +184,13 @@ def fetch_oa_url(work):
     return "" if work['best_oa_location'] is None or work['best_oa_location']['pdf_url'] is None else \
         work['best_oa_location']['pdf_url']
 
-def fetch_pdf_url_from_index(response):
-    return "" if response['primary_location'] is None or response['primary_location']['pdf_url'] is None else \
-        response['primary_location']['pdf_url']
+def fetch_pdf_url(response):
+    if response['primary_location'] is None or response['primary_location']['pdf_url'] is None:
+        return fetch_landing_page_url(response), False
+    else:
+        return response['primary_location']['pdf_url'], True
 
-def fetch_landing_page_url_from_index(response):
+def fetch_landing_page_url(response):
     return "" if response['primary_location'] is None or response['primary_location']['landing_page_url'] is None else \
         response['primary_location']['landing_page_url']
 

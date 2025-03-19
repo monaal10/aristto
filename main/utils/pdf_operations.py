@@ -19,7 +19,7 @@ def download_pdf(paper):
         logger.info(f"Retrieved paper with id : {paper.open_alex_id} from database")
         return convert_mongodb_to_research_paper(result[0])
     url = paper.oa_url
-    if paper.oa_url and len(paper.oa_url) > 0:
+    if paper.isPdfUrl and paper.oa_url and len(paper.oa_url) > 0:
         try:
             user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.82 Safari/537.36'
             headers = {

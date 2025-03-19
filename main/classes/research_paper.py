@@ -39,6 +39,7 @@ class ResearchPaper(BaseModel):
     doi: Optional[str] = Field(default=None)
     theme: Optional[str] = Field(default=None)
     landing_page_url: Optional[str] = Field(default=None)
+    isPdfUrl: Optional[bool] = Field(default=None)
 
     class Config:
         arbitrary_types_allowed = True
