@@ -225,6 +225,7 @@ def ask_question():
             for turn in saved_search:
                 turn.pop('_id', None)
             updated_saved_search = saved_search[0].get("saved_search") + [answer_dict]
+            title = saved_search[0].get("title")
         else:
             updated_saved_search = [answer_dict]
         saved_search_update = {"thread_id": thread_id, "user_id": user_id, "saved_search": updated_saved_search,
