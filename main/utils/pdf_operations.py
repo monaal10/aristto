@@ -45,7 +45,10 @@ def download_pdfs_parallel(papers):
             paper = future.result()
             if paper.pdf_content:
                 final_papers.append(paper)
-
+            else:
+                if paper.abstract and len(paper.abstract) > 0:
+                    paper.pdf_content = paper.abstract
+                    final_papers.append(paper)
     return final_papers  # Return dictionary with URLs and their content
 
 

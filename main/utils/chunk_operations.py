@@ -42,6 +42,7 @@ def parallel_chunk_text(papers):
             for future in as_completed(futures):
                 paper = future.result()
                 final_papers.append(paper)
+        logger.info("final papers:", final_papers)
         return final_papers
     except Exception as e:
         raise f"Could not chunk text: {e}"
@@ -50,6 +51,8 @@ def parallel_chunk_text(papers):
 def parallel_download_and_chunk_papers(papers):
     try:
         papers_with_pdf_content = download_pdfs_parallel(papers)
+        if len(papers_with_pdf_content) == 0:
+            return []
         final_papers = parallel_chunk_text(papers_with_pdf_content)
         return final_papers
     except Exception as e:

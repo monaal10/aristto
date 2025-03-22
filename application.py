@@ -167,9 +167,12 @@ def chat_with_papers():
         if len(final_papers) > 1:
             for paper in final_papers:
                 if not paper.pdf_content:
-                    new_paper = parallel_download_and_chunk_papers([paper])[0]
-                    insert_data([new_paper.dict()], RESEARCH_PAPER_DATABASE)
-
+                    new_paper_array = parallel_download_and_chunk_papers([paper])
+                    if len(new_paper_array) > 0:
+                        new_paper = new_paper_array[0]
+                        insert_data([new_paper.dict()], RESEARCH_PAPER_DATABASE)
+                    else:
+                        continue
                 else:
                     new_paper = paper
                 final_papers_with_pdf.append(new_paper)
