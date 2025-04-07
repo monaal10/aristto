@@ -31,7 +31,7 @@ stripe
 rapidfuzz
 azure-storage-blob
 azure-search-documents
-transformers
+transformers===4.50.3
 torch
 langchain_google_vertexai
 vertexai
