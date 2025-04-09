@@ -72,3 +72,47 @@ class SESEmailSender:
         except ClientError as e:
             logger.error(f"Failed to send email via SES: {str(e)}")
             raise
+
+    def send_verification_email(self, to_email: str, verification_url: str):
+        """Send email verification email using Amazon SES"""
+        try:
+            html_content = f"""
+            <html>
+                <body>
+                    <h2>Welcome to Aristto!</h2>
+                    <p>Thank you for signing up. Please verify your email address by clicking the link below:</p>
+                    <p><a href="{verification_url}">Verify Email</a></p>
+                    <p>This link will expire in 24 hours.</p>
+                    <p>If you didn't create this account, please ignore this email.</p>
+                </body>
+            </html>
+            """
+
+            text_content = f"""
+            Welcome to Aristto!
+
+            Thank you for signing up. Please verify your email address by clicking the link below:
+            {verification_url}
+
+            This link will expire in 24 hours.
+
+            If you didn't create this account, please ignore this email.
+            """
+
+            response = self.client.send_email(
+                Source=SES_SENDER_EMAIL,
+                Destination={'ToAddresses': [to_email]},
+                Message={
+                    'Subject': {'Data': 'Verify Your Email - Aristto', 'Charset': 'UTF-8'},
+                    'Body': {
+                        'Text': {'Data': text_content, 'Charset': 'UTF-8'},
+                        'Html': {'Data': html_content, 'Charset': 'UTF-8'}
+                    }
+                }
+            )
+            logger.info(f"Verification email sent! Message ID: {response['MessageId']}")
+            return True
+
+        except ClientError as e:
+            logger.error(f"Failed to send verification email via SES: {str(e)}")
+            raise

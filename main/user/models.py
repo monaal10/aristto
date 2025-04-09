@@ -30,7 +30,7 @@ class User:
         self.defaults = {
             "user_id": string_utils.randID(),
             "ip_addresses": [request.remote_addr],
-            "acct_active": True,
+            "acct_active": False,
             "date_created": string_utils.nowDatetimeUTC(),
             "last_login": string_utils.nowDatetimeUTC(),
             "first_name": "",
@@ -41,6 +41,9 @@ class User:
             "stripe_customer_id": None,
             "stripe_subscription_id": None,
             "subscription_status": None,
+            "email_verified": False,  # New field for email verification status
+            "verification_token": None,  # New field for email verification token
+            "verification_token_expires": None,  # New field for token expiration
         }
 
     def get(self):
@@ -158,48 +161,66 @@ class User:
                 "last_name": data.get('last_name'),
                 "email": data.get('email', '').lower(),
                 "password": data.get('password'),
-                "plan": data.get('plan', Plan.FREE.value)  # Defaults to "basic" if not specified
+                "plan": data.get('plan', Plan.FREE.value)
             }
 
             # Validate required fields
             for field in ['first_name', 'last_name', 'email', 'password']:
                 if not expected_data[field]:
-                    return string_utils.JsonResp({"message": f"{field.replace('_', ' ').capitalize()} is required"}, 400)
+                    return string_utils.JsonResp({"message": f"{field.replace('_', ' ').capitalize()} is required"},
+                                                 400)
 
-            # Merge the posted data with the default user attributes
-            self.defaults.update(expected_data)
-            user = self.defaults
-
-            # Encrypt the password
-            user["password"] = pbkdf2_sha256.encrypt(user["password"], rounds=20000, salt_size=16)
-
-            # Check if a user with this email already exists
-            existing_email = fetch_data({"email": user["email"]}, USERS_DATABASE)
+            # Check if email exists first
+            existing_email = fetch_data({"email": expected_data["email"]}, USERS_DATABASE)
             if existing_email and len(existing_email) > 0:
                 return string_utils.JsonResp({
                     "message": "There's already an account with this email address",
                     "error": "email_exists"
                 }, 400)
 
+            # Generate verification token
+            user_id = string_utils.randID()  # Generate user_id first
+            verification_token = jwt.encode({
+                'user_id': user_id,
+                'email': expected_data["email"],
+                'exp': datetime.utcnow() + timedelta(hours=24)
+            }, app.config['secret_key'], algorithm='HS256')
+
+            # Try to send verification email first
+            try:
+                verification_url = f"{CLIENT_URL}/verify-email/{verification_token}"
+                email_sender = SESEmailSender()
+                email_sender.send_verification_email(expected_data["email"], verification_url)
+            except Exception as e:
+                logger.error(f"Failed to send verification email: {str(e)}")
+                return string_utils.JsonResp({
+                    "message": "Failed to send verification email. Please try again.",
+                    "error": "email_send_failed"
+                }, 500)
+
+            # Only create user if email was sent successfully
+            self.defaults.update(expected_data)
+            user = self.defaults
+            user["user_id"] = user_id
+
+            # Encrypt the password
+            user["password"] = pbkdf2_sha256.encrypt(user["password"], rounds=20000, salt_size=16)
+
+            user["verification_token"] = verification_token
+            user["verification_token_expires"] = datetime.utcnow() + timedelta(hours=24)
+            user["email_verified"] = False
+            user["acct_active"] = False  # Keep account inactive until verified
+
+            # Insert the user
             insert_data(user, USERS_DATABASE)
 
-            # Log the user in (create and return tokens)
-            access_token = encodeAccessToken(user["user_id"], user["email"], user["plan"])
-            refresh_token = encodeRefreshToken(user["user_id"], user["email"], user["plan"])
-            update_data({
-                "refresh_token": refresh_token
-            }, USERS_DATABASE, {"user_id": user["user_id"]}, MONGODB_SET_OPERATION)
-            logger.info(user["user_id"])
             return string_utils.JsonResp({
-                "user_id": user["user_id"],
-                "email": user["email"],
-                "first_name": user["first_name"],
-                "last_name": user["last_name"],
-                "plan": user["plan"],
-                "access_token": access_token,
-                "refresh_token": refresh_token
+                "message": "Please check your email to verify your account",
+                "email": user["email"]
             }, 201)
-        except Exception:
+
+        except Exception as e:
+            logger.error(f"Error in user signup: {str(e)}")
             return string_utils.JsonResp({"message": "User could not be added"}, 400)
 
     def refresh(self):
@@ -355,4 +376,82 @@ class User:
         except Exception as e:
             logger.error(f"Password reset error: {str(e)}")
             return string_utils.JsonResp({"message": "Failed to reset password"}, 500)
+
+    def verify_email(self):
+        try:
+            data = json.loads(request.data)
+            token = data.get('token')
+
+            if not token:
+                return string_utils.JsonResp({"message": "Verification token is required"}, 400)
+
+            try:
+                # Verify token
+                payload = jwt.decode(token, app.config['secret_key'], algorithms=['HS256'])
+                user_id = payload['user_id']
+
+                # Find user with this token
+                user = fetch_data({
+                    "user_id": user_id,
+                    "verification_token": token,
+                    "verification_token_expires": {"$gt": datetime.utcnow()}
+                }, USERS_DATABASE)
+
+                if not user or len(user) == 0:
+                    return string_utils.JsonResp({"message": "Invalid or expired verification token"}, 400)
+
+                # Generate tokens for automatic login
+                access_token = encodeAccessToken(user_id, user[0]["email"], user[0]["plan"])
+                refresh_token = encodeRefreshToken(user_id, user[0]["email"], user[0]["plan"])
+
+                # Update user verification status and refresh token
+                update_data({
+                    "email_verified": True,
+                    "verification_token": None,
+                    "verification_token_expires": None,
+                    "refresh_token": refresh_token,
+                    "acct_active": True,
+                    "last_login": string_utils.nowDatetimeUTC()
+                }, USERS_DATABASE, {"user_id": user_id}, MONGODB_SET_OPERATION)
+
+                response = make_response(string_utils.JsonResp({
+                    "message": "Email verified successfully",
+                    "user_id": user_id,
+                    "email": user[0]["email"],
+                    "first_name": user[0]["first_name"],
+                    "last_name": user[0]["last_name"],
+                    "plan": user[0]["plan"]
+                }, 200))
+
+                # Set authentication cookies
+                response.set_cookie(
+                    'access_token',
+                    access_token,
+                    httponly=True,
+                    secure=True,
+                    samesite='Strict',
+                    max_age=900,  # 15 minutes
+                    path='/'
+                )
+
+                response.set_cookie(
+                    'refresh_token',
+                    refresh_token,
+                    httponly=True,
+                    secure=True,
+                    samesite='Strict',
+                    max_age=2592000,  # 30 days
+                    path='/'
+                )
+
+                return response
+
+            except jwt.ExpiredSignatureError:
+                return string_utils.JsonResp({"message": "Verification token has expired"}, 400)
+            except jwt.InvalidTokenError:
+                return string_utils.JsonResp({"message": "Invalid verification token"}, 400)
+
+        except Exception as e:
+            logger.error(f"Email verification error: {str(e)}")
+            return string_utils.JsonResp({"message": "Failed to verify email"}, 500)
 
