@@ -119,6 +119,10 @@ def request_password_reset():
 @user_blueprint.route('/reset-password/confirm', methods=['POST'])
 def reset_password():
     return User().reset_password()
+
+@user_blueprint.route('/verify-email', methods=['POST'])
+def verify_email():
+    return User().verify_email()
 application = Flask(__name__, static_folder='main/static', static_url_path='')
 application.config["secret_key"] = APPLICATION_SECRET_KEY
 # Configure CORS
