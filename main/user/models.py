@@ -89,6 +89,14 @@ class User:
             user = fetch_data({"email": email}, USERS_DATABASE)[0]
 
             if user and pbkdf2_sha256.verify(data["password"], user["password"]):
+                # Check if email is verified
+                if not user.get("email_verified", False):
+                    return string_utils.JsonResp({
+                        "message": "Please verify your email before logging in",
+                        "error": "email_not_verified",
+                        "email": email
+                    }, 403)
+
                 user_id = str(user["user_id"])
                 user_email = str(user["email"])
                 user_plan = str(user["plan"])
