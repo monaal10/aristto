@@ -44,6 +44,8 @@ class User:
             "email_verified": False,  # New field for email verification status
             "verification_token": None,  # New field for email verification token
             "verification_token_expires": None,  # New field for token expiration
+            "acquisition_channel": None,
+            "user_type": None
         }
 
     def get(self):
@@ -169,11 +171,13 @@ class User:
                 "last_name": data.get('last_name'),
                 "email": data.get('email', '').lower(),
                 "password": data.get('password'),
-                "plan": data.get('plan', Plan.FREE.value)
+                "plan": data.get('plan', Plan.FREE.value),
+                "acquisition_channel": data.get('acquisition_channel', None),
+                "user_type": data.get('user_type', None)
             }
 
             # Validate required fields
-            for field in ['first_name', 'last_name', 'email', 'password']:
+            for field in ['first_name', 'last_name', 'email', 'password', 'acquisition_channel', 'user_type']:
                 if not expected_data[field]:
                     return string_utils.JsonResp({"message": f"{field.replace('_', ' ').capitalize()} is required"},
                                                  400)
@@ -217,8 +221,9 @@ class User:
             user["verification_token"] = verification_token
             user["verification_token_expires"] = datetime.utcnow() + timedelta(hours=24)
             user["email_verified"] = False
-            user["acct_active"] = False  # Keep account inactive until verified
-
+            user["acct_active"] = False
+            user["acquisition_channel"]: data.get('acquisition_channel', None)# Keep account inactive until verified
+            user["user_type"]: data.get('user_type', None)
             # Insert the user
             insert_data(user, USERS_DATABASE)
 
