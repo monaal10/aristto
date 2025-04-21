@@ -5,28 +5,23 @@ import re
 from main.modules.open_alex_index_module import get_relevant_papers_from_open_alex, get_referenced_papers
 from main.classes.answer_a_question_classes import AnswerReference, AskQuestionOutput, Answer
 from main.modules.get_llm_response_module import get_model_response
-from main.utils.constants import SEARCH_QUERY_NUMBER_LIMIT
-from main.utils.llm_utils import get_openai_4o_mini, get_claude, get_o3_mini_medium, get_o3_mini, get_o3_mini_high
+from main.utils.llm_utils import get_o41_nano, get_o41_mini
 from main.utils.pdf_operations import download_pdf
 from main.classes.lit_review_agent_classes import SearchQueriesAndTitle
 from main.prompts.literature_review_prompts import THEME_IDENTIFICATION_PROMPT, GENERATE_DEEP_RESEARCH_REPORT_PROMPT, VALIDATE_AND_EXTRACT_RELEVANT_CONTEXT_PROMPT
 import logging
 from main.utils.mocks import PROCESSED_RESULTS
-from main.modules.answer_a_question_module import generate_searchable_query
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-llm = get_openai_4o_mini()
-#gemini = get_gemini_flash_2()
-o3_low = get_o3_mini()
-o3 = get_o3_mini_high()
-claude = get_claude()
+llm = get_o41_nano()
+o41 = get_o41_mini()
 
 
 def generate_search_queries(query, previous_search_queries, conversation_history, queries_to_generate, retry_number=1):
     try:
-        llm_with_output = o3_low.with_structured_output(SearchQueriesAndTitle)
+        llm_with_output = o41.with_structured_output(SearchQueriesAndTitle)
         search_queries_with_title = get_model_response(llm_with_output, THEME_IDENTIFICATION_PROMPT, {"query": query,
                                                                                    "previous_search_queries":
                                                                                        previous_search_queries,
@@ -73,7 +68,7 @@ def validate_and_extract_context(papers, query, theme):
                 try:
                     # Make a single LLM call for both validation and extraction
                     context_response = get_model_response(
-                        o3_low,
+                        o41,
                         VALIDATE_AND_EXTRACT_RELEVANT_CONTEXT_PROMPT,
                         {
                             "user_query": query,
@@ -227,7 +222,7 @@ def invoke_deep_research_agent(query, start_year, end_year, citation_count, publ
         context_for_llm = [{"paper_id": result["paper_id"], "context": result["context"]} for
                            result in processed_results]
         # Generate the final report using all contexts
-        answer = generate_final_report(query, context_for_llm, o3)
+        answer = generate_final_report(query, context_for_llm, o41)
 
         # Format the response
         formatted_answer = format_response(answer, processed_results)
@@ -246,10 +241,9 @@ def invoke_deep_research_agent(query, start_year, end_year, citation_count, publ
 """query = ("Give me a comprehensive lit review on the topic undulatory ﬁn motions in ﬁsh-like robots. Give me field "
          "progression, methodologies and comparisons, some research gaps and any other section you feel is important to "
          "know for a researcher.")
-answer = invoke_deep_research_agent(query, None, None, None, [], [], [], [])
+#answer = invoke_deep_research_agent(query, None, None, None, [], [], [], [])
 print()
-#ans = generate_final_report(query, PROCESSED_RESULTS, o3)
-ans = generate_final_report(query, PROCESSED_RESULTS, o3)
+#ans = generate_final_report(query, PROCESSED_RESULTS, o41)
+ans = generate_final_report(query, PROCESSED_RESULTS, o41)
 fin = format_response(ans, PROCESSED_RESULTS)
-print()
-"""
+print()"""

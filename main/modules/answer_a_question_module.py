@@ -6,12 +6,13 @@ from main.modules.semantic_scholar_index_module import get_papers_from_semantic_
 from main.modules.open_alex_index_module import get_relevant_papers_from_open_alex
 from main.classes.answer_a_question_classes import Answer, AskQuestionOutput, AnswerReference, SearchableQueryAndTitle
 from main.prompts.answer_a_question_prompts import ANSWER_A_QUESTION_PROMPT, GENERATE_SEARCHABLE_QUERY
-from main.utils.llm_utils import get_openai_4o_mini, get_o3_mini, get_o3_mini_medium
+from main.utils.llm_utils import get_o41_mini
 import json
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-model = get_o3_mini()
+
+model = get_o41_mini()
 
 
 def construct_final_output(output, context, relevant_papers):
