@@ -1,4 +1,4 @@
 # Aristto
 
-The official repo for Aristto backend.
+The official repo for Aristto.
 
