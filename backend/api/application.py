@@ -4,31 +4,30 @@ import logging
 import datetime
 import uuid
 
-
-from main.modules.answer_a_question_module import generate_searchable_query, invoke_agent
-from main.modules.chat_with_paper_module import chat
-from main.modules.extract_paper_info_module import extract_paper_information
-from main.modules.literature_review_agent_module import invoke_deep_research_agent
-from main.utils import string_utils
-from main.utils.chunk_operations import parallel_download_and_chunk_papers, get_relevant_chunks
-from main.modules.relevant_papers_module import get_relevant_papers
+from backend.core.modules.answer_a_question_module import generate_searchable_query, invoke_agent
+from backend.core.modules.chat_with_paper_module import chat
+from backend.core.modules.extract_paper_info_module import extract_paper_information
+from backend.core.modules.literature_review_agent_module import invoke_deep_research_agent
+from backend.core.utils import string_utils
+from backend.core.utils.chunk_operations import parallel_download_and_chunk_papers, get_relevant_chunks
+from backend.core.modules.relevant_papers_module import get_relevant_papers
 from flask_cors import CORS
-from main.classes.mongodb import insert_data, fetch_data, update_data
-from main.utils.constants import RESEARCH_PAPER_DATABASE, LITERATURE_REVIEW_DATABASE, RELEVANT_CHUNKS_TO_RETRIEVE, \
+from backend.core.classes.mongodb import insert_data, fetch_data, update_data
+from backend.config.settings import RESEARCH_PAPER_DATABASE, LITERATURE_REVIEW_DATABASE, RELEVANT_CHUNKS_TO_RETRIEVE, \
     MONGODB_SET_OPERATION, APPLICATION_SECRET_KEY, SAVED_PAPERS_DATABASE, STRIPE_API_KEY, CLIENT_URL, USERS_DATABASE, \
     STRIPE_WEBHOOKS_SECRET_KEY, CONVERSATION_HISTORY_DATABASE, SAVED_SEARCHES_DATABASE
-from main.utils.convert_data import convert_oa_response_to_research_paper, convert_mongodb_to_research_paper
-from main.utils.json_encoder import JSONEncoder
-from main.utils.string_utils import JsonResp
+from backend.core.utils.convert_data import convert_oa_response_to_research_paper, convert_mongodb_to_research_paper
+from backend.core.utils.json_encoder import JSONEncoder
+from backend.core.utils.string_utils import JsonResp
 from flask import Blueprint
-from main.utils.mocks import MOCK_RESPONSE_JSON
-from main.user.models import User, Plan
-from main.utils.auth_utils import token_required
+from backend.core.utils.mocks import MOCK_RESPONSE_JSON
+from backend.core.user.models import User, Plan
+from backend.core.utils.auth_utils import token_required
 from flask import jsonify, request
 from bson.json_util import dumps
 import json
 
-from main.utils.pdf_operations import download_pdf
+from backend.core.utils.pdf_operations import download_pdf
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -123,7 +122,8 @@ def reset_password():
 @user_blueprint.route('/verify-email', methods=['POST', 'OPTIONS'])
 def verify_email():
     return User().verify_email()
-application = Flask(__name__, static_folder='main/static', static_url_path='')
+
+application = Flask(__name__, static_folder='../core/static', static_url_path='')
 application.config["secret_key"] = APPLICATION_SECRET_KEY
 # Configure CORS
 CORS(application, supports_credentials=True)
